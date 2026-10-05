@@ -529,3 +529,12 @@ Do not implement yet unless MVP correctness requires it:
 - microservices;
 - production CSD replacement;
 - real bank rail.
+
+
+## Current delivery override (2026-10-05)
+
+At the owner's request, React migration was brought forward before Anchor.
+`feat/phase-1-react` implements the v4 Browser/Memo coupon bridge using npm,
+React/Vite, Tailwind and FSD-style folders. This changes delivery order, not
+TZ requirements. Current focus: CI/Playwright and React Devnet acceptance;
+next protocol milestone remains M1.1–M1.6. See ROADMAP and PHASE_1_AUDIT.

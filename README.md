@@ -1,12 +1,7 @@
 # Recorda — KASE Corporate Actions Engine on Solana
 
-<p>
-  <img src="https://camo.githubusercontent.com/08cef40a9105b6526ca22088bc514fbfdbc9aac1ddbf8d4e6c750e3a88a44dca/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4c6963656e73652d4d49542d626c75652e737667" alt="License: MIT" data-canonical-src="https://img.shields.io/badge/License-MIT-blue.svg" style="max-width: 100%;">
-  <img src="https://img.shields.io/badge/Solana-Devnet-9945FF" alt="Solana Devnet">
-  <img src="https://img.shields.io/badge/Token--2022-enabled-14F195" alt="Token-2022">
-  <img src="https://img.shields.io/badge/E2E-Coupon%20PASS-brightgreen" alt="Coupon E2E PASS">
-  <img src="https://img.shields.io/badge/Status-Protocol%20Core%20Next-orange" alt="Protocol Core Next">
-</p>
+![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-9945FF)
+![Rights](https://img.shields.io/badge/License-All%20rights%20reserved-red)
 
 **Recorda** is a Solana-native corporate-actions lifecycle engine for tokenized securities, built for the **Superteam Kazakhstan × KASE Corporate Actions on Blockchain** side track.
 
@@ -16,14 +11,14 @@
 
 Repository precedence is intentionally explicit:
 
-1. [\`docs/TZ.md\`](docs/TZ.md) — **authoritative product and technical requirements**.
-2. [\`docs/PRODUCT.md\`](docs/PRODUCT.md) — plain-language interpretation of the business problem and product value.
-3. [\`ROADMAP.md\`](ROADMAP.md) — delivery phases, milestones, UC/FR/NFR coverage and Definition of Done.
-4. [\`docs/plan.md\`](docs/plan.md) — current implementation plan and trust-boundary migration.
-5. [\`golden/\`](golden/) — deterministic E2E input/output oracles.
-6. [\`prototype/\`](prototype/) — reference implementations and evidence, not the final source of protocol truth.
+1. [`docs/TZ.md`](docs/TZ.md) — **authoritative product and technical requirements**.
+2. [`docs/PRODUCT.md`](docs/PRODUCT.md) — plain-language interpretation of the business problem and product value.
+3. [`ROADMAP.md`](ROADMAP.md) — delivery phases, milestones, UC/FR/NFR coverage and Definition of Done.
+4. [`docs/plan.md`](docs/plan.md) — current implementation plan and trust-boundary migration.
+5. [`golden/`](golden/) — deterministic E2E input/output oracles.
+6. [`prototype/`](prototype/) — reference implementations and evidence, not the final source of protocol truth.
 
-If documents conflict, **\`docs/TZ.md\` wins**.
+If documents conflict, **`docs/TZ.md` wins**.
 
 ---
 
@@ -41,7 +36,7 @@ A bond continues to live after issuance. Someone still has to determine:
 - whether the same entitlement can be executed twice;
 - how an investor or auditor can prove the complete result later.
 
-A Token-2022 balance can tell us that an investor owns \`6 KZB26\` **now**. It does not by itself tell us that the same investor held \`10 KZB26\` on a past record date and therefore earned a \`$500\` coupon.
+A Token-2022 balance can tell us that an investor owns `6 KZB26` **now**. It does not by itself tell us that the same investor held `10 KZB26` on a past record date and therefore earned a `$500` coupon.
 
 That missing link is the product.
 
@@ -49,10 +44,10 @@ That missing link is the product.
 
 Recorda is similar to a **payroll engine for tokenized securities**:
 
-\`\`\`text
+```text
 Employee state       → payroll cutoff → salary entitlement → approval → payment → payslip
 Token holder state   → record date    → investor right      → approval → settlement → ActionReceipt
-\`\`\`
+```
 
 ---
 
@@ -60,7 +55,7 @@ Token holder state   → record date    → investor right      → approval →
 
 Everything in the project should reinforce one chain:
 
-\`\`\`text
+```text
 TOKENIZED INSTRUMENT
         ↓
 RECORD DATE
@@ -76,7 +71,7 @@ HUMAN / AUTHORITY APPROVAL
 SETTLEMENT / REDEMPTION / VOTE
         ↓
 VERIFIABLE ON-CHAIN RESULT
-\`\`\`
+```
 
 Or, shorter:
 
@@ -142,36 +137,36 @@ Commodity / reusable primitives can cover issuance, token accounts, transfers, A
 
 The current Devnet prototype proves the core coupon story with **real Solana state**:
 
-- real Token-2022 \`KZB26\` mint;
+- real Token-2022 `KZB26` mint;
 - real holder keypairs and Token-2022 accounts;
-- initial on-chain balances \`A=10 / B=20 / C=5\`;
-- real post-record transfer \`A → B: 4 KZB26\` producing \`6 / 24 / 5\`;
-- immutable record-date attestation preserving \`10 / 20 / 5\`;
-- deterministic entitlements \`$500 / $1,000 / $250\`;
+- initial on-chain balances `A=10 / B=20 / C=5`;
+- real post-record transfer `A → B: 4 KZB26` producing `6 / 24 / 5`;
+- immutable record-date attestation preserving `10 / 20 / 5`;
+- deterministic entitlements `$500 / $1,000 / $250`;
 - real Phantom operator approval;
-- real Token-2022 \`KUSD-DEV\` settlement \`500 / 1000 / 250\`;
+- real Token-2022 `KUSD-DEV` settlement `500 / 1000 / 250`;
 - final receipt transaction;
 - black-box E2E verifier comparing known input → actual chain state → expected output.
 
 The reference HTML is stored at:
 
-[\`prototype/kase-real-devnet-v4-kusd.html\`](prototype/kase-real-devnet-v4-kusd.html)
+[`prototype/kase-real-devnet-v4-kusd.html`](prototype/kase-real-devnet-v4-kusd.html)
 
 ### What is still a bridge
 
 The prototype proves the business flow, but the critical middle layer is not yet enforced by our own program:
 
-\`\`\`text
+```text
 Token-2022 state                 REAL ON-CHAIN
         ↓
 Browser record-date orchestration / entitlement math
         ↓
 Solana Memo attestations        REAL TX, NOT DOMAIN ENFORCEMENT
-\`\`\`
+```
 
 The next milestone moves this truth into Anchor:
 
-\`\`\`text
+```text
 React / client
         ↓
 Recorda Anchor Program
@@ -183,15 +178,15 @@ Recorda Anchor Program
         └── ActionReceipt PDA
         ↓
 Token-2022 / KUSD settlement CPI
-\`\`\`
+```
 
 ---
 
 ## Golden coupon scenario
 
-The first protocol implementation must reproduce the exact known fixture in [\`golden/coupon-happy-path.json\`](golden/coupon-happy-path.json):
+The first protocol implementation must reproduce the exact known fixture in [`golden/coupon-happy-path.json`](golden/coupon-happy-path.json):
 
-\`\`\`text
+```text
 Initial ownership       10 / 20 / 5 KZB26
 Record-date snapshot    10 / 20 / 5
 Post-record transfer    A → B : 4
@@ -199,7 +194,7 @@ Current ownership        6 / 24 / 5
 Coupon entitlement      500 / 1000 / 250 KUSD
 Total entitlement        1750 KUSD
 Final state              FINALIZED
-\`\`\`
+```
 
 The most important invariant is:
 
@@ -215,13 +210,13 @@ The final MVP must demonstrate all three through the same lifecycle engine:
 2. **Bond Redemption** — snapshot → principal/final coupon → settlement → burn/retire → proof.
 3. **Bondholder Voting** — snapshot → voting power → vote → no double vote → final tally.
 
-See [\`ROADMAP.md\`](ROADMAP.md) for milestone-level UC/FR/NFR coverage and DoD.
+See [`ROADMAP.md`](ROADMAP.md) for milestone-level UC/FR/NFR coverage and DoD.
 
 ---
 
 ## Repository layout
 
-\`\`\`text
+```text
 recorda-solana/
 ├── README.md
 ├── ROADMAP.md
@@ -234,33 +229,33 @@ recorda-solana/
 │   └── coupon-happy-path.json
 └── prototype/
     └── kase-real-devnet-v4-kusd.html
-\`\`\`
+```
 
-The Anchor workspace and React/Vite app are created in the next milestone rather than prematurely copying prototype business logic into React.
+The React/Vite app is implemented in `src/`. The Anchor workspace is still planned. See [ARCHITECTURE.md](ARCHITECTURE.md) for the current structure and trust boundary.
 
 ---
 
-## Run the current reference prototype
+## Run React and verify
 
-Do not open it through \`file://\`. Serve the repository locally so Phantom sees a normal origin:
+Requires Node 22.12+ and npm.
 
-\`\`\`bash
-python -m http.server 4444
-\`\`\`
+```bash
+npm install
+npm run build
+npx playwright install chromium
+npm run test:e2e:golden
+npm run dev -- --host 127.0.0.1
+```
 
-Open:
+Open http://127.0.0.1:4444. Phantom signing is manual; automated tests do not send transactions. The golden oracle is a deterministic domain simulation, **not proof of real-chain settlement**. Follow [manual Devnet acceptance](tests/MANUAL_DEVNET_ACCEPTANCE.md) for chain validation.
 
-\`\`\`text
-http://localhost:4444/prototype/kase-real-devnet-v4-kusd.html
-\`\`\`
-
-Use **Solana Devnet** only. Generated holder keys are disposable development identities; never send Mainnet assets to them.
+[PR audit and requirement coverage](docs/PHASE_1_AUDIT.md) · [Architecture](ARCHITECTURE.md).
 
 ---
 
 ## Current implementation direction
 
-We intentionally do **not** start by polishing React.
+The React port is available on `feat/phase-1-react`; it retains the Browser/Memo bridge. Current focus: reliable React checks, then Anchor Coupon Core (M1.1–M1.6).
 
 The next engineering objective is:
 
@@ -268,7 +263,7 @@ The next engineering objective is:
 
 The existing HTML is frozen as a behavioral reference and golden oracle. The Anchor implementation must reproduce the same outputs while making the validator/program — not browser JavaScript — responsible for finalized snapshot, entitlement, authorization, idempotency and receipt state.
 
-See [\`docs/plan.md\`](docs/plan.md).
+See [`docs/plan.md`](docs/plan.md).
 
 ---
 
@@ -290,4 +285,5 @@ Target demo KPIs:
 
 ## License
 
-MIT. See [\`LICENSE\`](LICENSE).
+All rights reserved. See [LICENSE](LICENSE). Third-party dependencies retain their own licenses.
+

@@ -4,6 +4,32 @@
 **Execution principle:** E2E-first. Each milestone must end in a reproducible business outcome, not merely code completion.  
 **Product axis:** **Record Date → Right → Controlled Execution → Verifiable Proof**.
 
+## Current focus — Phase 1 React bridge → Anchor Coupon Core
+
+Branch: `feat/phase-1-react`. React migration was brought forward from M3.1 at the owner's request. It does not complete Phase 1 protocol requirements.
+
+### R1 — React migration and verification
+
+- [x] React 19 + TypeScript + Vite npm app; no runtime CDN loader.
+- [x] Tailwind v4 and local shadcn-style Button/Card components.
+- [x] FSD-style layers: app/pages/widgets/features/entities/shared.
+- [x] Phantom/manual-signing adapter and Token-2022 coupon orchestration port.
+- [x] Golden input/output fixture and independent input-derived domain oracle.
+- [x] Playwright domain/UI tests, wallet gating and restored-session regression.
+- [x] CI JSON import compatibility fix and committed npm lockfile.
+- [x] README formatting, architecture and requirement audit documentation.
+- [ ] Confirm latest remote CI and Vercel Preview checks after branch update.
+- [ ] Manually repeat React Devnet lifecycle with Phantom; record signatures and payout deltas.
+
+### Next milestone — M1.1, then M1.2–M1.6
+
+- [ ] Anchor workspace + Instrument/HolderPosition.
+- [ ] Immutable protocol snapshot + fixed-point entitlements.
+- [ ] Authority validation + idempotent settlement + receipt.
+- [ ] Golden comparison against actual on-chain accounts.
+
+Redemption and Voting remain Phase 2; full hackathon MVP is incomplete. [Audit evidence and gaps](docs/PHASE_1_AUDIT.md).
+
 Legend:
 
 - `[x]` demonstrated / complete for the stated milestone scope.
@@ -472,8 +498,8 @@ Replace the single-file UI with a maintainable client only after protocol bounda
 
 ### Checklist
 
-- [ ] Initialize Vite + React + TypeScript app.
-- [ ] Connect Phantom through supported wallet integration.
+- [x] Initialize Vite + React + TypeScript app (brought forward into R1).
+- [x] Connect Phantom through its injected provider (manual signing).
 - [ ] Use Anchor-generated IDL/types.
 - [ ] Read PDAs rather than duplicating finalized business state in client storage.
 - [ ] Preserve the proven vertical flow from the reference HTML.

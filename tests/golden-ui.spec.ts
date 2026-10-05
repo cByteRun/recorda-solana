@@ -47,3 +47,24 @@ test.describe("Recorda React golden UI", () => {
     await expect(page.getByTestId("holder-C")).toContainText("Investor C");
   });
 });
+
+
+
+test("restored approved action still requires wallet connection", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("kase_real_action_v2", JSON.stringify({
+      actionId: "TEST-RESTORED", status: "APPROVED",
+      signatures: { snapshot: "snapshot", transfer: "transfer", entitlement: "entitlement", approval: "approval" }
+    }));
+  });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();
+});
+
+test("missing Phantom reports an error without unlocking actions", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("connect-wallet").click();
+  await expect(page.getByTestId("app-error")).toBeVisible();
+  await expect(page.getByTestId("deploy-button")).toBeDisabled();
+  await expect(page.getByTestId("busy-state")).toHaveCount(0);
+});

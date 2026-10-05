@@ -1,4 +1,4 @@
-import fixture from "@golden/coupon-happy-path.json";
+import fixture from "@golden/coupon-happy-path.json" with { type: "json" };
 import type { HolderId } from "@/entities/holder/model/types";
 
 export const GOLDEN = fixture;
@@ -23,10 +23,11 @@ export function calculateGoldenEntitlements(snapshot: Record<HolderId, number>) 
 }
 
 export function runGoldenBlackBox() {
-  const snapshot = { ...fixture.expected.snapshot };
+  const snapshot = { ...fixture.input.initialHolderBalances };
   const currentAfterTransfer = { ...fixture.input.initialHolderBalances };
-  currentAfterTransfer.A -= fixture.input.postRecordTransfer.units;
-  currentAfterTransfer.B += fixture.input.postRecordTransfer.units;
+  const { from, to, units } = fixture.input.postRecordTransfer;
+  currentAfterTransfer[from as HolderId] -= units;
+  currentAfterTransfer[to as HolderId] += units;
 
   const entitlementsUsd = calculateGoldenEntitlements(snapshot);
 
@@ -50,8 +51,14 @@ export function goldenPass(actual: ReturnType<typeof runGoldenBlackBox>) {
     mintSupply: fixture.expected.mintSupply,
     snapshot: fixture.expected.snapshot,
     currentAfterTransfer: fixture.expected.currentAfterTransfer,
-    entitlementsUsd: fixture.expected.entitlements,
+    entitlementsUsd: {
+      A: fixture.expected.entitlements.A.amount,
+      B: fixture.expected.entitlements.B.amount,
+      C: fixture.expected.entitlements.C.amount,
+      total: fixture.expected.entitlements.total
+    },
     settlementKusd: fixture.expected.settlementKusd,
     finalStatus: fixture.expected.finalStatus
   });
 }
+

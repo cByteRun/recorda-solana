@@ -127,7 +127,7 @@ export function DashboardPage() {
                 title="Record Date → real balances → immutable snapshot attestation"
                 description="RPC читает A/B/C Token-2022 balances и Operator подписывает snapshot transaction."
                 done={!!sig.snapshot}
-                disabled={!recorda.deployment?.mint || !recorda.operator || !!recorda.busy}
+                disabled={!recorda.deployment?.mint || !recorda.operator || !!sig.snapshot || !!recorda.busy}
                 actionLabel="Create snapshot"
                 onAction={recorda.snapshot}
               />
@@ -136,7 +136,7 @@ export function DashboardPage() {
                 title="A реально переводит 4 KZB26 → B"
                 description="Holder A keypair authorizes Token-2022 transfer. Current state changes; record-date snapshot stays fixed."
                 done={!!sig.transfer}
-                disabled={!sig.snapshot || !!recorda.busy}
+                disabled={!sig.snapshot || !recorda.operator || !!sig.transfer || !!recorda.busy}
                 actionLabel="Transfer A → B"
                 onAction={recorda.transfer}
               />
@@ -145,7 +145,7 @@ export function DashboardPage() {
                 title="Entitlement = function(snapshot), not current balance"
                 description="10/20/5 snapshot produces $500/$1000/$250. This calculation moves into Anchor in Phase 1."
                 done={!!sig.entitlement}
-                disabled={!sig.transfer || !!recorda.busy}
+                disabled={!sig.transfer || !recorda.operator || !!sig.entitlement || !!recorda.busy}
                 actionLabel="Calculate entitlement"
                 onAction={recorda.calculate}
               />
@@ -154,7 +154,7 @@ export function DashboardPage() {
                 title="HITL Operator approval"
                 description="Phantom explicitly signs approval. Automatic calculation does not automatically move assets."
                 done={!!sig.approval}
-                disabled={!sig.entitlement || !!recorda.busy}
+                disabled={!sig.entitlement || !recorda.operator || !!sig.approval || !!recorda.busy}
                 actionLabel="Approve in Phantom"
                 onAction={recorda.approve}
               />
@@ -163,7 +163,7 @@ export function DashboardPage() {
                 title="Real Token-2022 KUSD-DEV settlement"
                 description="500/1000/250 KUSD-DEV moves to holder token accounts. Native SOL remains gas only."
                 done={!!sig.settlement}
-                disabled={!sig.approval || !!recorda.busy}
+                disabled={!sig.approval || !recorda.operator || !!sig.settlement || !!recorda.busy}
                 actionLabel="Settle KUSD"
                 onAction={recorda.settle}
               />
@@ -172,7 +172,7 @@ export function DashboardPage() {
                 title="ActionReceipt → final proof"
                 description="Final signed receipt links the corporate-action stages. Phase 1 replaces Memo receipt with ActionReceipt PDA."
                 done={!!sig.receipt}
-                disabled={!sig.settlement || !!recorda.busy}
+                disabled={!sig.settlement || !recorda.operator || !!sig.receipt || !!recorda.busy}
                 actionLabel="Finalize receipt"
                 onAction={recorda.receipt}
               />
@@ -347,3 +347,4 @@ function ValueCard({ icon, title, text }: { icon: React.ReactNode; title: string
     </Card>
   );
 }
+

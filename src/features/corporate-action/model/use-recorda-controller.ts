@@ -21,7 +21,7 @@ import {
 import { INSTRUMENT, SETTLEMENT } from "@/entities/instrument/model/instrument";
 import type { HolderId, HolderView } from "@/entities/holder/model/types";
 import type { CorporateActionState } from "@/features/corporate-action/model/types";
-import { GOLDEN_EXPECTED, runGoldenBlackBox } from "@/features/corporate-action/model/golden";
+import { GOLDEN_INPUT, GOLDEN_EXPECTED, goldenPass, runGoldenBlackBox } from "@/features/corporate-action/model/golden";
 import { connection, MEMO_PROGRAM_ID } from "@/shared/solana/config";
 import { getPhantom, type PhantomProvider } from "@/shared/solana/phantom";
 import { loadJson, loadOrCreateHolderKeypairs, saveJson, storageKeys } from "@/shared/solana/persistence";
@@ -638,6 +638,7 @@ export function useRecordaController() {
     try {
       const action = loadJson<CorporateActionState>(storageKeys.action);
       if (!action?.signatures.approval || !action.entitlements) throw new Error("Approve first");
+      if (action.signatures.settlement) throw new Error("Action already settled");
       const deployment = await ensureSettlementRail();
       const settlementMint = new PublicKey(deployment.settlementMint!);
       const treasuryAta = new PublicKey(deployment.settlementTreasuryAta!);
@@ -672,6 +673,10 @@ export function useRecordaController() {
       }, operatorRef.current!));
 
       const signature = await send(instructions, [], "KUSD settlement");
+      action.status = "SETTLED";
+      action.signatures.settlement = signature;
+      action.preSettlementKusd = pre;
+      saveJson(storageKeys.action, action);
       await refresh();
 
       const post = Object.fromEntries(
@@ -705,7 +710,7 @@ export function useRecordaController() {
         entitlementSig: action.signatures.entitlement,
         approvalSig: action.signatures.approval,
         settlementSig: action.signatures.settlement,
-        finalStatus: "SETTLED"
+        finalStatus: "FINALIZED"
       };
       const signature = await send(
         [memoInstruction({ ...payload, receiptHash: await sha256(JSON.stringify(payload)) }, operatorRef.current!)],
@@ -730,19 +735,10 @@ export function useRecordaController() {
   const goldenReport = useMemo(() => {
     const actual = runGoldenBlackBox();
     return {
-      input: {
-        initial: { A: 10, B: 20, C: 5 },
-        transfer: "A→B:4"
-      },
+      input: GOLDEN_INPUT,
       expected: GOLDEN_EXPECTED,
       actual,
-      pass:
-        JSON.stringify(actual.snapshot) === JSON.stringify(GOLDEN_EXPECTED.snapshot) &&
-        JSON.stringify(actual.currentAfterTransfer) === JSON.stringify(GOLDEN_EXPECTED.currentAfterTransfer) &&
-        actual.entitlementsUsd.A === GOLDEN_EXPECTED.entitlements.A.amount &&
-        actual.entitlementsUsd.B === GOLDEN_EXPECTED.entitlements.B.amount &&
-        actual.entitlementsUsd.C === GOLDEN_EXPECTED.entitlements.C.amount &&
-        actual.finalStatus === GOLDEN_EXPECTED.finalStatus
+      pass: goldenPass(actual)
     };
   }, []);
 
@@ -761,3 +757,4 @@ export function useRecordaController() {
     goldenReport
   };
 }
+
