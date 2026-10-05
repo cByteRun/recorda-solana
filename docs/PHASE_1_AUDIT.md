@@ -13,6 +13,7 @@ full hackathon MVP and Anchor protocol are not complete.
 - [x] Trace React lifecycle, storage, Phantom signing and Token-2022 calls.
 - [x] Inspect Playwright config and failed remote Actions logs.
 - [x] Correct Node 22 JSON import attribute (remote failure root cause).
+- [x] Trace revealed Buffer is not defined during SPL module evaluation: dynamically load App after Buffer bootstrap; assert no pageerror in UI tests.
 - [x] Commit dependency lockfile; use npm ci in CI.
 - [x] Derive model snapshot from input rather than expected.
 - [x] Compare all modeled outputs; reject corrupted totals/settlement.

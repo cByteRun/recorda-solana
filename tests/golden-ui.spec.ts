@@ -1,4 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect, test as base } from "@playwright/test";
+
+const test = base.extend<{ runtimeErrors: string[] }>({
+  runtimeErrors: [async ({ page }, use) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await use(errors);
+    expect(errors, "browser runtime errors").toEqual([]);
+  }, { auto: true }]
+});
 
 test.describe("Recorda React golden UI", () => {
   test.beforeEach(async ({ page }) => {
