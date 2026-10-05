@@ -4,7 +4,7 @@
 
 React port of the v4 coupon Devnet prototype. Product axis:
 **Record Date → Right → Controlled Execution → Verifiable Proof**.
-Requirements authority: [TZ](docs/TZ.md). Delivery: [ROADMAP](ROADMAP.md).
+Requirements authority: [TZ](TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 
 ## Stack and purpose
 
@@ -45,7 +45,7 @@ Requirements authority: [TZ](docs/TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 | `src/shared/ui/`, `src/shared/lib/` | Button/Card and shared helpers |
 | `golden/coupon-happy-path.json` | Known input and independent expected output |
 | `tests/golden-domain.spec.ts`, `tests/golden-ui.spec.ts` | Domain and browser regression checks |
-| `tests/MANUAL_DEVNET_ACCEPTANCE.md` | Human-signed real-chain acceptance |
+| `docs/MANUAL_DEVNET_ACCEPTANCE.md` | Human-signed real-chain acceptance |
 | `docs/TZ.md`, `docs/PRODUCT.md`, `docs/plan.md` | Requirements, product interpretation and implementation plan |
 | `docs/PHASE_1_AUDIT.md` | Traceability, evidence and remaining gaps |
 | `prototype/` | Frozen v4 HTML behavioral reference |

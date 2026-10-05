@@ -63,7 +63,7 @@ full hackathon MVP and Anchor protocol are not complete.
 Local build and 11 Playwright tests are the intended automated gate. Remote CI
 and Vercel status must be checked for the new commit before declaring release
 readiness. Human signing and real-chain validation follow
-[MANUAL_DEVNET_ACCEPTANCE](../tests/MANUAL_DEVNET_ACCEPTANCE.md).
+[MANUAL_DEVNET_ACCEPTANCE](MANUAL_DEVNET_ACCEPTANCE.md).
 
 ## Wallet and CI follow-up
 

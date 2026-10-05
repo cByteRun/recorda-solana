@@ -1,6 +1,6 @@
 # ROADMAP — Recorda
 
-**Source of truth:** [Technical specification](docs/TZ.md), particularly §§2–5: linking record-date ownership to holder rights, execution and proof.
+**Source of truth:** [Technical specification](TZ.md), particularly §§2–5: linking record-date ownership to holder rights, execution and proof.
 
 > **“Tokenization tells you who owns the asset. We determine what that ownership entitled them to on the record date, execute the corporate action and prove what happened next.”**
 
@@ -365,4 +365,4 @@ These milestones do not cancel unfinished MVP requirements. UCs here are new sce
 
 A feature belongs in MVP if it strengthens the central axis, supports a required scenario or satisfies specification FR/NFR/DoD. Otherwise, it belongs in Post-MVP.
 
-README presents the product. ROADMAP tracks delivery and current focus. [ARCHITECTURE](ARCHITECTURE.md) describes implementation. The [audit](docs/PHASE_1_AUDIT.md) records limitations and evidence.
+README presents the product. ROADMAP tracks delivery and current focus. [ARCHITECTURE](ARCHITECTURE.md) describes implementation. The [audit](PHASE_1_AUDIT.md) records limitations and evidence.

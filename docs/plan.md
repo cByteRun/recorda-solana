@@ -2,7 +2,7 @@
 
 **Status:** next implementation phase after the proven Devnet v4 coupon prototype.  
 **Source of truth:** [`TZ.md`](TZ.md).  
-**Roadmap:** [`../ROADMAP.md`](../ROADMAP.md).
+**Roadmap:** [`../ROADMAP.md`](ROADMAP.md).
 
 ---
 
