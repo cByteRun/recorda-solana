@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Keypair,
@@ -64,7 +65,7 @@ function memoInstruction(payload: unknown, signer?: PublicKey) {
   return new TransactionInstruction({
     keys: signer ? [{ pubkey: signer, isSigner: true, isWritable: false }] : [],
     programId: MEMO_PROGRAM_ID,
-    data: new TextEncoder().encode(JSON.stringify(payload))
+    data: Buffer.from(new TextEncoder().encode(JSON.stringify(payload)))
   });
 }
 
