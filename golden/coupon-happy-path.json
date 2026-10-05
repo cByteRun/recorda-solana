@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "coupon-happy-path",
+  "purpose": "Golden E2E oracle for the Recorda coupon vertical slice. The same business output must be reproduced by the future Anchor implementation.",
+  "input": {
+    "instrument": {
+      "symbol": "KZB26",
+      "supply": 35,
+      "faceValueUsd": 1000,
+      "annualCouponRate": 0.1,
+      "couponFrequency": 2,
+      "bondDecimals": 0,
+      "settlementSymbol": "KUSD-DEV",
+      "settlementDecimals": 2
+    },
+    "initialHolderBalances": {
+      "A": 10,
+      "B": 20,
+      "C": 5
+    },
+    "postRecordTransfer": {
+      "from": "A",
+      "to": "B",
+      "units": 4
+    }
+  },
+  "expected": {
+    "mintSupply": 35,
+    "snapshot": {
+      "A": 10,
+      "B": 20,
+      "C": 5
+    },
+    "currentAfterTransfer": {
+      "A": 6,
+      "B": 24,
+      "C": 5
+    },
+    "entitlements": {
+      "A": {
+        "snapshotUnits": 10,
+        "amount": 500,
+        "formula": "10 * 1000 * 0.10 / 2"
+      },
+      "B": {
+        "snapshotUnits": 20,
+        "amount": 1000,
+        "formula": "20 * 1000 * 0.10 / 2"
+      },
+      "C": {
+        "snapshotUnits": 5,
+        "amount": 250,
+        "formula": "5 * 1000 * 0.10 / 2"
+      },
+      "total": 1750
+    },
+    "settlementKusd": {
+      "A": 500,
+      "B": 1000,
+      "C": 250,
+      "total": 1750
+    },
+    "finalStatus": "FINALIZED",
+    "invariants": [
+      "record-date snapshot remains 10/20/5 after the A-to-B transfer",
+      "current balances become 6/24/5 after the real transfer",
+      "entitlement is calculated from snapshot units, never current units",
+      "operator approval is required before settlement",
+      "each entitlement can be settled at most once",
+      "finalized action has verifiable on-chain state/proof"
+    ]
+  },
+  "referencePrototypeEvidence": {
+    "status": "PASS",
+    "network": "Solana Devnet",
+    "verifiedAt": "2026-10-05",
+    "checks": [
+      "Token-2022 bond mint exists and supply equals 35",
+      "holder Token-2022 accounts exist",
+      "snapshot equals 10/20/5",
+      "real post-record transfer produces 6/24/5",
+      "snapshot remains independent from current balances",
+      "entitlements equal 500/1000/250 and total 1750",
+      "real KUSD-DEV settlement deltas equal 500/1000/250",
+      "snapshot/transfer/entitlement/approval/settlement/receipt transactions are confirmed",
+      "operator signed approval",
+      "holder A signed the A-to-B token transfer"
+    ],
+    "note": "Reference v4 proves the business flow. Snapshot/entitlement/receipt domain enforcement must move from Browser/Memo to the Recorda Anchor program in Phase 1."
+  }
+}
