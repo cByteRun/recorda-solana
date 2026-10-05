@@ -1,0 +1,28 @@
+name: React Golden E2E
+
+on:
+  push:
+    branches:
+      - feat/phase-1-react
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  golden:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install
+
+      - run: npm run build
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e:golden
