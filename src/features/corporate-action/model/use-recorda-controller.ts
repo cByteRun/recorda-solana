@@ -16,7 +16,8 @@ import {
   createTransferCheckedInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
-  getMint
+  getMint,
+  unpackAccount
 } from "@solana/spl-token";
 import { INSTRUMENT, SETTLEMENT } from "@/entities/instrument/model/instrument";
 import type { HolderId, HolderView } from "@/entities/holder/model/types";
@@ -378,25 +379,29 @@ export function useRecordaController() {
     setBusy("Creating record-date snapshot…");
     try {
       if (!operatorRef.current) throw new Error("Connect Phantom first");
-      await refresh();
       const deployment = loadJson<DeploymentState>(storageKeys.deployment);
       if (!deployment?.mint) throw new Error("Deploy KZB26 first");
-
-      const slot = await connection.getSlot("confirmed");
+      const mint = new PublicKey(deployment.mint);
+      const addresses = runtimeHolders.current.map((holder) => getAssociatedTokenAddressSync(
+        mint, holder.keypair.publicKey, false, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID
+      ));
+      // One contextual read replaces refresh + three independent holder reads.
+      // All positions come from the same RPC response; errors never become zero.
+      const accounts = await connection.getMultipleAccountsInfoAndContext(addresses, "confirmed");
+      const slot = accounts.context.slot;
       const blockTime = await connection.getBlockTime(slot);
       const actionId = `CA-COUPON-${Date.now()}`;
-      // Snapshot reads must fail closed: refresh may display zero for an
-      // unavailable account, but that fallback must never become a signed right.
-      const holders = await Promise.all(runtimeHolders.current.map(async (holder) => {
-        if (!holder.bondAta) throw new Error(`Missing bond account for holder ${holder.id}`);
-        const account = await getAccount(connection, holder.bondAta, "confirmed", TOKEN_2022_PROGRAM_ID);
-        if (!account.owner.equals(holder.keypair.publicKey) || !account.mint.equals(new PublicKey(deployment.mint!))) {
+      const holders = runtimeHolders.current.map((holder, index) => {
+        const account = unpackAccount(addresses[index], accounts.value[index], TOKEN_2022_PROGRAM_ID);
+        if (!account.owner.equals(holder.keypair.publicKey) || !account.mint.equals(mint)) {
           throw new Error(`Invalid bond account for holder ${holder.id}`);
         }
         const units = Number(account.amount);
         if (!Number.isSafeInteger(units)) throw new Error(`Unsafe bond balance for holder ${holder.id}`);
+        holder.bondAta = addresses[index];
+        holder.currentBondUnits = units;
         return { id: holder.id, owner: holder.keypair.publicKey.toBase58(), units };
-      }));
+      });
       const base = { actionId, mint: deployment.mint, slot, blockTime, holders };
       const hash = await sha256(JSON.stringify(base));
       const signature = await send(
