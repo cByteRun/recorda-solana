@@ -1,10 +1,10 @@
-import type { PublicKey, Transaction } from "@solana/web3.js";
+import type { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 export interface PhantomProvider {
   isPhantom?: boolean;
   publicKey?: PublicKey;
   connect(): Promise<{ publicKey: PublicKey }>;
-  signTransaction(transaction: Transaction): Promise<Transaction>;
+  signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction>;
 }
 
 declare global {

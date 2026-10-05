@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Buffer } from "buffer";
-import { ComputeBudgetProgram, Connection, Keypair, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, Connection, Keypair, Transaction, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
 import { MEMO_PROGRAM_ID } from "@/shared/solana/config";
 import { phantomSignAndSend, transactionFromInstructions } from "@/shared/solana/transactions";
 import type { PhantomProvider } from "@/shared/solana/phantom";
@@ -27,7 +27,15 @@ function harness() {
   const provider: PhantomProvider = {
     publicKey: operator.publicKey,
     connect: async () => ({ publicKey: operator.publicKey }),
-    signTransaction: async (tx: Transaction) => { calls.sign += 1; tx.partialSign(operator); return tx; }
+    signTransaction: async (tx: Transaction | VersionedTransaction) => {
+      calls.sign += 1;
+      expect(tx).toBeInstanceOf(VersionedTransaction);
+      const versioned = tx as VersionedTransaction;
+      expect(versioned.version).toBe(0);
+      VersionedTransaction.deserialize(versioned.serialize());
+      versioned.sign([operator]);
+      return versioned;
+    }
   };
   const send = () => phantomSignAndSend({ provider, operator: operator.publicKey, instructions: [memo], rpc, label: "snapshot" });
   return { calls, rpc, provider, send };
@@ -81,4 +89,24 @@ test("changed Phantom account is rejected before simulation or signing", async (
   h.provider.publicKey = Keypair.generate().publicKey;
   await expect(h.send()).rejects.toThrow("Phantom account changed");
   expect(h.calls).toEqual({ simulate: 0, sign: 0, send: 0 });
+});
+
+ test("v0 signing preserves a holder partial signature across the wallet boundary", async () => {
+  const h = harness();
+  const holder = Keypair.generate();
+  const instruction = new TransactionInstruction({
+    programId: MEMO_PROGRAM_ID,
+    keys: [operator, holder].map((key) => ({ pubkey: key.publicKey, isSigner: true, isWritable: false })),
+    data: Buffer.from("holder attestation")
+  });
+  h.provider.signTransaction = async (tx) => {
+    const v0 = tx as VersionedTransaction;
+    const before = Uint8Array.from(v0.signatures[1]);
+    expect(before.some((byte) => byte !== 0)).toBe(true);
+    v0.sign([operator]);
+    expect(v0.signatures[1]).toEqual(before);
+    return v0;
+  };
+  await expect(phantomSignAndSend({ provider: h.provider, operator: operator.publicKey,
+    instructions: [instruction], partialSigners: [holder], rpc: h.rpc })).resolves.toBe("submitted-signature");
 });

@@ -1,6 +1,7 @@
 import {
   ComputeBudgetProgram,
   Transaction,
+  TransactionMessage,
   VersionedTransaction,
   type Connection,
   type Keypair,
@@ -61,12 +62,21 @@ export async function phantomSignAndSend({
     const latest = await rpc.getLatestBlockhashAndContext("confirmed");
     tx.feePayer = operator;
     tx.recentBlockhash = latest.value.blockhash;
-    partialSigners.forEach((signer) => tx.partialSign(signer));
+    // Use a canonical v0 wire transaction for both simulation and Phantom.
+    // Avoid passing a legacy Transaction with null signature slots through the
+    // extension's legacy serialization path.
+    const walletTransaction = new VersionedTransaction(new TransactionMessage({
+      payerKey: operator,
+      recentBlockhash: latest.value.blockhash,
+      instructions: tx.instructions
+    }).compileToV0Message());
+    if (partialSigners.length) walletTransaction.sign(partialSigners);
+    walletTransaction.serialize(); // Fail locally on oversized/invalid wire data.
 
     try {
       // Diagnose program/funding errors before Phantom hides simulation failures
       // behind "Unexpected error". Simulation does not sign or submit anything.
-      const simulation = await rpc.simulateTransaction(new VersionedTransaction(tx.compileMessage()), {
+      const simulation = await rpc.simulateTransaction(walletTransaction, {
         sigVerify: false,
         commitment: "confirmed",
         minContextSlot: latest.context.slot
@@ -76,9 +86,9 @@ export async function phantomSignAndSend({
         throw new Error(`${label} simulation failed on Solana Devnet: ${JSON.stringify(simulation.value.err)}${logs ? `\n${logs}` : ""}`);
       }
 
-      let signed: Transaction;
+      let signed: Transaction | VersionedTransaction;
       try {
-        signed = await provider.signTransaction(tx);
+        signed = await provider.signTransaction(walletTransaction);
       } catch (error) {
         if (/unexpected error/i.test(errorMessage(error))) {
           throw new Error(
