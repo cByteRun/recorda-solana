@@ -2,9 +2,9 @@ import { Keypair } from "@solana/web3.js";
 import type { HolderId } from "@/entities/holder/model/types";
 
 const KEYS = {
-  deployment: "recorda_react_deployment_v1",
-  holders: "recorda_react_holders_v1",
-  action: "recorda_react_action_v1"
+  deployment: "kase_real_deployment_v2",
+  holders: "kase_real_holders_v2",
+  action: "kase_real_action_v2"
 } as const;
 
 export interface StoredHolder {
