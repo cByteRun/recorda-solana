@@ -1,620 +1,364 @@
-# ROADMAP — Recorda / KASE Corporate Actions Engine
+# ROADMAP — Recorda
 
-**Source of truth:** [`docs/TZ.md`](docs/TZ.md).  
-**Execution principle:** E2E-first. Each milestone must end in a reproducible business outcome, not merely code completion.  
-**Product axis:** **Record Date → Right → Controlled Execution → Verifiable Proof**.
+**Источник истины:** [ТЗ](docs/TZ.md), прежде всего §§2–5: связь владения на record date с правом держателя, исполнением и доказательством.
 
-## Current focus — Phase 1 React bridge → Anchor Coupon Core
+> **“Tokenization tells you who owns the asset. We determine what that ownership entitled them to on the record date, execute the corporate action and prove what happened next.”**
 
-Branch: `feat/phase-1-react`. React migration was brought forward from M3.1 at the owner's request. It does not complete Phase 1 protocol requirements.
+**Центральная ось: Record Date → Right → Controlled Execution → Verifiable Proof.**
 
-### R1 — React migration and verification
+Каждая фича должна продвигать один из этих этапов или обеспечивать его корректность. UC/FR/NFR/TC ниже — краткая трассировка к ТЗ, а не замена требований. MVP включает Phase 1–4; Post-MVP не подменяет обязательные сценарии.
 
-- [x] React 19 + TypeScript + Vite npm app; no runtime CDN loader.
-- [x] Tailwind v4 and local shadcn-style Button/Card components.
-- [x] FSD-style layers: app/pages/widgets/features/entities/shared.
-- [x] Phantom/manual-signing adapter and Token-2022 coupon orchestration port.
-- [x] Golden input/output fixture and independent input-derived domain oracle.
-- [x] Playwright domain/UI tests, wallet gating and restored-session regression.
-- [x] CI JSON import compatibility fix and committed npm lockfile.
-- [x] README formatting, architecture and requirement audit documentation.
-- [ ] Confirm latest remote CI and Vercel Preview checks after branch update.
-- [ ] Manually repeat React Devnet lifecycle with Phantom; record signatures and payout deltas.
+## Текущий фокус и прогресс
 
-### Next milestone — M1.1, then M1.2–M1.6
+Ветка: **feat/phase-1-react**. Активная фаза: **Phase 1**, milestone **R1 — React coupon bridge**. Следующий protocol milestone: **M1.1**, затем M1.2–M1.6.
 
-- [ ] Anchor workspace + Instrument/HolderPosition.
-- [ ] Immutable protocol snapshot + fixed-point entitlements.
-- [ ] Authority validation + idempotent settlement + receipt.
-- [ ] Golden comparison against actual on-chain accounts.
+- [x] React/npm миграция, UI/domain Playwright и исправления runtime/CI.
+- [x] Последняя проверка кода на commit a09cd7a: build + 11/11 Playwright, [PR CI](https://github.com/cByteRun/recorda-solana/actions/runs/37360917971).
+- [x] README как презентация продукта; FEATURES и UC/FR/NFR в roadmap.
+- [ ] React Devnet acceptance с ручным Phantom signing и сохранёнными tx/deltas.
+- [ ] Preview последней версии: Vercel сообщил build-rate-limit.
+- [ ] Anchor Coupon Core M1.1–M1.6.
+- [ ] Полный MVP: Coupon + Redemption + Voting, protocol security и proof.
 
-Redemption and Voting remain Phase 2; full hackathon MVP is incomplete. [Audit evidence and gaps](docs/PHASE_1_AUDIT.md).
+**Правило галочек:** [x] означает готовность только в указанном scope с доказательством. Реализованный bridge не закрывает on-chain требования. Изменение документации не означает прохождение новой проверки кода.
 
-Legend:
+## Проверка связи требований с результатом
 
-- `[x]` demonstrated / complete for the stated milestone scope.
-- `[ ]` not complete.
-- `UC` / `FR` / `NFR` IDs refer to `docs/TZ.md`.
+**Ось ТЗ → UC/FR/NFR → milestone FEATURES → golden input/expected → implementation → E2E → actual output/proof.**
 
----
+Для каждого milestone нужны: фичи, ожидаемый бизнес-результат, проверка actual против expected и честное описание границы IMPLEMENTED / SIMULATED.
 
-# Phase 0 — Product proof / reference implementation
+| Слой проверки | Что подтверждает | Что не закрывает |
+| --- | --- | --- |
+| Golden model + domain Playwright | Формула, snapshot/current separation, суммы, сравнение выхода | Реальное исполнение или protocol enforcement |
+| UI Playwright | Ось продукта, holder cards, gating, ошибки браузера | Подпись Phantom и выплату |
+| Manual React Devnet acceptance | RPC state, подписи и payout deltas реального bridge | Неизменяемость и idempotency собственного program |
+| Anchor integration E2E (план) | Actual PDA/token state, authority, transitions, повторные вызовы | UX-понятность без проверки интерфейса |
 
-## M0.1 — Real tokenized instrument and holders ✅
+**Dataset gap:** golden содержит A/B/C = 10/20/5; ТЗ §22 задаёт A/B/C/D = 10/5/2/0. Оба воспроизводят центральный invariant, но полный MVP должен проверить и набор ТЗ с нулевым держателем. Golden сохраняется как отдельный regression fixture; ожидаемые значения не меняются ради PASS.
 
-### Goal
+## Phase 0 — доказательство бизнес-flow в reference prototype
 
-Prove that the demo is grounded in real Solana state rather than mock balances.
+### M0.1 — тестовый инструмент и держатели
 
-### Use cases
+**Результат:** оператор видит реальные позиции, из которых позже возникают права.
+**Ось:** вход для Record Date. **UC:** подготовка UC-CP-01, UC-BR-01, UC-VOTE-01.
+**FR:** 01–04,09,40 — инструмент, параметры, выпуск, распределение, баланс, tx.
+**NFR:** 05,10,12 — проверяемость, воспроизводимость, отсутствие hardcoded operator secret.
 
-- Foundation for `UC-CP-01` Coupon Payment.
-- Foundation for `UC-BR-01` Bond Redemption.
-- Foundation for `UC-VOTE-01` Bondholder Voting.
+**FEATURES**
 
-### Requirements covered
+- [x] Reference Token-2022 KZB26, supply 35 и A/B/C = 10/20/5.
+- [x] Disposable holder identities и token accounts.
+- [x] Phantom operator и ссылки на реальные Devnet транзакции.
 
-- FR-01 Create tokenized bond instrument.
-- FR-02 Store financial parameters in the reference fixture.
-- FR-03 Issue Token-2022 test supply.
-- FR-04 Distribute tokens among test holders.
-- FR-09 Display current registered-holder balances.
-- FR-40 Show transaction signatures.
-- NFR-05 Auditability.
-- NFR-10 Devnet reproducibility.
-- NFR-12 No admin private key hardcoded in repository.
+**Проверка / выход:** историческое reference evidence в golden; mint ownership, supply и holder balances прочитаны через RPC. Это не завершённый protocol registry.
 
-### Checklist
+### M0.2 — coupon reference flow
 
-- [x] Real Token-2022 `KZB26` mint on Devnet.
-- [x] Supply = `35` units.
-- [x] Real test holder keypairs A/B/C.
-- [x] Real Token-2022 accounts for A/B/C.
-- [x] Initial balances `10 / 20 / 5`.
-- [x] Phantom operator / fee payer.
-- [x] Real Devnet transaction links.
+**Результат:** после перевода облигаций право на купон остаётся за record-date позицией.
+**Ось:** все четыре этапа в Browser/Memo bridge. **UC:** UC-CP-01.
+**FR:** 10,12,14–16,22–25,27,38–41 — snapshot, entitlement, approval, settlement, proof.
+**NFR:** 01,05,09,10 — повторяемость, аудит и понятное demo; protocol гарантии остаются открытыми.
 
-### DoD
+**FEATURES**
 
-- [x] RPC independently returns mint owner = Token-2022.
-- [x] RPC independently returns supply = `35`.
-- [x] RPC independently returns holder balances = `10 / 20 / 5` before the corporate-action flow.
+- [x] Reference snapshot 10/20/5 и post-record transfer A → B: 4.
+- [x] Текущее владение 6/24/5 при купоне 500/1000/250.
+- [x] Подтверждение Phantom и reference KUSD-DEV settlement.
+- [x] Memo receipt и reference verifier с RPC-проверкой результата.
 
----
+**Проверка / выход:** golden/reference evidence описывает исторический PASS. FR-13,20,26 и NFR-02,03,06,11 не закрываются Memo/browser реализацией.
 
-## M0.2 — Coupon vertical slice with black-box E2E oracle ✅
+## Phase 1 — MVP: React bridge и protocol Coupon Core
 
-### Goal
+### R1 — React coupon bridge и воспроизводимая проверка
 
-Prove the central business hypothesis before writing the custom Anchor protocol.
+**Результат:** тот же предметный flow доступен в поддерживаемом клиенте и проверяется автоматически в доступных границах.
+**Ось:** показывает Record Date → Right → Controlled Execution → Verifiable Proof.
+**UC:** UC-CP-01; объяснение права и проверка результата для ролей ТЗ §6.
+**FR:** клиентская часть 09,14–16,23–25,27,40–41.
+**NFR:** 09,10,12; NFR-11 требует будущего protocol core.
 
-### Use case
+**FEATURES**
 
-- `UC-CP-01` Coupon Payment — reference / bridge implementation.
+- [x] React + TypeScript + Vite/npm, Tailwind v4, local shadcn-style UI.
+- [x] FSD-style структура и port Phantom/Token-2022 orchestration.
+- [x] Holder cards, coupon pipeline, формула, статусы и tx links.
+- [x] Offline oracle из input и полное сравнение с expected.
+- [x] Playwright: snapshot/current invariant, coupon/total, zero, corrupted output, UI/gating/runtime errors.
+- [x] npm lockfile, npm ci, CI build/tests и отчёты.
+- [x] Wallet gating восстановленной сессии и local recorded-settlement guard.
+- [x] README, ARCHITECTURE и аудит границ реализации.
+- [ ] Ручной replay React Devnet acceptance с сохранённым evidence.
+- [ ] Рабочий preview текущей версии после снятия Vercel limit.
 
-### Requirements demonstrated
+**Проверка / выход:** 11/11 automated tests подтверждены для a09cd7a; real React flow подтверждается отдельно по manual acceptance. Offline settlement/FINALIZED — simulation.
 
-- FR-10 Corporate action with record date.
-- FR-12 Capture holder balances.
-- FR-14 Store snapshot slot/time/hash in attestation.
-- FR-15 Post-record transfer does not recalculate snapshot.
-- FR-16 Coupon entitlement calculation.
-- FR-20 Fixed deterministic formula in the fixture.
-- FR-23 Coupon preview.
-- FR-24 Explicit operator approval.
-- FR-25 Real settlement execution using KUSD-DEV.
-- FR-27 Finalize coupon action.
-- FR-38 Unique action ID.
-- FR-39 State-transition evidence via transactions.
-- FR-40 Transaction signatures.
-- FR-41 Final receipt attestation.
-- NFR-01 Determinism.
-- NFR-05 Auditability.
-- NFR-09 UX clarity.
-- NFR-10 Devnet reproducibility.
+### M1.1 — инструмент, eligibility и holder registry
 
-### Checklist
+**Результат:** права создаются для допущенных держателей заданного инструмента.
+**Ось:** основание Record Date. **UC:** setup всех трёх UC.
+**FR:** 01–09,38 — параметры, supply, registry, approve/revoke, transfer control, balances.
+**NFR:** 04,10–12 — authority, reproducibility, protocol truth, key safety.
 
-- [x] Record-date snapshot reads real Token-2022 balances `10 / 20 / 5`.
-- [x] Real post-record transfer `A → B: 4 KZB26`.
-- [x] Current balances become `6 / 24 / 5`.
-- [x] Snapshot remains `10 / 20 / 5`.
-- [x] Entitlements remain `$500 / $1,000 / $250`.
-- [x] Phantom signs explicit approval.
-- [x] Real Token-2022 KUSD-DEV settlement `500 / 1000 / 250`.
-- [x] Receipt transaction finalized.
-- [x] Black-box verifier re-reads network state and reports `E2E PASS`.
+**FEATURES**
 
-### DoD
+- [ ] Anchor workspace, Instrument и HolderPosition PDA.
+- [ ] Параметры обязательства, mint/settlement mint, authority, outstanding/redeemed supply.
+- [ ] Registry: register/approve/revoke держателя и связь с token account.
+- [ ] Контроль transfer eligibility без обхода registry (FR-08).
+- [ ] Валидация Token-2022 mint/account и чтение позиций клиентом.
 
-- [x] `golden/coupon-happy-path.json` expected output equals independently read actual output.
-- [x] Every reference transaction is confirmed/finalized.
-- [x] Holder A signs the A→B bond transfer.
-- [x] Connected operator signs approval.
-- [x] Real KUSD settlement deltas equal entitlements.
+**Проверка / выход:** integration tests отклоняют чужую authority и неподходящие accounts; registry/параметры восстанавливаются с chain после reload.
 
-### Known limitation / exit condition
+### M1.2 — record date и immutable snapshot
 
-This milestone proves the **business flow**, not final protocol trust. Snapshot semantics, entitlement calculation and final action state are still orchestrated by browser code and recorded through Memo attestations.
+**Результат:** известно, кто и сколько имел на нужную дату; последующие transfers не переписывают права.
+**Ось:** Record Date. **UC:** UC-CP-01, UC-BR-01, UC-VOTE-01.
+**FR:** 10–15,38–39 — action, authority, snapshot, finalization, metadata, transitions.
+**NFR:** 04,06,11 — авторизация, неизменяемость, protocol truth.
 
-**Exit to Phase 1:** custom Anchor program becomes the source of finalized corporate-action truth.
+**FEATURES**
 
----
+- [ ] CorporateAction PDA и допустимые переходы lifecycle.
+- [ ] SnapshotPosition по eligible holder с проверкой источника balance.
+- [ ] create action → snapshot holders → finalize snapshot.
+- [ ] Slot/time/hash и запрет изменения finalized snapshot.
+- [ ] Реальный post-record transfer без изменения snapshot.
 
-# Phase 1 — MVP Protocol Core: Move Corporate Action Truth On-Chain
+**Проверка / выход:** TC-03,16,17; golden snapshot 10/20/5 при current 6/24/5. Неверные balances, mutation и transitions отклоняются on-chain.
 
-## M1.1 — Anchor workspace + Instrument / Holder state
+### M1.3 — права держателя и финансовый расчёт
 
-### Goal
+**Результат:** каждому держателю положена объяснимая сумма из record-date позиции.
+**Ось:** Right. **UC:** UC-CP-01; основа principal/final coupon и voting power.
+**FR:** 16–22 — виды прав, integer math, per-holder entitlement и total.
+**NFR:** 01,02,11 — детерминизм, точность, protocol truth.
 
-Create the minimal protocol foundation without rewriting the working business flow.
+**FEATURES**
 
-### Use cases
+- [ ] EntitlementPosition PDA и integer/fixed-point coupon calculation.
+- [ ] Расчёт из Instrument + SnapshotPosition; frontend amount не является authoritative.
+- [ ] Aggregate obligation и валидация параметров/overflow.
+- [ ] Контракты данных для principal, final coupon и snapshot voting power.
 
-- Instrument setup used by all three required scenarios.
-- Holder eligibility used by all three required scenarios.
+**Проверка / выход:** TC-01,02,05; 500/1000/250, total 1750, zero = 0; неверный client amount не меняет protocol результат.
 
-### Requirements
+### M1.4 — подтверждение и однократная выплата
 
-- FR-01, FR-02, FR-05.
-- FR-06 Holder registry.
-- FR-07 Approve/revoke test holder.
-- FR-09 Current holder balance view.
-- FR-38 Unique PDA identity.
-- NFR-04 Authorization.
-- NFR-11 Critical finalized state must not depend on UI/backend.
-- NFR-12 No hardcoded admin keys.
+**Результат:** проверенное право исполняется после разрешения и без повторной выплаты.
+**Ось:** Controlled Execution. **UC:** UC-CP-01.
+**FR:** 23–27 — preview, approval, settlement, no double payment, finalization.
+**NFR:** 03,04,07,08 — idempotency, authority, atomicity, recovery.
 
-### Checklist
+**FEATURES**
 
-- [ ] Initialize Anchor workspace.
-- [ ] Create `Instrument` PDA.
-- [ ] Store mint, settlement mint, face value, coupon bps, frequency, maturity, authorities and status.
-- [ ] Create `HolderPosition` PDA.
-- [ ] Implement `register_holder`.
-- [ ] Implement `revoke_holder`.
-- [ ] Validate Token-2022 mint/account ownership.
-- [ ] Add TypeScript integration tests.
+- [ ] Preview распределения и approve_action с проверкой authority.
+- [ ] Контролируемый settlement vault и Token-2022 transfer_checked CPI.
+- [ ] Per-holder settled state и запрет второго settlement.
+- [ ] Безопасное продолжение partial batch без повторной выплаты.
+- [ ] Проверка funding и total settled против obligation.
 
-### DoD
+**Проверка / выход:** TC-04,15,17–19; actual KUSD deltas = 500/1000/250. Повторный/неавторизованный вызов не переводит средства.
 
-- [ ] Unauthorized wallet cannot mutate instrument/registry.
-- [ ] Instrument financial parameters are read from PDA, not frontend constants.
-- [ ] Holder registry can be reproduced from chain state after refreshing/restarting the client.
+### M1.5 — receipt и история прав/исполнений
 
----
+**Результат:** инвестор и аудитор видят, когда право возникло, почему и что исполнено.
+**Ось:** Verifiable Proof. **UC:** investor/auditor flows ТЗ §§6,21.
+**FR:** 38–42 — identity, events, tx, receipt, read-only verification.
+**NFR:** 05,09,11 — аудит, понятность, chain state.
 
-## M1.2 — CorporateAction state machine + immutable record-date snapshot
+**FEATURES**
 
-### Goal
+- [ ] ActionReceipt PDA и finalize только после исполнения обязательства.
+- [ ] Events/tx references связывают snapshot, entitlement, approval и outcome.
+- [ ] История держателя из action/entitlement state, отдельно от текущего wallet balance.
+- [ ] Read-only объяснение формулы и проверка результата.
 
-Move the product's most important truth — **who held how much on the record date** — into protocol-owned state.
+**Проверка / выход:** A: record-date 10, current 6, право/выплата 500 и финальный receipt. Неисполненное действие нельзя финализировать.
 
-### Use cases
+### M1.6 — полный golden Coupon protocol E2E
 
-- `UC-CP-01` snapshot stage.
-- `UC-BR-01` snapshot stage.
-- `UC-VOTE-01` voting-power snapshot stage.
+**Результат:** бизнес-ось подтверждается actual chain state, а не только карточками или моделью.
+**Ось:** все четыре этапа. **UC:** UC-CP-01.
+**FR:** совместная приёмка M1.1–M1.5. **NFR:** 01–12 в scope Coupon.
 
-### Requirements
+**FEATURES**
 
-- FR-10 Create corporate action with record date.
-- FR-11 Authorized snapshot only.
-- FR-12 Capture eligible-holder balances.
-- FR-13 Finalize immutable snapshot.
-- FR-14 Store timestamp/slot/hash or equivalent proof metadata.
-- FR-15 Ignore post-record transfers for finalized snapshot.
-- FR-38 / FR-39 Action identity and transitions.
-- NFR-04 Authorization.
-- NFR-06 Snapshot immutability.
-- NFR-11 Protocol as source of truth.
+- [ ] Golden fixture → initialize → snapshot → transfer → entitlement → approve → settle → receipt.
+- [ ] Oracle сравнивает PDA/token-account actual с independent expected.
+- [ ] Negative tests: unauthorized, mutation, double settlement, wrong accounts, invalid transitions.
+- [ ] Replay набора ТЗ §22 с A/B/C/D и zero holder, отдельно от regression golden.
+- [ ] Playwright читает/показывает protocol result; ручная подпись остаётся у человека.
 
-### Checklist
+**Проверка / выход:** TC-01–05,15–19 проходят; права/исполнение совпадают с expected; Memo не является источником domain truth.
 
-- [ ] Create `CorporateAction` PDA.
-- [ ] Define state machine: `DRAFT → SNAPSHOTTING → SNAPSHOTTED → CALCULATED → APPROVED → SETTLING → SETTLED → FINALIZED`.
-- [ ] Create per-holder `SnapshotPosition` PDA for hackathon scale.
-- [ ] Implement `create_corporate_action`.
-- [ ] Implement `snapshot_holder`.
-- [ ] Implement `finalize_snapshot`.
-- [ ] Reject snapshot mutation after finalization.
-- [ ] Test real post-record Token-2022 transfer after snapshot.
+## Phase 2 — MVP: три corporate actions на одном движке
 
-### DoD
+### M2.1 — погашение облигации
 
-- [ ] Golden scenario: snapshot remains `10 / 20 / 5` while live token accounts become `6 / 24 / 5`.
-- [ ] Attempt to modify finalized snapshot fails on-chain.
-- [ ] Browser cannot submit arbitrary snapshot units that disagree with validated holder state for the chosen snapshot mechanism.
+**Результат:** держатель получает principal/final coupon, соответствующие units прекращают обращение.
+**Ось:** Right → Controlled Execution → Verifiable Proof, общий Record Date.
+**UC:** UC-BR-01. **FR:** 05,17–18,28–32,41.
+**NFR:** 01–08,11 — точность, корректность, однократность и доказательство.
 
----
+**FEATURES**
 
-## M1.3 — EntitlementPosition + deterministic financial math
+- [ ] Redemption action по maturity и общему snapshot.
+- [ ] Principal и отдельный final coupon.
+- [ ] Подтверждение authority и settlement.
+- [ ] Burn/retire/lock units и outstanding/redeemed supply.
+- [ ] Защита от double redemption и receipt результата.
 
-### Goal
+**Проверка / выход:** TC-06–10; 10 bonds → 10000 principal плюс заданный coupon; redeemed units нельзя погасить снова.
 
-Make the program — not JavaScript — calculate and persist holder rights.
+### M2.2 — голосование держателей
 
-### Use cases
+**Результат:** голос соответствует позиции на record date и учитывается ровно один раз.
+**Ось:** общий Record Date → voting Right → vote → Proof.
+**UC:** UC-VOTE-01. **FR:** 19,33–37,41.
+**NFR:** 01,03–06,11 — детерминизм, once-only, authority, аудит и immutability.
 
-- `UC-CP-01` coupon entitlement.
-- Foundation for `UC-BR-01` principal/final coupon.
-- Foundation for `UC-VOTE-01` voting power.
+**FEATURES**
 
-### Requirements
+- [ ] Proposal, record date, voting window и quorum.
+- [ ] Voting power из finalized snapshot.
+- [ ] YES/NO/ABSTAIN и VoteReceipt.
+- [ ] Запрет double vote и проверка deadline.
+- [ ] Final on-chain tally/quorum и proof.
 
-- FR-16 Coupon entitlement.
-- FR-17 Redemption principal foundation.
-- FR-18 Final coupon foundation.
-- FR-19 Voting power foundation.
-- FR-20 Integer/fixed-point arithmetic.
-- FR-21 Per-holder entitlement on-chain.
-- FR-22 Aggregate total obligation.
-- NFR-01 Determinism.
-- NFR-02 Precision.
-- NFR-11 Protocol source of truth.
+**Проверка / выход:** TC-11–14; post-record transfer не меняет power; итог равен сумме валидных votes.
 
-### Checklist
+### M2.3 — общий lifecycle engine
 
-- [ ] Create `EntitlementPosition` PDA.
-- [ ] Implement integer coupon formula using snapshot units and `Instrument` parameters.
-- [ ] Implement `calculate_entitlement`.
-- [ ] Prevent frontend from providing the final calculated amount as authoritative input.
-- [ ] Accumulate / validate total obligation.
-- [ ] Add tests for zero balance and exact 10-bond coupon.
+**Результат:** новые события используют единый механизм обслуживания прав.
+**Ось:** все четыре этапа. **UC:** все три UC.
+**FR:** 06,10–15,21–24,38–42. **NFR:** 01,04–06,09,11.
 
-### DoD
+**FEATURES**
 
-- [ ] For `A/B/C snapshot = 10/20/5`, program outputs `500/1000/250` KUSD.
-- [ ] Identical inputs always produce identical outputs.
-- [ ] No floating-point arithmetic exists in the program.
-- [ ] Deliberately wrong frontend amount cannot alter protocol entitlement.
+- [ ] Общие Instrument/Registry/Snapshot и правила authority.
+- [ ] Общая identity/history/receipt модель с action-specific расчётами.
+- [ ] Явное различие общего lifecycle и Coupon/Redemption/Voting логики в UI.
 
----
+**Проверка / выход:** 3/3 actual E2E сценария; каждое завершённое событие имеет проверяемый результат.
 
-## M1.4 — HITL approval + settlement CPI + idempotency
+## Phase 3 — MVP: объяснение прав в продукте
 
-### Goal
+### M3.1 — клиент читает protocol truth
 
-Turn a calculated right into controlled execution and guarantee no double payment.
+**Результат:** открытие клиента восстанавливает историю и права независимо от локального состояния.
+**Ось:** представление всей цепочки. **UC:** операторские сценарии всех UC.
+**FR:** 02,05,09,14,21–23,38–41. **NFR:** 09–12.
 
-### Use case
+**FEATURES**
 
-- `UC-CP-01` approval and settlement.
+- [x] React/Vite shell и Phantom adapter (реализованы заранее в R1).
+- [ ] Generated Anchor IDL/types и PDA reads.
+- [ ] UI finalized state из chain; localStorage только для необязательного resume/cache.
+- [ ] Refresh/restart восстанавливает lifecycle и holder rights.
 
-### Requirements
+**Проверка / выход:** UI данные совпадают с PDA после reload; client не определяет финальную сумму.
 
-- FR-23 Preview distribution.
-- FR-24 Explicit approval.
-- FR-25 Settlement.
-- FR-26 Double-payment protection.
-- FR-27 Finalize coupon action.
-- NFR-03 Idempotency.
-- NFR-04 Authorization.
-- NFR-07 Atomicity where possible.
-- NFR-08 Recoverability.
+### M3.2 — Operator / Investor / Auditor journeys
 
-### Checklist
+**Результат:** за 30–60 секунд понятно, кому какое право положено и где доказательство.
+**Ось:** Record Date → Right → Controlled Execution → Verifiable Proof.
+**UC:** три corporate actions и роль-specific flows ТЗ §§6,21.
+**FR:** 02,05–09,14,21–25,33–34,38–42. **NFR:** 05,09,10.
 
-- [ ] Implement `approve_action` with operator authority constraint.
-- [ ] Implement `settle_holder` using Token-2022 `transfer_checked` CPI for KUSD-DEV.
-- [ ] Store destination, settled amount and settled timestamp in `EntitlementPosition`.
-- [ ] Reject second settlement of a settled entitlement.
-- [ ] Allow safe continuation after partial batch settlement.
-- [ ] Track aggregate settled amount.
+**FEATURES**
 
-### DoD
+- [ ] Instruments и holder registry с eligibility/current balance.
+- [ ] Timeline corporate actions и action detail с record date/formula/status.
+- [ ] Operator preview/approval/execution.
+- [ ] Investor: «что было положено, почему, что исполнено».
+- [ ] Auditor: snapshot/obligation/processed totals/mismatches/tx/receipt.
+- [ ] IMPLEMENTED/SIMULATED видимы в нужном контексте.
 
-- [ ] Unauthorized approval fails.
-- [ ] A receives exactly `500 KUSD`, B `1000`, C `250` from program-controlled flow.
-- [ ] Repeating `settle_holder(A)` fails without an additional transfer.
-- [ ] Partial A/B settlement can resume with C without paying A/B twice.
+**Проверка / выход:** Playwright journeys для доступных шагов и manual signing boundary; demo делает pitch очевидным за 30–60 секунд.
 
----
+## Phase 4 — MVP: приёмка и подача
 
-## M1.5 — ActionReceipt + holder corporate-action history
+### M4.1 — корректность и безопасность
 
-### Goal
+**Результат:** права и исполнения корректны при штатных и ошибочных вызовах.
+**Ось:** гарантии всех четырёх этапов. **UC:** все три UC.
+**FR:** 08,11,13,20,24,26,30–32,36–42. **NFR:** 01–12.
 
-Make the system answer not only “what is the wallet balance?” but **who received what, for which record date, why, and when**.
+**FEATURES**
 
-### Use cases
+- [ ] TC-01–19 automated где возможно; ручные границы документированы.
+- [ ] Integer math, authority, immutable snapshot и valid transitions.
+- [ ] No double settle/redeem/vote и partial recovery.
+- [ ] Чистый Devnet run, protocol/UI совпадение и отсутствие known P0/P1.
+- [ ] Operator secret не находится в repository/frontend.
 
-- `UC-AUDIT-01` View holder corporate-action history.
-- `UC-INVESTOR-01` Explain my entitlement.
-- Auditor flow from the TZ.
+**Проверка / выход:** mismatch/double execution/unauthorized execution = 0 в acceptance dataset.
 
-### Requirements
+### M4.2 — воспроизводимое demo и submission
 
-- FR-39 State-transition logging/events.
-- FR-40 Transaction proof in client/indexer.
-- FR-41 Final ActionReceipt.
-- FR-42 Read-only verification view.
-- NFR-05 Auditability.
-- NFR-09 UX clarity.
+**Результат:** judge понимает идею и воспроизводит результат.
+**Ось:** pitch → live rights lifecycle → proof.
+**UC/FR:** все обязательные сценарии и DoD ТЗ §24. **NFR:** 05,09,10.
 
-### Checklist
+**FEATURES**
 
-- [ ] Create `ActionReceipt` PDA.
-- [ ] Implement `finalize_action` only after obligation is fully satisfied.
-- [ ] Emit corporate-action events.
-- [ ] Expose per-holder history from `SnapshotPosition + EntitlementPosition`.
-- [ ] Investor explanation displays record-date units, formula inputs, entitlement and settled amount.
-- [ ] Auditor view resolves action state plus relevant transaction signatures.
+- [x] README: проблема, решение, целевая аудитория, edge и продуктовая ось.
+- [x] Инструкции локального запуска, architecture и implemented/simulated границы.
+- [ ] Полный working MVP по DoD ТЗ §24 и таблица подтверждённого покрытия.
+- [ ] Demo video: полный E2E Coupon/Redemption/Voting, не только интерфейс.
+- [ ] Devnet evidence и понятный способ независимой проверки.
 
-### DoD
+**Проверка / выход:** 3/3 сценария, 100% finalized outcomes с proof; README позволяет повторить demo.
 
-- [ ] Holder A history can show: record date `10 KZB26`, current balance `6`, entitlement `500 KUSD`, settled `500 KUSD`, finalized status and tx proof.
-- [ ] Current KUSD wallet balance is not used as a substitute for payment history.
-- [ ] Finalized action has an on-chain receipt owned by the Recorda program.
+## Post-MVP — расширение обслуживаемых прав и интеграций
 
----
+Эти milestones не отменяют незакрытые MVP требования. UC здесь — новые сценарии, которые сначала должны быть утверждены в ТЗ; существующие NFR остаются обязательными.
 
-## M1.6 — Golden Anchor E2E parity
+### P1 — масштабирование и инфраструктурные роли
 
-### Goal
+**Ось:** scalable Record Date и Controlled Execution/Proof.
+**Связь с ТЗ:** §26 P1; развитие FR-06,12–14,24,39–42 и NFR-04–05,08–11.
 
-Replace the current Browser/Memo black box while preserving the exact verified business output.
+**FEATURES**
 
-### Requirements
+- [ ] Merkle commitment / indexer для больших реестров.
+- [ ] Batch processing и richer transfer controls поверх обязательного FR-08.
+- [ ] Issuer/operator/auditor separation и multisig.
+- [ ] Downloadable reports и расширенная timeline.
 
-- TC-01, TC-03, TC-04, TC-05.
-- TC-15, TC-16, TC-17, TC-18, TC-19.
-- NFR-01 through NFR-12 where applicable to Coupon.
+**Проверка / выход:** масштабирование не меняет golden права; batching не создаёт повторную обработку.
 
-### Checklist
+### P2 — дополнительные виды corporate actions
 
-- [ ] Consume [`golden/coupon-happy-path.json`](golden/coupon-happy-path.json) in test harness.
-- [ ] Initialize `10 / 20 / 5`.
-- [ ] Finalize snapshot `10 / 20 / 5`.
-- [ ] Transfer `A→B:4` and observe current `6 / 24 / 5`.
-- [ ] Program entitlement remains `500 / 1000 / 250`.
-- [ ] Settle `500 / 1000 / 250 KUSD`.
-- [ ] Finalize ActionReceipt.
-- [ ] Negative tests for unauthorized, mutation and double settlement.
+**Ось:** новые Rights на общем lifecycle.
+**Связь с ТЗ:** §26 P2; новые UC/FR перед реализацией, NFR-01–08,11.
 
-### DoD
+**FEATURES**
 
-- [ ] `expected == actual` for the golden fixture.
-- [ ] Coupon protocol E2E passes without Memo being the source of domain truth.
-- [ ] Browser can be replaced without changing financial outcome.
+- [ ] Early/partial redemption.
+- [ ] Dividends, tender offer/buyback.
+- [ ] Conversion и modification of terms workflow.
 
----
+**Проверка / выход:** отдельный golden/acceptance contract для каждого нового права и исполнения.
 
-# Phase 2 — MVP Required Corporate Actions (3/3)
+### P3 — внешние интеграции и production model
 
-## M2.1 — Bond Redemption
+**Ось:** eligibility → controlled external execution → proof.
+**Связь с ТЗ:** §§20,25–26; новые UC/FR, NFR-03–05,07–08,11–12.
 
-### Goal
+**FEATURES**
 
-Satisfy the second required KASE scenario using the same snapshot/entitlement/execution engine.
+- [ ] KYC/AML, custody/recovery и внешние fiat/bank rails.
+- [ ] KASE/KCSD/depository adapters после проверки требований интеграции.
+- [ ] Production security review и операционная/legal модель до Mainnet.
 
-### Use case
+**Проверка / выход:** внешний settlement reference связан с entitlement; фактическое исполнение и initiation ясно различаются.
 
-- `UC-BR-01` Bond Redemption at maturity.
+## Фильтр scope
 
-### Requirements
+Фича входит в MVP, если усиливает центральную ось, нужна обязательному сценарию или закрывает FR/NFR/DoD ТЗ. Иначе — Post-MVP.
 
-- FR-17 Principal calculation.
-- FR-18 Final coupon.
-- FR-28 Start redemption at maturity.
-- FR-29 Principal settlement.
-- FR-30 Burn/retire/lock redeemed units.
-- FR-31 No double redemption.
-- FR-32 Mark instrument redeemed when fully redeemed.
-- NFR-03, NFR-04, NFR-07, NFR-08.
-
-### Checklist
-
-- [ ] Create `REDEMPTION` action using common `CorporateAction` model.
-- [ ] Calculate principal = snapshot units × face value.
-- [ ] Calculate final coupon separately when due.
-- [ ] Settle principal/final coupon in KUSD-DEV.
-- [ ] CPI burn/retire/lock corresponding KZB26 units.
-- [ ] Track redeemed/outstanding supply.
-- [ ] Reject second redemption.
-
-### DoD
-
-- [ ] 10 bonds produce `10,000 KUSD` principal plus configured final coupon.
-- [ ] Redeemed units are no longer active outstanding bonds.
-- [ ] Same units cannot be redeemed twice.
-- [ ] Full redemption moves instrument to final redeemed state.
-- [ ] Final ActionReceipt exists.
-
----
-
-## M2.2 — Bondholder Voting
-
-### Goal
-
-Satisfy the required additional corporate action and prove reuse of the same record-date layer beyond payments.
-
-### Use case
-
-- `UC-VOTE-01` Bondholder Voting.
-
-### Requirements
-
-- FR-19 Voting power.
-- FR-33 Proposal.
-- FR-34 Record date/window/quorum.
-- FR-35 YES/NO/ABSTAIN.
-- FR-36 No double vote.
-- FR-37 Final tally on-chain.
-- NFR-01, NFR-03, NFR-04, NFR-06.
-
-### Checklist
-
-- [ ] Create proposal linked to instrument and record-date action.
-- [ ] Voting power = finalized snapshot units.
-- [ ] Implement YES/NO/ABSTAIN receipt.
-- [ ] Reject second vote by same holder for same proposal.
-- [ ] Finalize tally on-chain.
-- [ ] Demonstrate that post-record transfers do not alter voting power.
-
-### DoD
-
-- [ ] Holder voting power exactly matches record-date snapshot.
-- [ ] No double vote.
-- [ ] Tally equals sum of valid vote receipts.
-- [ ] Final voting ActionReceipt / result is verifiable.
-
----
-
-## M2.3 — Common lifecycle engine validation
-
-### Goal
-
-Prove that Coupon, Redemption and Voting are configurations of one lifecycle engine, not three unrelated demos.
-
-### Checklist
-
-- [ ] Common `Instrument` and `HolderPosition` reused.
-- [ ] Common `CorporateAction` identity/state principles reused.
-- [ ] Common record-date/snapshot layer reused.
-- [ ] Common authorization/audit conventions reused.
-- [ ] UI clearly distinguishes action-specific logic from shared lifecycle infrastructure.
-
-### DoD
-
-- [ ] Required scenarios demonstrated E2E: **3/3**.
-- [ ] Every finalized action has verifiable on-chain proof: **100%**.
-
----
-
-# Phase 3 — MVP Product UX / React / Audit
-
-## M3.1 — React + Vite dApp shell
-
-### Goal
-
-Replace the single-file UI with a maintainable client only after protocol boundaries are stable.
-
-### Requirements
-
-- NFR-09 UX clarity.
-- NFR-10 Devnet reproducibility.
-- NFR-11 Separation of UI from protocol truth.
-
-### Checklist
-
-- [x] Initialize Vite + React + TypeScript app (brought forward into R1).
-- [x] Connect Phantom through its injected provider (manual signing).
-- [ ] Use Anchor-generated IDL/types.
-- [ ] Read PDAs rather than duplicating finalized business state in client storage.
-- [ ] Preserve the proven vertical flow from the reference HTML.
-
-### DoD
-
-- [ ] Refreshing/restarting browser reconstructs corporate-action state from Solana.
-- [ ] React contains presentation/orchestration only; final entitlement is not client-authoritative.
-
----
-
-## M3.2 — Operator / Investor / Auditor views
-
-### Goal
-
-Make the financial logic understandable to non-blockchain judges and users.
-
-### Checklist
-
-- [ ] Instruments view.
-- [ ] Holder Registry view.
-- [ ] Corporate Actions timeline.
-- [ ] Action detail with Record Date → Snapshot → Entitlement → Approval → Execution → Proof.
-- [ ] Investor “Why did I receive this amount?” view.
-- [ ] Holder corporate-action payment/history view.
-- [ ] Auditor read-only verification view.
-- [ ] Explorer links / transaction proof.
-
-### DoD
-
-A judge can understand the product without reading source code and can independently verify each core outcome.
-
----
-
-# Phase 4 — MVP Hardening & Hackathon Submission
-
-## M4.1 — Acceptance/security matrix
-
-### Checklist
-
-- [ ] TC-01…TC-19 automated where practical.
-- [ ] No float financial math.
-- [ ] No hardcoded authority secret.
-- [ ] Invalid state transitions rejected.
-- [ ] Unauthorized execution rejected.
-- [ ] Double settlement rejected.
-- [ ] Double redemption rejected.
-- [ ] Double voting rejected.
-- [ ] Partial settlement recovery tested.
-
-### DoD
-
-- [ ] Required scenarios pass on clean Devnet deployment.
-- [ ] Golden coupon test is reproducible.
-- [ ] No known P0/P1 correctness failure.
-
----
-
-## M4.2 — Submission package
-
-### Checklist
-
-- [ ] Working prototype.
-- [ ] Source repository.
-- [ ] README quick start.
-- [ ] Technical overview: architecture, record-date logic, entitlement, settlement, Solana components.
-- [ ] Explicit IMPLEMENTED vs SIMULATED table.
-- [ ] Demo video showing full E2E, not static screens.
-- [ ] Public/reproducible Devnet evidence as appropriate.
-
-### DoD — Hackathon MVP
-
-All source-of-truth DoD items in `docs/TZ.md §24` are satisfied, including Coupon, Redemption, Voting and final on-chain proof.
-
----
-
-# Post-MVP
-
-## P1 — Scale and market-infrastructure fit
-
-- [ ] Merkle snapshot commitment for large holder sets.
-- [ ] Indexer / snapshot service for scalable holder enumeration.
-- [ ] Token ACL / richer permissioned transfer controls.
-- [ ] Separate issuer/operator/auditor roles.
-- [ ] Squads / multisig authorization.
-- [ ] Downloadable action reports.
-- [ ] Rich event timeline and reporting.
-
-## P2 — More corporate actions
-
-- [ ] Early redemption.
-- [ ] Partial redemption.
-- [ ] Dividends.
-- [ ] Tender offer / buyback.
-- [ ] Token conversion.
-- [ ] Modification of instrument terms.
-
-## P3 — Production integrations
-
-- [ ] Real KYC/AML provider.
-- [ ] External fiat/bank settlement rail adapter.
-- [ ] KASE/KCSD/depository integration research and adapters.
-- [ ] Custody / recovery model.
-- [ ] Production security review/audit.
-- [ ] Mainnet operational model only after legal/compliance validation.
-
----
-
-# Scope guard
-
-Do not add a feature to MVP unless at least one is true:
-
-1. it improves **Record Date → Right → Controlled Execution → Verifiable Proof**;
-2. it is required by a KASE scenario / minimum prototype requirement;
-3. it closes a listed FR/NFR/DoD gap;
-4. it materially improves live-demo understanding of the core lifecycle.
-
-Otherwise it belongs in Post-MVP.
+README презентует продукт. ROADMAP показывает доставку и текущий фокус. [ARCHITECTURE](ARCHITECTURE.md) описывает реализацию. [Аудит](docs/PHASE_1_AUDIT.md) фиксирует ограничения и доказательства.
