@@ -1,364 +1,364 @@
 # ROADMAP — Recorda
 
-**Источник истины:** [ТЗ](docs/TZ.md), прежде всего §§2–5: связь владения на record date с правом держателя, исполнением и доказательством.
+**Source of truth:** [Technical specification](docs/TZ.md), particularly §§2–5: linking record-date ownership to holder rights, execution and proof.
 
 > **“Tokenization tells you who owns the asset. We determine what that ownership entitled them to on the record date, execute the corporate action and prove what happened next.”**
 
-**Центральная ось: Record Date → Right → Controlled Execution → Verifiable Proof.**
+**Central axis: Record Date → Right → Controlled Execution → Verifiable Proof.**
 
-Каждая фича должна продвигать один из этих этапов или обеспечивать его корректность. UC/FR/NFR/TC ниже — краткая трассировка к ТЗ, а не замена требований. MVP включает Phase 1–4; Post-MVP не подменяет обязательные сценарии.
+Every feature must advance one of these stages or ensure its correctness. UC/FR/NFR/TC below provide concise traceability to the specification and do not replace its requirements. MVP includes Phases 1–4; Post-MVP does not replace required scenarios.
 
-## Текущий фокус и прогресс
+## Current focus and progress
 
-Ветка: **feat/phase-1-react**. Активная фаза: **Phase 1**, milestone **R1 — React coupon bridge**. Следующий protocol milestone: **M1.1**, затем M1.2–M1.6.
+Branch: **feat/phase-1-react**. Active phase: **Phase 1**, milestone **R1 — React coupon bridge**. Next protocol milestone: **M1.1**, followed by M1.2–M1.6.
 
-- [x] React/npm миграция, UI/domain Playwright и исправления runtime/CI.
-- [x] Последняя проверка кода на commit a09cd7a: build + 11/11 Playwright, [PR CI](https://github.com/cByteRun/recorda-solana/actions/runs/37360917971).
-- [x] README как презентация продукта; FEATURES и UC/FR/NFR в roadmap.
-- [ ] React Devnet acceptance с ручным Phantom signing и сохранёнными tx/deltas.
-- [ ] Preview последней версии: Vercel сообщил build-rate-limit.
+- [x] React/npm migration, UI/domain Playwright and runtime/CI fixes.
+- [x] Last code verification at commit a09cd7a: build + 11/11 Playwright, [PR CI](https://github.com/cByteRun/recorda-solana/actions/runs/37360917971).
+- [x] README as product presentation; FEATURES and UC/FR/NFR in the roadmap.
+- [ ] React Devnet acceptance with manual Phantom signing and recorded transactions/deltas.
+- [ ] Latest-version preview: Vercel reported build-rate-limit.
 - [ ] Anchor Coupon Core M1.1–M1.6.
-- [ ] Полный MVP: Coupon + Redemption + Voting, protocol security и proof.
+- [ ] Full MVP: Coupon + Redemption + Voting, protocol security and proof.
 
-**Правило галочек:** [x] означает готовность только в указанном scope с доказательством. Реализованный bridge не закрывает on-chain требования. Изменение документации не означает прохождение новой проверки кода.
+**Checkbox rule:** [x] means completion only within the stated scope and with evidence. An implemented bridge does not satisfy on-chain requirements. Documentation changes do not imply that a new code verification has passed.
 
-## Проверка связи требований с результатом
+## Trace requirements to outcomes
 
-**Ось ТЗ → UC/FR/NFR → milestone FEATURES → golden input/expected → implementation → E2E → actual output/proof.**
+**Specification axis → UC/FR/NFR → milestone FEATURES → golden input/expected → implementation → E2E → actual output/proof.**
 
-Для каждого milestone нужны: фичи, ожидаемый бизнес-результат, проверка actual против expected и честное описание границы IMPLEMENTED / SIMULATED.
+Every milestone needs features, an expected business outcome, actual-versus-expected verification and an accurate IMPLEMENTED / SIMULATED boundary.
 
-| Слой проверки | Что подтверждает | Что не закрывает |
+| Verification layer | What it proves | What it does not cover |
 | --- | --- | --- |
-| Golden model + domain Playwright | Формула, snapshot/current separation, суммы, сравнение выхода | Реальное исполнение или protocol enforcement |
-| UI Playwright | Ось продукта, holder cards, gating, ошибки браузера | Подпись Phantom и выплату |
-| Manual React Devnet acceptance | RPC state, подписи и payout deltas реального bridge | Неизменяемость и idempotency собственного program |
-| Anchor integration E2E (план) | Actual PDA/token state, authority, transitions, повторные вызовы | UX-понятность без проверки интерфейса |
+| Golden model + domain Playwright | Formula, snapshot/current separation, amounts and output comparison | Actual execution or protocol enforcement |
+| UI Playwright | Product axis, holder cards, gating and browser errors | Phantom signing and payment |
+| Manual React Devnet acceptance | RPC state, signatures and actual bridge payout deltas | Custom-program immutability and idempotency |
+| Anchor integration E2E (planned) | Actual PDA/token state, authority, transitions and repeated calls | UX clarity without interface verification |
 
-**Dataset gap:** golden содержит A/B/C = 10/20/5; ТЗ §22 задаёт A/B/C/D = 10/5/2/0. Оба воспроизводят центральный invariant, но полный MVP должен проверить и набор ТЗ с нулевым держателем. Golden сохраняется как отдельный regression fixture; ожидаемые значения не меняются ради PASS.
+**Dataset gap:** golden contains A/B/C = 10/20/5; specification §22 defines A/B/C/D = 10/5/2/0. Both reproduce the central invariant, but the full MVP must also verify the specification dataset with its zero-balance holder. Golden remains a separate regression fixture; expected values must not be changed to obtain PASS.
 
-## Phase 0 — доказательство бизнес-flow в reference prototype
+## Phase 0 — business-flow evidence in the reference prototype
 
-### M0.1 — тестовый инструмент и держатели
+### M0.1 — test instrument and holders
 
-**Результат:** оператор видит реальные позиции, из которых позже возникают права.
-**Ось:** вход для Record Date. **UC:** подготовка UC-CP-01, UC-BR-01, UC-VOTE-01.
-**FR:** 01–04,09,40 — инструмент, параметры, выпуск, распределение, баланс, tx.
-**NFR:** 05,10,12 — проверяемость, воспроизводимость, отсутствие hardcoded operator secret.
+**Outcome:** the operator sees real positions from which rights later arise.
+**Axis:** input to Record Date. **UC:** preparation for UC-CP-01, UC-BR-01, UC-VOTE-01.
+**FR:** 01–04,09,40 — instrument, parameters, issuance, allocation, balance and transactions.
+**NFR:** 05,10,12 — verifiability, reproducibility and no hardcoded operator secret.
 
 **FEATURES**
 
-- [x] Reference Token-2022 KZB26, supply 35 и A/B/C = 10/20/5.
-- [x] Disposable holder identities и token accounts.
-- [x] Phantom operator и ссылки на реальные Devnet транзакции.
+- [x] Reference Token-2022 KZB26, supply 35 and A/B/C = 10/20/5.
+- [x] Disposable holder identities and token accounts.
+- [x] Phantom operator and links to real Devnet transactions.
 
-**Проверка / выход:** историческое reference evidence в golden; mint ownership, supply и holder balances прочитаны через RPC. Это не завершённый protocol registry.
+**Verification / exit:** historical reference evidence in golden; mint ownership, supply and holder balances read through RPC. This is not a completed protocol registry.
 
 ### M0.2 — coupon reference flow
 
-**Результат:** после перевода облигаций право на купон остаётся за record-date позицией.
-**Ось:** все четыре этапа в Browser/Memo bridge. **UC:** UC-CP-01.
+**Outcome:** coupon entitlement remains tied to the record-date position after a bond transfer.
+**Axis:** all four stages in the Browser/Memo bridge. **UC:** UC-CP-01.
 **FR:** 10,12,14–16,22–25,27,38–41 — snapshot, entitlement, approval, settlement, proof.
-**NFR:** 01,05,09,10 — повторяемость, аудит и понятное demo; protocol гарантии остаются открытыми.
+**NFR:** 01,05,09,10 — repeatability, audit and a clear demo; protocol guarantees remain open.
 
 **FEATURES**
 
-- [x] Reference snapshot 10/20/5 и post-record transfer A → B: 4.
-- [x] Текущее владение 6/24/5 при купоне 500/1000/250.
-- [x] Подтверждение Phantom и reference KUSD-DEV settlement.
-- [x] Memo receipt и reference verifier с RPC-проверкой результата.
+- [x] Reference snapshot 10/20/5 and post-record transfer A → B: 4.
+- [x] Current ownership 6/24/5 with coupon 500/1000/250.
+- [x] Phantom approval and reference KUSD-DEV settlement.
+- [x] Memo receipt and reference verifier with RPC outcome checks.
 
-**Проверка / выход:** golden/reference evidence описывает исторический PASS. FR-13,20,26 и NFR-02,03,06,11 не закрываются Memo/browser реализацией.
+**Verification / exit:** golden/reference evidence describes a historical PASS. FR-13,20,26 and NFR-02,03,06,11 are not satisfied by the Memo/browser implementation.
 
-## Phase 1 — MVP: React bridge и protocol Coupon Core
+## Phase 1 — MVP: React bridge and protocol Coupon Core
 
-### R1 — React coupon bridge и воспроизводимая проверка
+### R1 — React coupon bridge and reproducible verification
 
-**Результат:** тот же предметный flow доступен в поддерживаемом клиенте и проверяется автоматически в доступных границах.
-**Ось:** показывает Record Date → Right → Controlled Execution → Verifiable Proof.
-**UC:** UC-CP-01; объяснение права и проверка результата для ролей ТЗ §6.
-**FR:** клиентская часть 09,14–16,23–25,27,40–41.
-**NFR:** 09,10,12; NFR-11 требует будущего protocol core.
+**Outcome:** the same domain flow is available in a maintainable client and automatically verified within supported boundaries.
+**Axis:** presents Record Date → Right → Controlled Execution → Verifiable Proof.
+**UC:** UC-CP-01; entitlement explanation and outcome verification for specification §6 roles.
+**FR:** client scope of 09,14–16,23–25,27,40–41.
+**NFR:** 09,10,12; NFR-11 requires the future protocol core.
 
 **FEATURES**
 
 - [x] React + TypeScript + Vite/npm, Tailwind v4, local shadcn-style UI.
-- [x] FSD-style структура и port Phantom/Token-2022 orchestration.
-- [x] Holder cards, coupon pipeline, формула, статусы и tx links.
-- [x] Offline oracle из input и полное сравнение с expected.
+- [x] FSD-style structure and ported Phantom/Token-2022 orchestration.
+- [x] Holder cards, coupon pipeline, formula, statuses and transaction links.
+- [x] Input-derived offline oracle and complete expected-output comparison.
 - [x] Playwright: snapshot/current invariant, coupon/total, zero, corrupted output, UI/gating/runtime errors.
-- [x] npm lockfile, npm ci, CI build/tests и отчёты.
-- [x] Wallet gating восстановленной сессии и local recorded-settlement guard.
-- [x] README, ARCHITECTURE и аудит границ реализации.
-- [ ] Ручной replay React Devnet acceptance с сохранённым evidence.
-- [ ] Рабочий preview текущей версии после снятия Vercel limit.
+- [x] npm lockfile, npm ci, CI build/tests and reports.
+- [x] Restored-session wallet gating and local recorded-settlement guard.
+- [x] README, ARCHITECTURE and implementation-boundary audit.
+- [ ] Manual React Devnet acceptance replay with retained evidence.
+- [ ] Working preview of the current version after the Vercel limit is lifted.
 
-**Проверка / выход:** 11/11 automated tests подтверждены для a09cd7a; real React flow подтверждается отдельно по manual acceptance. Offline settlement/FINALIZED — simulation.
+**Verification / exit:** 11/11 automated tests confirmed for a09cd7a; the real React flow is verified separately through manual acceptance. Offline settlement/FINALIZED are simulated.
 
-### M1.1 — инструмент, eligibility и holder registry
+### M1.1 — instrument, eligibility and holder registry
 
-**Результат:** права создаются для допущенных держателей заданного инструмента.
-**Ось:** основание Record Date. **UC:** setup всех трёх UC.
-**FR:** 01–09,38 — параметры, supply, registry, approve/revoke, transfer control, balances.
+**Outcome:** rights are created for eligible holders of the specified instrument.
+**Axis:** foundation for Record Date. **UC:** setup for all three UCs.
+**FR:** 01–09,38 — parameters, supply, registry, approve/revoke, transfer control and balances.
 **NFR:** 04,10–12 — authority, reproducibility, protocol truth, key safety.
 
 **FEATURES**
 
-- [ ] Anchor workspace, Instrument и HolderPosition PDA.
-- [ ] Параметры обязательства, mint/settlement mint, authority, outstanding/redeemed supply.
-- [ ] Registry: register/approve/revoke держателя и связь с token account.
-- [ ] Контроль transfer eligibility без обхода registry (FR-08).
-- [ ] Валидация Token-2022 mint/account и чтение позиций клиентом.
+- [ ] Anchor workspace, Instrument and HolderPosition PDAs.
+- [ ] Obligation parameters, mint/settlement mint, authority and outstanding/redeemed supply.
+- [ ] Registry: register/approve/revoke a holder and link the token account.
+- [ ] Transfer eligibility control that cannot bypass the registry (FR-08).
+- [ ] Token-2022 mint/account validation and client position reads.
 
-**Проверка / выход:** integration tests отклоняют чужую authority и неподходящие accounts; registry/параметры восстанавливаются с chain после reload.
+**Verification / exit:** integration tests reject incorrect authority and unsuitable accounts; registry/parameters reload from the chain.
 
-### M1.2 — record date и immutable snapshot
+### M1.2 — record date and immutable snapshot
 
-**Результат:** известно, кто и сколько имел на нужную дату; последующие transfers не переписывают права.
-**Ось:** Record Date. **UC:** UC-CP-01, UC-BR-01, UC-VOTE-01.
+**Outcome:** ownership at the required date is known; later transfers do not rewrite rights.
+**Axis:** Record Date. **UC:** UC-CP-01, UC-BR-01, UC-VOTE-01.
 **FR:** 10–15,38–39 — action, authority, snapshot, finalization, metadata, transitions.
-**NFR:** 04,06,11 — авторизация, неизменяемость, protocol truth.
+**NFR:** 04,06,11 — authorization, immutability and protocol truth.
 
 **FEATURES**
 
-- [ ] CorporateAction PDA и допустимые переходы lifecycle.
-- [ ] SnapshotPosition по eligible holder с проверкой источника balance.
+- [ ] CorporateAction PDA and valid lifecycle transitions.
+- [ ] SnapshotPosition for each eligible holder with balance-source validation.
 - [ ] create action → snapshot holders → finalize snapshot.
-- [ ] Slot/time/hash и запрет изменения finalized snapshot.
-- [ ] Реальный post-record transfer без изменения snapshot.
+- [ ] Slot/time/hash and protection against finalized-snapshot mutation.
+- [ ] Real post-record transfer without changing the snapshot.
 
-**Проверка / выход:** TC-03,16,17; golden snapshot 10/20/5 при current 6/24/5. Неверные balances, mutation и transitions отклоняются on-chain.
+**Verification / exit:** TC-03,16,17; golden snapshot 10/20/5 with current 6/24/5. Invalid balances, mutation and transitions are rejected on-chain.
 
-### M1.3 — права держателя и финансовый расчёт
+### M1.3 — holder rights and financial calculation
 
-**Результат:** каждому держателю положена объяснимая сумма из record-date позиции.
-**Ось:** Right. **UC:** UC-CP-01; основа principal/final coupon и voting power.
-**FR:** 16–22 — виды прав, integer math, per-holder entitlement и total.
-**NFR:** 01,02,11 — детерминизм, точность, protocol truth.
+**Outcome:** each holder receives an explainable entitlement based on their record-date position.
+**Axis:** Right. **UC:** UC-CP-01; foundation for principal/final coupon and voting power.
+**FR:** 16–22 — right types, integer math, per-holder entitlement and total.
+**NFR:** 01,02,11 — determinism, precision and protocol truth.
 
 **FEATURES**
 
-- [ ] EntitlementPosition PDA и integer/fixed-point coupon calculation.
-- [ ] Расчёт из Instrument + SnapshotPosition; frontend amount не является authoritative.
-- [ ] Aggregate obligation и валидация параметров/overflow.
-- [ ] Контракты данных для principal, final coupon и snapshot voting power.
+- [ ] EntitlementPosition PDA and integer/fixed-point coupon calculation.
+- [ ] Calculation from Instrument + SnapshotPosition; frontend amounts are not authoritative.
+- [ ] Aggregate obligation and parameter/overflow validation.
+- [ ] Data contracts for principal, final coupon and snapshot voting power.
 
-**Проверка / выход:** TC-01,02,05; 500/1000/250, total 1750, zero = 0; неверный client amount не меняет protocol результат.
+**Verification / exit:** TC-01,02,05; 500/1000/250, total 1750, zero = 0; an incorrect client amount does not change the protocol result.
 
-### M1.4 — подтверждение и однократная выплата
+### M1.4 — approval and once-only payment
 
-**Результат:** проверенное право исполняется после разрешения и без повторной выплаты.
-**Ось:** Controlled Execution. **UC:** UC-CP-01.
+**Outcome:** a verified entitlement is executed after authorization without double payment.
+**Axis:** Controlled Execution. **UC:** UC-CP-01.
 **FR:** 23–27 — preview, approval, settlement, no double payment, finalization.
 **NFR:** 03,04,07,08 — idempotency, authority, atomicity, recovery.
 
 **FEATURES**
 
-- [ ] Preview распределения и approve_action с проверкой authority.
-- [ ] Контролируемый settlement vault и Token-2022 transfer_checked CPI.
-- [ ] Per-holder settled state и запрет второго settlement.
-- [ ] Безопасное продолжение partial batch без повторной выплаты.
-- [ ] Проверка funding и total settled против obligation.
+- [ ] Distribution preview and approve_action with authority validation.
+- [ ] Controlled settlement vault and Token-2022 transfer_checked CPI.
+- [ ] Per-holder settled state and protection against a second settlement.
+- [ ] Safe partial-batch continuation without double payment.
+- [ ] Funding checks and total settled versus obligation verification.
 
-**Проверка / выход:** TC-04,15,17–19; actual KUSD deltas = 500/1000/250. Повторный/неавторизованный вызов не переводит средства.
+**Verification / exit:** TC-04,15,17–19; actual KUSD deltas = 500/1000/250. Repeated/unauthorized calls do not transfer funds.
 
-### M1.5 — receipt и история прав/исполнений
+### M1.5 — receipt and rights/execution history
 
-**Результат:** инвестор и аудитор видят, когда право возникло, почему и что исполнено.
-**Ось:** Verifiable Proof. **UC:** investor/auditor flows ТЗ §§6,21.
+**Outcome:** investors and auditors see when rights arose, why and what was executed.
+**Axis:** Verifiable Proof. **UC:** investor/auditor flows in specification §§6,21.
 **FR:** 38–42 — identity, events, tx, receipt, read-only verification.
-**NFR:** 05,09,11 — аудит, понятность, chain state.
+**NFR:** 05,09,11 — audit, clarity and chain state.
 
 **FEATURES**
 
-- [ ] ActionReceipt PDA и finalize только после исполнения обязательства.
-- [ ] Events/tx references связывают snapshot, entitlement, approval и outcome.
-- [ ] История держателя из action/entitlement state, отдельно от текущего wallet balance.
-- [ ] Read-only объяснение формулы и проверка результата.
+- [ ] ActionReceipt PDA and finalization only after the obligation is executed.
+- [ ] Events/transaction references linking snapshot, entitlement, approval and outcome.
+- [ ] Holder history from action/entitlement state, separate from current wallet balance.
+- [ ] Read-only formula explanation and outcome verification.
 
-**Проверка / выход:** A: record-date 10, current 6, право/выплата 500 и финальный receipt. Неисполненное действие нельзя финализировать.
+**Verification / exit:** A: record-date 10, current 6, entitlement/payment 500 and final receipt. An unexecuted action cannot be finalized.
 
-### M1.6 — полный golden Coupon protocol E2E
+### M1.6 — complete golden Coupon protocol E2E
 
-**Результат:** бизнес-ось подтверждается actual chain state, а не только карточками или моделью.
-**Ось:** все четыре этапа. **UC:** UC-CP-01.
-**FR:** совместная приёмка M1.1–M1.5. **NFR:** 01–12 в scope Coupon.
+**Outcome:** actual chain state proves the business axis, beyond cards or a model.
+**Axis:** all four stages. **UC:** UC-CP-01.
+**FR:** combined acceptance of M1.1–M1.5. **NFR:** 01–12 within Coupon scope.
 
 **FEATURES**
 
 - [ ] Golden fixture → initialize → snapshot → transfer → entitlement → approve → settle → receipt.
-- [ ] Oracle сравнивает PDA/token-account actual с independent expected.
+- [ ] Oracle compares actual PDA/token-account state with independent expected output.
 - [ ] Negative tests: unauthorized, mutation, double settlement, wrong accounts, invalid transitions.
-- [ ] Replay набора ТЗ §22 с A/B/C/D и zero holder, отдельно от regression golden.
-- [ ] Playwright читает/показывает protocol result; ручная подпись остаётся у человека.
+- [ ] Replay specification §22 with A/B/C/D and a zero-balance holder, separately from regression golden.
+- [ ] Playwright reads/displays protocol results; signing remains a human action.
 
-**Проверка / выход:** TC-01–05,15–19 проходят; права/исполнение совпадают с expected; Memo не является источником domain truth.
+**Verification / exit:** TC-01–05,15–19 pass; rights/execution match expected; Memo is not the source of domain truth.
 
-## Phase 2 — MVP: три corporate actions на одном движке
+## Phase 2 — MVP: three corporate actions on one engine
 
-### M2.1 — погашение облигации
+### M2.1 — bond redemption
 
-**Результат:** держатель получает principal/final coupon, соответствующие units прекращают обращение.
-**Ось:** Right → Controlled Execution → Verifiable Proof, общий Record Date.
+**Outcome:** holders receive principal/final coupon and the corresponding units stop circulating.
+**Axis:** Right → Controlled Execution → Verifiable Proof, with shared Record Date.
 **UC:** UC-BR-01. **FR:** 05,17–18,28–32,41.
-**NFR:** 01–08,11 — точность, корректность, однократность и доказательство.
+**NFR:** 01–08,11 — precision, correctness, once-only execution and proof.
 
 **FEATURES**
 
-- [ ] Redemption action по maturity и общему snapshot.
-- [ ] Principal и отдельный final coupon.
-- [ ] Подтверждение authority и settlement.
-- [ ] Burn/retire/lock units и outstanding/redeemed supply.
-- [ ] Защита от double redemption и receipt результата.
+- [ ] Maturity redemption action using the shared snapshot.
+- [ ] Principal and separate final coupon.
+- [ ] Authority approval and settlement.
+- [ ] Unit burn/retirement/lock and outstanding/redeemed supply.
+- [ ] Double-redemption protection and outcome receipt.
 
-**Проверка / выход:** TC-06–10; 10 bonds → 10000 principal плюс заданный coupon; redeemed units нельзя погасить снова.
+**Verification / exit:** TC-06–10; 10 bonds → 10000 principal plus the specified coupon; redeemed units cannot be redeemed again.
 
-### M2.2 — голосование держателей
+### M2.2 — bondholder voting
 
-**Результат:** голос соответствует позиции на record date и учитывается ровно один раз.
-**Ось:** общий Record Date → voting Right → vote → Proof.
+**Outcome:** each vote corresponds to a record-date position and is counted exactly once.
+**Axis:** shared Record Date → voting Right → vote → Proof.
 **UC:** UC-VOTE-01. **FR:** 19,33–37,41.
-**NFR:** 01,03–06,11 — детерминизм, once-only, authority, аудит и immutability.
+**NFR:** 01,03–06,11 — determinism, once-only execution, authority, audit and immutability.
 
 **FEATURES**
 
-- [ ] Proposal, record date, voting window и quorum.
-- [ ] Voting power из finalized snapshot.
-- [ ] YES/NO/ABSTAIN и VoteReceipt.
-- [ ] Запрет double vote и проверка deadline.
-- [ ] Final on-chain tally/quorum и proof.
+- [ ] Proposal, record date, voting window and quorum.
+- [ ] Voting power from the finalized snapshot.
+- [ ] YES/NO/ABSTAIN and VoteReceipt.
+- [ ] Double-vote protection and deadline validation.
+- [ ] Final on-chain tally/quorum and proof.
 
-**Проверка / выход:** TC-11–14; post-record transfer не меняет power; итог равен сумме валидных votes.
+**Verification / exit:** TC-11–14; post-record transfers do not change voting power; the result equals the sum of valid votes.
 
-### M2.3 — общий lifecycle engine
+### M2.3 — shared lifecycle engine
 
-**Результат:** новые события используют единый механизм обслуживания прав.
-**Ось:** все четыре этапа. **UC:** все три UC.
+**Outcome:** new events reuse one rights-servicing mechanism.
+**Axis:** all four stages. **UC:** all three UCs.
 **FR:** 06,10–15,21–24,38–42. **NFR:** 01,04–06,09,11.
 
 **FEATURES**
 
-- [ ] Общие Instrument/Registry/Snapshot и правила authority.
-- [ ] Общая identity/history/receipt модель с action-specific расчётами.
-- [ ] Явное различие общего lifecycle и Coupon/Redemption/Voting логики в UI.
+- [ ] Shared Instrument/Registry/Snapshot and authority rules.
+- [ ] Shared identity/history/receipt model with action-specific calculations.
+- [ ] Clear UI distinction between the shared lifecycle and Coupon/Redemption/Voting logic.
 
-**Проверка / выход:** 3/3 actual E2E сценария; каждое завершённое событие имеет проверяемый результат.
+**Verification / exit:** 3/3 actual E2E scenarios; every completed event has a verifiable outcome.
 
-## Phase 3 — MVP: объяснение прав в продукте
+## Phase 3 — MVP: explain rights in the product
 
-### M3.1 — клиент читает protocol truth
+### M3.1 — client reads protocol truth
 
-**Результат:** открытие клиента восстанавливает историю и права независимо от локального состояния.
-**Ось:** представление всей цепочки. **UC:** операторские сценарии всех UC.
+**Outcome:** opening the client restores history and rights independently of local state.
+**Axis:** presentation of the full chain. **UC:** operator journeys for all UCs.
 **FR:** 02,05,09,14,21–23,38–41. **NFR:** 09–12.
 
 **FEATURES**
 
-- [x] React/Vite shell и Phantom adapter (реализованы заранее в R1).
-- [ ] Generated Anchor IDL/types и PDA reads.
-- [ ] UI finalized state из chain; localStorage только для необязательного resume/cache.
-- [ ] Refresh/restart восстанавливает lifecycle и holder rights.
+- [x] React/Vite shell and Phantom adapter (implemented early in R1).
+- [ ] Generated Anchor IDL/types and PDA reads.
+- [ ] UI finalized state from the chain; localStorage only for optional resume/cache.
+- [ ] Refresh/restart restores lifecycle and holder rights.
 
-**Проверка / выход:** UI данные совпадают с PDA после reload; client не определяет финальную сумму.
+**Verification / exit:** UI data matches PDAs after reload; the client does not determine the final amount.
 
 ### M3.2 — Operator / Investor / Auditor journeys
 
-**Результат:** за 30–60 секунд понятно, кому какое право положено и где доказательство.
-**Ось:** Record Date → Right → Controlled Execution → Verifiable Proof.
-**UC:** три corporate actions и роль-specific flows ТЗ §§6,21.
+**Outcome:** users understand who is entitled to what and where the proof is within 30–60 seconds.
+**Axis:** Record Date → Right → Controlled Execution → Verifiable Proof.
+**UC:** three corporate actions and role-specific flows in specification §§6,21.
 **FR:** 02,05–09,14,21–25,33–34,38–42. **NFR:** 05,09,10.
 
 **FEATURES**
 
-- [ ] Instruments и holder registry с eligibility/current balance.
-- [ ] Timeline corporate actions и action detail с record date/formula/status.
+- [ ] Instruments and holder registry with eligibility/current balance.
+- [ ] Corporate-action timeline and action detail with record date/formula/status.
 - [ ] Operator preview/approval/execution.
-- [ ] Investor: «что было положено, почему, что исполнено».
+- [ ] Investor: what was due, why and what was executed.
 - [ ] Auditor: snapshot/obligation/processed totals/mismatches/tx/receipt.
-- [ ] IMPLEMENTED/SIMULATED видимы в нужном контексте.
+- [ ] IMPLEMENTED/SIMULATED labels visible in the relevant context.
 
-**Проверка / выход:** Playwright journeys для доступных шагов и manual signing boundary; demo делает pitch очевидным за 30–60 секунд.
+**Verification / exit:** Playwright journeys for supported steps and the manual-signing boundary; the demo makes the pitch obvious in 30–60 seconds.
 
-## Phase 4 — MVP: приёмка и подача
+## Phase 4 — MVP: acceptance and submission
 
-### M4.1 — корректность и безопасность
+### M4.1 — correctness and security
 
-**Результат:** права и исполнения корректны при штатных и ошибочных вызовах.
-**Ось:** гарантии всех четырёх этапов. **UC:** все три UC.
+**Outcome:** rights and execution remain correct under normal and invalid calls.
+**Axis:** guarantees across all four stages. **UC:** all three UCs.
 **FR:** 08,11,13,20,24,26,30–32,36–42. **NFR:** 01–12.
 
 **FEATURES**
 
-- [ ] TC-01–19 automated где возможно; ручные границы документированы.
-- [ ] Integer math, authority, immutable snapshot и valid transitions.
-- [ ] No double settle/redeem/vote и partial recovery.
-- [ ] Чистый Devnet run, protocol/UI совпадение и отсутствие known P0/P1.
-- [ ] Operator secret не находится в repository/frontend.
+- [ ] TC-01–19 automated where possible; manual boundaries documented.
+- [ ] Integer math, authority, immutable snapshot and valid transitions.
+- [ ] No double settle/redeem/vote and partial recovery.
+- [ ] Clean Devnet run, protocol/UI consistency and no known P0/P1 issues.
+- [ ] No operator secret in the repository/frontend.
 
-**Проверка / выход:** mismatch/double execution/unauthorized execution = 0 в acceptance dataset.
+**Verification / exit:** mismatch/double execution/unauthorized execution = 0 in the acceptance dataset.
 
-### M4.2 — воспроизводимое demo и submission
+### M4.2 — reproducible demo and submission
 
-**Результат:** judge понимает идею и воспроизводит результат.
-**Ось:** pitch → live rights lifecycle → proof.
-**UC/FR:** все обязательные сценарии и DoD ТЗ §24. **NFR:** 05,09,10.
-
-**FEATURES**
-
-- [x] README: проблема, решение, целевая аудитория, edge и продуктовая ось.
-- [x] Инструкции локального запуска, architecture и implemented/simulated границы.
-- [ ] Полный working MVP по DoD ТЗ §24 и таблица подтверждённого покрытия.
-- [ ] Demo video: полный E2E Coupon/Redemption/Voting, не только интерфейс.
-- [ ] Devnet evidence и понятный способ независимой проверки.
-
-**Проверка / выход:** 3/3 сценария, 100% finalized outcomes с proof; README позволяет повторить demo.
-
-## Post-MVP — расширение обслуживаемых прав и интеграций
-
-Эти milestones не отменяют незакрытые MVP требования. UC здесь — новые сценарии, которые сначала должны быть утверждены в ТЗ; существующие NFR остаются обязательными.
-
-### P1 — масштабирование и инфраструктурные роли
-
-**Ось:** scalable Record Date и Controlled Execution/Proof.
-**Связь с ТЗ:** §26 P1; развитие FR-06,12–14,24,39–42 и NFR-04–05,08–11.
+**Outcome:** judges understand the idea and reproduce the result.
+**Axis:** pitch → live rights lifecycle → proof.
+**UC/FR:** all required scenarios and specification §24 DoD. **NFR:** 05,09,10.
 
 **FEATURES**
 
-- [ ] Merkle commitment / indexer для больших реестров.
-- [ ] Batch processing и richer transfer controls поверх обязательного FR-08.
-- [ ] Issuer/operator/auditor separation и multisig.
-- [ ] Downloadable reports и расширенная timeline.
+- [x] README: problem, solution, target audience, edge and product axis.
+- [x] Local setup instructions, architecture and implemented/simulated boundaries.
+- [ ] Complete working MVP against specification §24 DoD and an evidence-backed coverage table.
+- [ ] Demo video: complete Coupon/Redemption/Voting E2E, beyond the interface.
+- [ ] Devnet evidence and a clear independent-verification method.
 
-**Проверка / выход:** масштабирование не меняет golden права; batching не создаёт повторную обработку.
+**Verification / exit:** 3/3 scenarios, 100% finalized outcomes with proof; README enables demo reproduction.
 
-### P2 — дополнительные виды corporate actions
+## Post-MVP — extend supported rights and integrations
 
-**Ось:** новые Rights на общем lifecycle.
-**Связь с ТЗ:** §26 P2; новые UC/FR перед реализацией, NFR-01–08,11.
+These milestones do not cancel unfinished MVP requirements. UCs here are new scenarios that must first be approved in the specification; existing NFRs remain mandatory.
+
+### P1 — scaling and infrastructure roles
+
+**Axis:** scalable Record Date and Controlled Execution/Proof.
+**Specification link:** §26 P1; extends FR-06,12–14,24,39–42 and NFR-04–05,08–11.
+
+**FEATURES**
+
+- [ ] Merkle commitment / indexer for larger registries.
+- [ ] Batch processing and richer transfer controls built on mandatory FR-08.
+- [ ] Issuer/operator/auditor separation and multisig.
+- [ ] Downloadable reports and an extended timeline.
+
+**Verification / exit:** scaling does not change golden rights; batching does not cause repeated processing.
+
+### P2 — additional corporate-action types
+
+**Axis:** new Rights on the shared lifecycle.
+**Specification link:** §26 P2; new UC/FR definitions before implementation, NFR-01–08,11.
 
 **FEATURES**
 
 - [ ] Early/partial redemption.
 - [ ] Dividends, tender offer/buyback.
-- [ ] Conversion и modification of terms workflow.
+- [ ] Conversion and modification-of-terms workflow.
 
-**Проверка / выход:** отдельный golden/acceptance contract для каждого нового права и исполнения.
+**Verification / exit:** a separate golden/acceptance contract for each new right and execution.
 
-### P3 — внешние интеграции и production model
+### P3 — external integrations and production model
 
-**Ось:** eligibility → controlled external execution → proof.
-**Связь с ТЗ:** §§20,25–26; новые UC/FR, NFR-03–05,07–08,11–12.
+**Axis:** eligibility → controlled external execution → proof.
+**Specification link:** §§20,25–26; new UC/FR definitions, NFR-03–05,07–08,11–12.
 
 **FEATURES**
 
-- [ ] KYC/AML, custody/recovery и внешние fiat/bank rails.
-- [ ] KASE/KCSD/depository adapters после проверки требований интеграции.
-- [ ] Production security review и операционная/legal модель до Mainnet.
+- [ ] KYC/AML, custody/recovery and external fiat/bank rails.
+- [ ] KASE/KCSD/depository adapters after integration-requirement verification.
+- [ ] Production security review and an operational/legal model before Mainnet.
 
-**Проверка / выход:** внешний settlement reference связан с entitlement; фактическое исполнение и initiation ясно различаются.
+**Verification / exit:** external settlement references link to entitlements; actual execution and initiation are clearly distinguished.
 
-## Фильтр scope
+## Scope filter
 
-Фича входит в MVP, если усиливает центральную ось, нужна обязательному сценарию или закрывает FR/NFR/DoD ТЗ. Иначе — Post-MVP.
+A feature belongs in MVP if it strengthens the central axis, supports a required scenario or satisfies specification FR/NFR/DoD. Otherwise, it belongs in Post-MVP.
 
-README презентует продукт. ROADMAP показывает доставку и текущий фокус. [ARCHITECTURE](ARCHITECTURE.md) описывает реализацию. [Аудит](docs/PHASE_1_AUDIT.md) фиксирует ограничения и доказательства.
+README presents the product. ROADMAP tracks delivery and current focus. [ARCHITECTURE](ARCHITECTURE.md) describes implementation. The [audit](docs/PHASE_1_AUDIT.md) records limitations and evidence.

@@ -1,100 +1,100 @@
-# Recorda — права держателей и корпоративные действия на Solana
+# Recorda — holder rights and corporate actions on Solana
 
 > **“Tokenization tells you who owns the asset. We determine what that ownership entitled them to on the record date, execute the corporate action and prove what happened next.”**
 
-**Recorda** связывает владение токенизированной ценной бумагой на дату фиксации реестра с правом держателя, контролируемым исполнением корпоративного действия и проверяемым результатом.
+**Recorda** links ownership of a tokenized security on the record date to a holder's entitlement, controlled corporate-action execution and a verifiable outcome.
 
-**Центральная ось продукта: Record Date → Right → Controlled Execution → Verifiable Proof.**
+**Central product axis: Record Date → Right → Controlled Execution → Verifiable Proof.**
 
-## Бизнес-проблема
+## Business problem
 
-После выпуска токенизированная облигация продолжает жить: нужно выплатить купон, погасить номинал, провести голосование и объяснить каждому инвестору, какое право он получил.
+A tokenized bond continues its lifecycle after issuance: coupons must be paid, principal redeemed, votes conducted and each investor's entitlement explained.
 
-Текущий баланс показывает владение сейчас. Для корпоративного действия важны другие вопросы:
+The current balance shows ownership today. Corporate actions require answers to different questions:
 
-- Кто владел инструментом **на record date** и сколько единиц имел?
-- Какое право возникло: сумма купона, погашение или голос?
-- По каким параметрам рассчитано это право?
-- Кто разрешил исполнение и что фактически произошло?
-- Где инвестор и аудитор могут проверить результат?
+- Who owned the instrument **on the record date**, and how many units did they hold?
+- What right arose: a coupon amount, redemption payment or vote?
+- Which parameters determined that entitlement?
+- Who authorized execution, and what actually happened?
+- Where can the investor and auditor verify the outcome?
 
-Без общей связи между реестром, расчётом, исполнением и историей эти вопросы требуют отдельной сверки данных. Recorda строит единый процесс обслуживания прав после выпуска инструмента.
+Without a shared link between the registry, calculation, execution and history, these questions require separate data reconciliation. Recorda creates one process for servicing rights after instrument issuance.
 
-## Решение и предметный функционал
+## Solution and domain features
 
-| Этап центральной оси | Что делает продукт | Результат для пользователя |
+| Central-axis stage | Product function | User outcome |
 | --- | --- | --- |
-| Record Date | Определяет eligible holders и фиксирует их позиции на нужную дату | Известно, кому принадлежит право |
-| Right | Рассчитывает купон, principal или voting power из snapshot и условий инструмента | Понятно, кому сколько положено и почему |
-| Controlled Execution | Показывает распределение, требует подтверждения authority и исполняет действие | Выплата, погашение или голосование проходят по заданным правилам |
-| Verifiable Proof | Связывает действие с результатом, транзакциями и receipt | Можно проверить, кто, когда, какое право получил и как оно исполнено |
+| Record Date | Identifies eligible holders and records their positions at the required date | The entitled holders are known |
+| Right | Calculates coupon, principal or voting power from the snapshot and instrument terms | Each holder knows what they are entitled to and why |
+| Controlled Execution | Previews the distribution, requires authority approval and executes the action | Payment, redemption or voting follows defined rules |
+| Verifiable Proof | Links the action to its outcome, transactions and receipt | Users can verify who acquired which right, when and how it was executed |
 
-Обязательные сценарии MVP из [ТЗ](docs/TZ.md):
+Required MVP scenarios from the [technical specification](docs/TZ.md):
 
-1. **Coupon Payment:** snapshot → купон → подтверждение → выплата → доказательство.
-2. **Bond Redemption:** snapshot → principal и final coupon → исполнение → burn/retire/lock → доказательство.
-3. **Bondholder Voting:** snapshot → voting power → голос → защита от повторного голосования → итог.
+1. **Coupon Payment:** snapshot → coupon → approval → payment → proof.
+2. **Bond Redemption:** snapshot → principal and final coupon → execution → burn/retire/lock → proof.
+3. **Bondholder Voting:** snapshot → voting power → vote → double-vote protection → result.
 
-Общий registry/snapshot/entitlement слой должен обслуживать все три сценария.
+A shared registry/snapshot/entitlement layer must serve all three scenarios.
 
-## Для кого и какая ценность
+## Users and value
 
-| Пользователь | Задача | Ценность Recorda |
+| User | Task | Recorda value |
 | --- | --- | --- |
-| Оператор корпоративных действий / инфраструктура рынка | Определить держателей, проверить расчёт, исполнить событие | Единый воспроизводимый workflow и меньше ручной сверки |
-| Эмитент / paying agent | Узнать обязательства и подготовить выплату или погашение | Прозрачные суммы, подтверждения и статус исполнения |
-| Держатель / инвестор | Понять своё право и проверить результат | Позиция на record date, формула, сумма и доказательство |
-| Аудитор | Проверить исходные данные и фактический результат | Связь snapshot → entitlement → execution → receipt |
+| Corporate-actions operator / market infrastructure | Identify holders, verify calculations and execute an event | One reproducible workflow with less manual reconciliation |
+| Issuer / paying agent | Determine obligations and prepare payment or redemption | Transparent amounts, approvals and execution status |
+| Holder / investor | Understand their entitlement and verify the outcome | Record-date position, formula, amount and proof |
+| Auditor | Verify inputs and actual results | A linked snapshot → entitlement → execution → receipt chain |
 
-Экономическая гипотеза: меньше разрозненных операций и ошибок, быстрее проверка и аудит, повторное использование движка для новых событий. Проценты экономии требуют отдельного измерения.
+Economic hypothesis: fewer fragmented operations and errors, faster verification and audit, and engine reuse for new events. Savings percentages require separate measurement.
 
-## Наша edge
+## Our edge
 
-**Связь исторического владения с правом и доказанным исполнением — ядро Recorda.**
+**Linking historical ownership to entitlement and proven execution is Recorda's core.**
 
-Token-2022 даёт базовые операции с активом. Предметный слой Recorda добавляет:
+Token-2022 provides basic asset operations. Recorda's domain layer adds:
 
-- единый record-date механизм для выплат, погашения и голосования;
-- право держателя, которое сохраняется после post-record transfer;
-- объяснимый расчёт из snapshot и условий инструмента;
-- явное подтверждение исполнения и защиту от повторной обработки;
-- историю корпоративных действий и проверяемый ActionReceipt.
+- one record-date mechanism for payments, redemption and voting;
+- holder rights that survive a post-record transfer;
+- explainable calculations from the snapshot and instrument terms;
+- explicit execution approval and protection against repeated processing;
+- corporate-action history and a verifiable ActionReceipt.
 
-Это целевой функционал продукта. Реализованный объём и ограничения показаны ниже; точные milestones и текущий фокус находятся в [ROADMAP](ROADMAP.md).
+These are target product capabilities. Implemented scope and limitations appear below; detailed milestones and current focus are in [ROADMAP](ROADMAP.md).
 
-## Демонстрация идеи за 30–60 секунд
+## Demonstrate the idea in 30–60 seconds
 
-Инвестор A имел **10 облигаций на record date**. Затем он перевёл 4 облигации B: сейчас у A осталось **6**, но право на купон сохранилось по зафиксированным **10**.
+Investor A held **10 bonds on the record date**. A then transferred 4 bonds to B: A currently holds **6**, but the coupon entitlement remains based on the recorded **10**.
 
-| Показатель golden coupon | A | B | C | Всего |
+| Golden coupon metric | A | B | C | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Позиция на record date | 10 | 20 | 5 | 35 |
-| Текущее владение после A → B: 4 | 6 | 24 | 5 | 35 |
-| Купон по snapshot, KUSD-DEV | 500 | 1000 | 250 | 1750 |
+| Record-date position | 10 | 20 | 5 | 35 |
+| Current ownership after A → B: 4 | 6 | 24 | 5 | 35 |
+| Snapshot-based coupon, KUSD-DEV | 500 | 1000 | 250 | 1750 |
 
-Формула A: **10 × 1000 × 10% ÷ 2 = 500**. Оператор проверяет распределение, подтверждает исполнение в Phantom, после чего результат должен быть проверяем по транзакциям и receipt.
+A's formula: **10 × 1000 × 10% ÷ 2 = 500**. The operator reviews the distribution and approves execution in Phantom; the outcome must then be verifiable through transactions and a receipt.
 
-> **Если demo не делает эту мысль очевидной за 30–60 секунд — значит UI или scope надо упрощать.**
+> **If the demo does not make this idea obvious in 30–60 seconds, simplify the UI or scope.**
 
-[Golden dataset](golden/coupon-happy-path.json) фиксирует известные входы и ожидаемые выходы. Его числовой сценарий не заменяет остальные кейсы приёмки ТЗ.
+The [golden dataset](golden/coupon-happy-path.json) fixes known inputs and expected outputs. Its numerical scenario does not replace the specification's other acceptance cases.
 
-## Реализация и границы доказательства
+## Implementation and evidence boundaries
 
-| Слой | Реализовано | Что ещё требуется для полного MVP |
+| Layer | Implemented | Still required for the full MVP |
 | --- | --- | --- |
-| Клиент | React + TypeScript + Vite, Tailwind v4, локальные shadcn-style компоненты, FSD-style структура | Полные Operator / Investor / Auditor сценарии |
-| Coupon bridge | Phantom signing, Token-2022 операции и RPC, browser snapshot/расчёт, Memo attestations | Повторная ручная приёмка React Devnet с подписями и payout deltas |
-| Автоматическая проверка | Playwright: golden model, UI, wallet gating, runtime errors | Реальный protocol E2E и негативные on-chain проверки |
-| Protocol core | Целевая архитектура описана | Anchor PDA, immutable snapshot, integer math, authority и idempotency |
-| Другие corporate actions | Требования и план | Redemption и Voting |
+| Client | React + TypeScript + Vite, Tailwind v4, local shadcn-style components, FSD-style structure | Complete Operator / Investor / Auditor journeys |
+| Coupon bridge | Phantom signing, Token-2022 operations and RPC, browser snapshot/calculation, Memo attestations | Repeat manual React Devnet acceptance with signatures and payout deltas |
+| Automated verification | Playwright: golden model, UI, wallet gating, runtime errors | Real protocol E2E and negative on-chain checks |
+| Protocol core | Target architecture documented | Anchor PDAs, immutable snapshot, integer math, authority and idempotency |
+| Other corporate actions | Requirements and plan | Redemption and Voting |
 
-**Offline oracle PASS проверяет модель сценария.** Settlement и FINALIZED в этом oracle симулируются. Реальный результат проверяется чтением Solana state и транзакций.
+**Offline oracle PASS verifies the scenario model.** Settlement and FINALIZED are simulated in this oracle. Actual outcomes are verified by reading Solana state and transactions.
 
-Browser/Memo bridge ещё хранит предметное состояние в браузере; Memo фиксирует отправленные данные, но не обеспечивает корректность entitlement или защиту от повторной выплаты. Целевой источник finalized state — Recorda Anchor program.
+The Browser/Memo bridge still stores domain state in the browser; Memo records submitted data but does not enforce entitlement correctness or prevent double payment. The target source of finalized state is the Recorda Anchor program.
 
-## Запуск на ПК
+## Run locally
 
-Нужны Node.js **22.12+**, npm и доступ к репозиторию.
+Requires Node.js **22.12+**, npm and repository access.
 
 ```bash
 git clone --branch feat/phase-1-react https://github.com/cByteRun/recorda-solana.git
@@ -103,16 +103,16 @@ npm ci
 npm run dev
 ```
 
-Открой адрес из терминала, обычно http://localhost:4444. Интерфейс и offline golden доступны без кошелька. Реальные операции требуют Phantom, Solana Devnet, SOL для gas и ручного подтверждения транзакций. A/B/C — одноразовые Devnet identities.
+Open the URL printed in the terminal, usually http://localhost:4444. The interface and offline golden are available without a wallet. Real operations require Phantom, Solana Devnet, SOL for gas and manual transaction approval. A/B/C are disposable Devnet identities.
 
-Для просмотра собранной версии:
+To view the built version:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Проверка реализации
+## Verify implementation
 
 ```bash
 npm run build
@@ -120,21 +120,21 @@ npx playwright install chromium
 npm run test:e2e:golden
 ```
 
-Цепочка проверки: **ТЗ и его ось → milestone/features → golden input/expected → implementation → Playwright и protocol tests → actual output/proof**.
+Verification chain: **Specification and its axis → milestone/features → golden input/expected → implementation → Playwright and protocol tests → actual output/proof**.
 
-Playwright автоматически проверяет модель и браузерный интерфейс без подписания транзакций. Реальный flow выполняется по [Manual Devnet Acceptance](tests/MANUAL_DEVNET_ACCEPTANCE.md). Полный MVP требует Coupon, Redemption и Voting, проверки прав и защиты от повторного исполнения.
+Playwright automatically checks the model and browser interface without signing transactions. Follow [Manual Devnet Acceptance](tests/MANUAL_DEVNET_ACCEPTANCE.md) for the real flow. The full MVP requires Coupon, Redemption and Voting, authorization checks and protection against repeated execution.
 
-## Документация и источник истины
+## Documentation and source of truth
 
-1. [ТЗ](docs/TZ.md) — центральная идея, UC, FR/NFR и приёмка; при конфликте имеет приоритет.
-2. [ROADMAP](ROADMAP.md) — фазы, milestones, FEATURES, текущий фокус и подтверждённый прогресс.
-3. [PRODUCT](docs/PRODUCT.md) — объяснение бизнес-задачи.
-4. [ARCHITECTURE](ARCHITECTURE.md) — стек, структура файлов и границы ответственности.
-5. [Implementation plan](docs/plan.md) — техническая последовательность реализации.
-6. [Golden dataset](golden/coupon-happy-path.json), [аудит](docs/PHASE_1_AUDIT.md) и [reference prototype](prototype/kase-real-devnet-v4-kusd.html) — проверки и свидетельства.
+1. [Technical specification](docs/TZ.md) — central idea, UC, FR/NFR and acceptance; takes precedence in a conflict.
+2. [ROADMAP](ROADMAP.md) — phases, milestones, FEATURES, current focus and verified progress.
+3. [PRODUCT](docs/PRODUCT.md) — business-problem explanation.
+4. [ARCHITECTURE](ARCHITECTURE.md) — stack, file structure and responsibility boundaries.
+5. [Implementation plan](docs/plan.md) — technical implementation sequence.
+6. [Golden dataset](golden/coupon-happy-path.json), [audit](docs/PHASE_1_AUDIT.md) and [reference prototype](prototype/kase-real-devnet-v4-kusd.html) — verification and evidence.
 
-Метрика успеха из ТЗ: **100% корректно и воспроизводимо обработанные права держателей с проверяемым on-chain результатом**. Цели MVP: 0 mismatches, 0 повторных исполнений, 0 неавторизованных исполнений, 3/3 сценария с доказательством.
+Specification success metric: **100% correctly and reproducibly processed holder entitlements with verifiable on-chain outcomes**. MVP targets: 0 mismatches, 0 repeated executions, 0 unauthorized executions, and 3/3 scenarios with proof.
 
-## Права
+## Rights
 
-All rights reserved. См. [LICENSE](LICENSE). Сторонние зависимости сохраняют собственные лицензии.
+All rights reserved. See [LICENSE](LICENSE). Third-party dependencies retain their own licenses.
