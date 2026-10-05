@@ -1,12 +1,17 @@
 name: React Golden E2E
 
 on:
-  push:
-    branches:
-      - feat/phase-1-react
   pull_request:
-    branches:
-      - main
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: golden-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   golden:
@@ -14,20 +19,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
+          cache: npm
       - run: npm ci
-
       - run: npm run build
-
       - run: npx playwright install --with-deps chromium
-
       - run: npm run test:e2e:golden
-
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:

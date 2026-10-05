@@ -88,6 +88,10 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 - [x] Input-derived offline oracle and complete expected-output comparison.
 - [x] Playwright: snapshot/current invariant, coupon/total, zero, corrupted output, UI/gating/runtime errors.
 - [x] npm lockfile, npm ci, CI build/tests and reports.
+- [x] Signed-Memo compute budget, pre-sign RPC simulation, account checks and transaction-adapter regression tests.
+- [x] Snapshot reads fail closed instead of attesting RPC-error zero fallbacks.
+- [x] PR-only CI with stale-run cancellation; merge-only Vercel CLI deployment workflow and disabled Git auto-deployments.
+- [ ] Configure VERCEL_TOKEN/VERCEL_ORG_ID/VERCEL_PROJECT_ID and verify the first merge deployment.
 - [x] Restored-session wallet gating and local recorded-settlement guard.
 - [x] README, ARCHITECTURE and implementation-boundary audit.
 - [ ] Manual React Devnet acceptance replay with retained evidence.

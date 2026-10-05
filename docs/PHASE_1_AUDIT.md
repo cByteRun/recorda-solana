@@ -51,8 +51,9 @@ full hackathon MVP and Anchor protocol are not complete.
    adapter does not provide full durable recovery/idempotency.
 3. Settlement rail setup persists after several transactions; partial failures
    are not yet safely resumable. M1.4 must move recovery into protocol state.
-4. RPC read failures currently map some token balances to zero. Snapshot reads
-   must fail closed before claiming production correctness.
+4. Display refresh can map unavailable balances to zero; snapshot acquisition now
+   rereads validated accounts directly and aborts on RPC failure. Protocol-owned
+   atomic record-date enforcement is still required.
 5. Instrument math uses JS numbers. Fixed-point protocol math remains required.
 6. Offline oracle emits simulated settlement and FINALIZED. It validates the
    deterministic scenario only; it does not run real wallet/RPC lifecycle.
@@ -63,3 +64,11 @@ Local build and 11 Playwright tests are the intended automated gate. Remote CI
 and Vercel status must be checked for the new commit before declaring release
 readiness. Human signing and real-chain validation follow
 [MANUAL_DEVNET_ACCEPTANCE](../tests/MANUAL_DEVNET_ACCEPTANCE.md).
+
+## Wallet and CI follow-up
+
+- Signed JSON Memo instructions now request 600,000 compute units unless an explicit unit limit already exists. The original snapshot/receipt payload is retained. Compute exhaustion is a plausible cause of Phantom's generic error, not a confirmed diagnosis from the submitted stack trace alone.
+- The TypeScript shared adapter simulates before asking Phantom to sign, exposes failed program logs, checks the account, and reports actionable wallet errors. It never automatically re-signs after a known broadcast signature.
+- Six mocked transaction-adapter regression tests plus five golden domain tests passed locally; TypeScript/Vite build passed. Real Phantom signing remains manual acceptance. Local Chromium download returned truncated archives, so browser UI execution must be verified by the remote CI gate.
+- E2E now triggers on PR updates and manual dispatch, without duplicate push runs. Concurrency cancels older runs of the same PR. GitHub-hosted runner provisioning can still queue; repository YAML cannot guarantee immediate capacity.
+- Production deployment is triggered only by a merged same-repository PR to main, checks out its merge commit and reruns build/tests before official Vercel CLI prebuilt deployment. Vercel Git auto-deployments are disabled in vercel.json. The three deployment secrets must be configured before first use.

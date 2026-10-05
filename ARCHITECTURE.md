@@ -22,7 +22,7 @@ Requirements authority: [TZ](docs/TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 | localStorage | Disposable Devnet holder keys and deployment/action resume references |
 | Playwright | Domain oracle and real browser UI checks without wallet signing |
 | GitHub Actions | npm ci → TypeScript/Vite build → Chromium tests → report artifacts |
-| Vercel | Static Vite branch preview; production remains separate |
+| Vercel | Prebuilt production deployment only after a merged PR; Git auto-deployments disabled |
 
 ## Folder and file responsibilities
 
@@ -40,7 +40,7 @@ Requirements authority: [TZ](docs/TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 | `src/entities/holder/`, `src/entities/instrument/` | Holder types and demo instrument parameters |
 | `src/shared/solana/config.ts` | Devnet connection and Explorer links |
 | `src/shared/solana/phantom.ts` | Injected wallet interface |
-| `src/shared/solana/transactions.ts` | Sign/send/confirm adapter |
+| `src/shared/solana/transactions.ts` | Simulate/sign/send/confirm adapter |
 | `src/shared/solana/persistence.ts` | v4-compatible localStorage keys and disposable identities |
 | `src/shared/ui/`, `src/shared/lib/` | Button/Card and shared helpers |
 | `golden/coupon-happy-path.json` | Known input and independent expected output |
@@ -49,7 +49,7 @@ Requirements authority: [TZ](docs/TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 | `docs/TZ.md`, `docs/PRODUCT.md`, `docs/plan.md` | Requirements, product interpretation and implementation plan |
 | `docs/PHASE_1_AUDIT.md` | Traceability, evidence and remaining gaps |
 | `prototype/` | Frozen v4 HTML behavioral reference |
-| `.github/workflows/e2e.yml`, `playwright.config.ts` | CI and browser test configuration |
+| `.github/workflows/e2e.yml`, `.github/workflows/deploy.yml`, `playwright.config.ts` | PR CI, merge-only production deployment and browser test configuration |
 | `package.json`, `package-lock.json`, `tsconfig*.json`, `vite.config.ts` | npm dependencies, reproducible resolution, typing and bundling |
 | `components.json`, `vercel.json` | UI generator aliases and hosting configuration |
 
@@ -79,3 +79,7 @@ EntitlementPosition and ActionReceipt PDAs. Protocol validates authority,
 immutable snapshots, integer math, allowed transitions and once-only settlement.
 React will read accounts via generated IDL rather than trusting localStorage.
 See roadmap M1.1–M1.6, then Redemption and Voting in Phase 2.
+
+## Transaction verification
+
+The shared TypeScript transaction adapter adds a compute budget for Memo attestations, simulates against Devnet before requesting Phantom signing, checks the connected account and avoids automatic retry after a known broadcast signature. Snapshot acquisition reads validated holder accounts directly and fails on RPC errors. `tests/transactions.spec.ts` covers these boundaries with mocked RPC and wallet responses; actual Phantom/Devnet execution remains manual acceptance.

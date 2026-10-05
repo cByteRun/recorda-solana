@@ -385,10 +385,17 @@ export function useRecordaController() {
       const slot = await connection.getSlot("confirmed");
       const blockTime = await connection.getBlockTime(slot);
       const actionId = `CA-COUPON-${Date.now()}`;
-      const holders = runtimeHolders.current.map((holder) => ({
-        id: holder.id,
-        owner: holder.keypair.publicKey.toBase58(),
-        units: holder.currentBondUnits
+      // Snapshot reads must fail closed: refresh may display zero for an
+      // unavailable account, but that fallback must never become a signed right.
+      const holders = await Promise.all(runtimeHolders.current.map(async (holder) => {
+        if (!holder.bondAta) throw new Error(`Missing bond account for holder ${holder.id}`);
+        const account = await getAccount(connection, holder.bondAta, "confirmed", TOKEN_2022_PROGRAM_ID);
+        if (!account.owner.equals(holder.keypair.publicKey) || !account.mint.equals(new PublicKey(deployment.mint!))) {
+          throw new Error(`Invalid bond account for holder ${holder.id}`);
+        }
+        const units = Number(account.amount);
+        if (!Number.isSafeInteger(units)) throw new Error(`Unsafe bond balance for holder ${holder.id}`);
+        return { id: holder.id, owner: holder.keypair.publicKey.toBase58(), units };
       }));
       const base = { actionId, mint: deployment.mint, slot, blockTime, holders };
       const hash = await sha256(JSON.stringify(base));

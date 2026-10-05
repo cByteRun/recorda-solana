@@ -10,13 +10,15 @@ export interface PhantomProvider {
 declare global {
   interface Window {
     solana?: PhantomProvider;
+    phantom?: { solana?: PhantomProvider };
   }
 }
 
 export function getPhantom() {
-  const provider = window.solana;
+  const provider = window.phantom?.solana ?? window.solana;
   if (!provider?.isPhantom) {
     throw new Error("Phantom provider not found");
   }
   return provider;
 }
+

@@ -20,7 +20,7 @@ This is a product/security boundary, not a missing test.
 
 Use Solana Devnet and the same golden scenario:
 
-1. Connect Phantom.
+1. Set Phantom to Solana Devnet, unlock it and connect the operator account with Devnet SOL.
 2. Deploy/resume KZB26.
 3. Verify RPC state is `10/20/5`.
 4. Create record-date snapshot.
@@ -47,3 +47,8 @@ Use Solana Devnet and the same golden scenario:
 - action finalized.
 
 When Anchor replaces Memo/browser domain truth, the same acceptance fixture remains unchanged.
+
+
+## Snapshot failure diagnostics
+
+Before signing, the adapter simulates the exact transaction with the Memo compute budget. A simulation failure must expose program logs and must not open Phantom. An unexpected wallet error after successful simulation must not submit a transaction. Reconnect after checking Phantom network/account and retry only when nothing was submitted. Verify the signed snapshot transaction succeeds on Devnet and still contains the complete snapshot payload. These checks require the actual wallet; mocked transaction tests do not prove extension acceptance.

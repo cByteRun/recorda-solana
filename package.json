@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts"
+    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts tests/transactions.spec.ts"
   },
   "dependencies": {
     "@solana/spl-token": "0.4.15",
