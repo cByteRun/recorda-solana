@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KASE Corporate Actions — Real Solana Devnet Vertical Slice v4</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    html { scroll-behavior:smooth; }
+    body { background:#f5f6f8; color:#18181b; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .dot { width:10px;height:10px;border-radius:999px;display:inline-block; }
+    .flow-line::after { content:""; position:absolute; left:19px; top:43px; width:2px; height:calc(100% - 20px); background:#e4e4e7; }
+    .flow-line:last-child::after { display:none; }
+    button:disabled { opacity:.35; cursor:not-allowed; }
+    .spin { animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg) } }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <header class="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
+      <div>
+        <div class="text-sm font-semibold">KASE Corporate Actions Engine</div>
+        <div class="text-xs text-zinc-500">Real Solana Devnet · Token-2022 · zero fake balances</div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+          DEVNET ONLY
+        </span>
+        <button id="connectBtn" class="rounded-xl bg-zinc-950 px-4 py-2 text-xs font-semibold text-white">
+          Connect Phantom
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-4 py-8 md:px-6">
+    <section class="grid gap-6 lg:grid-cols-[1.15fr_.85fr]">
+      <div class="rounded-3xl bg-zinc-950 p-7 text-white md:p-9">
+        <div class="text-xs font-semibold uppercase tracking-[.22em] text-zinc-500">Business value</div>
+        <h1 class="mt-4 max-w-4xl text-3xl font-semibold tracking-tight md:text-5xl">
+          Ownership on Record Date → Investor Right → Execution → Proof.
+        </h1>
+        <p class="mt-5 max-w-3xl text-base leading-7 text-zinc-300">
+          Это уже не browser mock. Bond balances, holder transfer, snapshot attestation,
+          approval, settlement и финальный receipt создают реальные подтверждённые транзакции в Solana Devnet.
+        </p>
+
+        <div class="mt-7 grid gap-3 sm:grid-cols-4">
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4"><div class="text-xs text-zinc-500">01</div><div class="mt-2 font-semibold">WHO + WHEN</div><div class="mt-1 text-xs text-zinc-400">Real Token-2022 balances</div></div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4"><div class="text-xs text-zinc-500">02</div><div class="mt-2 font-semibold">RIGHT</div><div class="mt-1 text-xs text-zinc-400">Deterministic entitlement</div></div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4"><div class="text-xs text-zinc-500">03</div><div class="mt-2 font-semibold">EXECUTE</div><div class="mt-1 text-xs text-zinc-400">Signed settlement tx</div></div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4"><div class="text-xs text-zinc-500">04</div><div class="mt-2 font-semibold">PROVE</div><div class="mt-1 text-xs text-zinc-400">On-chain receipt memo</div></div>
+        </div>
+      </div>
+
+      <aside class="rounded-3xl border border-zinc-200 bg-white p-6">
+        <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Что реально / что ещё не Anchor</div>
+        <div class="mt-4 space-y-3 text-sm">
+          <div class="rounded-2xl bg-emerald-50 p-4">
+            <div class="font-semibold text-emerald-800">Реально on-chain уже сейчас</div>
+            <div class="mt-1 leading-6 text-emerald-900/70">
+              Token-2022 mint, holder token accounts, 10/20/5 balances, A→B transfer, snapshot transaction,
+              signed approval, Token-2022 KUSD settlement, tx signatures и ActionReceipt transaction.
+            </div>
+          </div>
+          <div class="rounded-2xl bg-amber-50 p-4">
+            <div class="font-semibold text-amber-800">Devnet v0 bridge</div>
+            <div class="mt-1 leading-6 text-amber-900/70">
+              Snapshot/entitlement/receipt пока записываются как signed Solana Memo transactions.
+              После деплоя Anchor program эти же UI-шаги заменяются на Snapshot/CorporateAction/ActionReceipt PDA.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="mt-6 rounded-3xl border border-blue-200 bg-blue-50 p-5">
+      <div class="grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
+        <div>
+          <div class="font-semibold text-blue-950">Phantom = Operator / Treasury. A, B, C = реальные throwaway Devnet keypairs.</div>
+          <p class="mt-2 text-sm leading-6 text-blue-950/70">
+            Тебе не нужны три Phantom. HTML один раз генерирует три настоящих Solana keypair для тестовых инвесторов и хранит их локально только для Devnet.
+            Никогда не отправляй на эти адреса реальные Mainnet assets.
+          </p>
+        </div>
+        <div class="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
+          <div class="text-[10px] uppercase tracking-widest text-zinc-400">RPC</div>
+          <div class="mono mt-1 text-xs font-semibold">api.devnet.solana.com</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OPERATOR + COST -->
+    <section class="mt-8 grid gap-4 md:grid-cols-3">
+      <div class="rounded-3xl border border-zinc-200 bg-white p-5">
+        <div class="text-xs uppercase tracking-widest text-zinc-400">Operator / Phantom</div>
+        <div id="operatorPubkey" class="mono mt-3 break-all text-sm">Not connected</div>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span id="operatorSol" class="text-3xl font-semibold">—</span>
+          <span class="text-sm text-zinc-500">SOL</span>
+        </div>
+      </div>
+
+      <div class="rounded-3xl border border-zinc-200 bg-white p-5">
+        <div class="text-xs uppercase tracking-widest text-zinc-400">One-time setup</div>
+        <div id="setupCost" class="mt-3 text-2xl font-semibold">—</div>
+        <p class="mt-2 text-xs leading-5 text-zinc-500">
+          Mint + 3 associated token accounts require rent once. Reuse this deployment for repeated demo cycles.
+        </p>
+      </div>
+
+      <div class="rounded-3xl border border-zinc-200 bg-white p-5">
+        <div class="text-xs uppercase tracking-widest text-zinc-400">Per coupon cycle</div>
+        <div class="mt-3 text-2xl font-semibold">network fee only</div>
+        <p class="mt-2 text-xs leading-5 text-zinc-500">
+          Settlement rail = KUSD-DEV Token-2022. 1 USD entitlement = 1 KUSD-DEV in this demo.
+        </p>
+      </div>
+    </section>
+
+    <!-- NETWORK SANITY / SETTLEMENT PREFLIGHT -->
+    <section class="mt-4 rounded-3xl border border-zinc-200 bg-white p-5 md:p-6">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div class="max-w-3xl">
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Network sanity check</div>
+          <h2 class="mt-2 text-xl font-semibold">Что именно видит Solana Devnet для fee payer</h2>
+          <p class="mt-2 text-sm leading-6 text-zinc-600">
+            Перед settlement мы больше не полагаемся на то, что показывает Phantom визуально:
+            HTML читает баланс <b>этого же public key</b> напрямую из <span class="mono">api.devnet.solana.com</span>.
+            После этого native SOL используется только как gas. Купон выплачивается отдельным Token-2022 settlement asset <b>KUSD-DEV</b>,
+            поэтому Phantom больше не должен оценивать исходящий native-SOL payout.
+          </p>
+        </div>
+        <button id="networkCheckBtn" disabled class="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50">
+          Run network check
+        </button>
+      </div>
+
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div class="rounded-2xl bg-zinc-50 p-4">
+          <div class="text-[10px] uppercase tracking-widest text-zinc-400">Fee payer</div>
+          <div id="diagPayer" class="mono mt-2 break-all text-xs font-semibold">—</div>
+        </div>
+        <div class="rounded-2xl bg-zinc-50 p-4">
+          <div class="text-[10px] uppercase tracking-widest text-zinc-400">Devnet RPC balance</div>
+          <div id="diagBalance" class="mt-2 font-semibold">—</div>
+        </div>
+        <div class="rounded-2xl bg-zinc-50 p-4">
+          <div class="text-[10px] uppercase tracking-widest text-zinc-400">Settlement obligation</div>
+          <div id="diagPayout" class="mt-2 font-semibold">1,750.00 KUSD-DEV</div>
+        </div>
+        <div class="rounded-2xl bg-zinc-50 p-4">
+          <div class="text-[10px] uppercase tracking-widest text-zinc-400">RPC fee estimate</div>
+          <div id="diagFee" class="mt-2 font-semibold">—</div>
+        </div>
+        <div id="diagStatusCard" class="rounded-2xl bg-zinc-50 p-4">
+          <div class="text-[10px] uppercase tracking-widest text-zinc-400">Preflight verdict</div>
+          <div id="diagStatus" class="mt-2 font-semibold">Connect Phantom</div>
+        </div>
+      </div>
+
+      <div id="phantomModeHint" class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950/80">
+        <b>Phantom для Devnet:</b> Settings → Developer Settings → Testnet Mode → <b>Solana Devnet</b>.
+        Payer в popup Phantom должен совпадать с Fee payer выше.
+      </div>
+    </section>
+
+    <!-- DEPLOYMENT -->
+    <section class="mt-8 rounded-3xl border border-zinc-200 bg-white p-6">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Step 0 · one-time deployment</div>
+          <h2 class="mt-2 text-2xl font-semibold">Create real Token-2022 KZB26 bond</h2>
+          <p class="mt-2 max-w-4xl text-sm leading-6 text-zinc-600">
+            Supply = 35, decimals = 0. The operator wallet becomes mint authority.
+            Three real Token-2022 accounts receive exactly A=10, B=20, C=5.
+          </p>
+        </div>
+
+        <button id="deployBtn" disabled class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">
+          Deploy KZB26 on Devnet
+        </button>
+      </div>
+
+      <div id="deploymentPanel" class="mt-5 hidden rounded-2xl bg-zinc-50 p-4">
+        <div class="grid gap-4 md:grid-cols-4">
+          <div><div class="text-[10px] uppercase tracking-widest text-zinc-400">Bond Mint</div><div id="mintAddress" class="mono mt-2 break-all text-xs"></div></div>
+          <div><div class="text-[10px] uppercase tracking-widest text-zinc-400">Bond Supply</div><div id="mintSupply" class="mt-2 font-semibold"></div></div>
+          <div><div class="text-[10px] uppercase tracking-widest text-zinc-400">Instrument tx</div><div id="instrumentTx" class="mono mt-2 break-all text-xs"></div></div>
+          <div><div class="text-[10px] uppercase tracking-widest text-zinc-400">Settlement Rail</div><div id="settlementRailStatus" class="mono mt-2 break-all text-xs">KUSD-DEV: not initialized</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOLDER STATE -->
+    <section class="mt-8">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Real holder registry</div>
+          <h2 class="mt-1 text-2xl font-semibold">Current on-chain state · KZB26 + KUSD-DEV</h2>
+        </div>
+        <button id="refreshBtn" disabled class="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">Refresh RPC</button>
+      </div>
+
+      <div id="holderGrid" class="mt-4 grid gap-4 md:grid-cols-3"></div>
+    </section>
+
+    <!-- WHERE STATE LIVES -->
+    <section class="mt-8 rounded-3xl border border-zinc-200 bg-white p-6">
+      <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Где сейчас что живёт</div>
+      <h2 class="mt-2 text-2xl font-semibold">Не всё “на Solana” означает одно и то же</h2>
+      <p class="mt-2 max-w-4xl text-sm leading-6 text-zinc-600">
+        Это текущая честная граница v0. Токен и balances уже являются protocol state.
+        Corporate-action semantics пока фиксируются транзакциями Memo, а расчёт entitlement выполняется браузером.
+        Именно этот средний слой следующим этапом переезжает в наш Anchor program.
+      </p>
+
+      <div class="mt-6 grid gap-4 lg:grid-cols-4">
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+          <div class="text-xs font-semibold uppercase tracking-widest text-emerald-700">Token-2022 · REAL STATE</div>
+          <div class="mt-3 font-semibold">Mint + ATAs + current balances</div>
+          <p class="mt-2 text-sm leading-6 text-emerald-950/70">
+            KZB26 mint, supply=35, A/B/C token accounts и реальные 10/20/5 → 6/24/5 после transfer.
+            Это читается напрямую из Solana RPC.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <div class="text-xs font-semibold uppercase tracking-widest text-blue-700">Memo tx · REAL ATTESTATION</div>
+          <div class="mt-3 font-semibold">Snapshot / approval / receipt</div>
+          <p class="mt-2 text-sm leading-6 text-blue-950/70">
+            Реальные immutable transactions и signatures, но Memo Program не проверяет нашу финансовую логику.
+            Это bridge до собственных PDAs.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-violet-200 bg-violet-50 p-4">
+          <div class="text-xs font-semibold uppercase tracking-widest text-violet-700">Browser · TEMP LOGIC</div>
+          <div class="mt-3 font-semibold">Coupon formula + orchestration</div>
+          <p class="mt-2 text-sm leading-6 text-violet-950/70">
+            <span class="mono">snapshotUnits × 1000 × 10% ÷ 2</span>.
+            Детерминированно и проверяется E2E oracle, но пока не enforced валидатором.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div class="text-xs font-semibold uppercase tracking-widest text-amber-700">localStorage · DEV ONLY</div>
+          <div class="mt-3 font-semibold">Holder test keys + tx references</div>
+          <p class="mt-2 text-sm leading-6 text-amber-950/70">
+            Disposable Devnet secret keys и ссылки на action transactions.
+            Это удобство single-file demo, а не источник финансовой истины.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-4 rounded-2xl bg-zinc-950 p-4 text-sm leading-6 text-zinc-300">
+        <b class="text-white">Следующая граница:</b>
+        Browser/Memo middle layer → <span class="mono text-white">CorporateAction PDA + Snapshot PDA + Entitlement state + ActionReceipt PDA</span>.
+        UI и Token-2022 holders при этом остаются теми же.
+      </div>
+    </section>
+
+    <!-- CORPORATE ACTION PIPELINE -->
+    <section class="mt-10 grid gap-8 xl:grid-cols-[1fr_420px]">
+      <div>
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">One E2E vertical slice</div>
+          <h2 class="mt-1 text-2xl font-semibold">Coupon corporate action</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-zinc-600">
+            Каждый шаг ниже либо читает blockchain state, либо создаёт реальную подтверждённую Devnet transaction.
+          </p>
+        </div>
+
+        <div id="pipeline" class="mt-5 space-y-4"></div>
+
+        <div class="mt-5 flex flex-wrap gap-2">
+          <button id="resetCycleBtn" disabled class="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">
+            Reset bond balances for next cycle
+          </button>
+          <button id="verifyBtn" disabled class="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">
+            Verify all action signatures
+          </button>
+        </div>
+      </div>
+
+      <aside class="space-y-4 xl:sticky xl:top-24 xl:self-start">
+        <div class="rounded-3xl border border-zinc-200 bg-white p-5">
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Live chain state</div>
+          <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <div class="rounded-2xl bg-zinc-50 p-3"><div class="text-xs text-zinc-400">Action</div><div id="actionId" class="mono mt-1 text-xs font-semibold">—</div></div>
+            <div class="rounded-2xl bg-zinc-50 p-3"><div class="text-xs text-zinc-400">Status</div><div id="actionStatus" class="mt-1 font-semibold">NOT_STARTED</div></div>
+            <div class="rounded-2xl bg-zinc-50 p-3"><div class="text-xs text-zinc-400">Snapshot slot</div><div id="snapshotSlot" class="mt-1 font-semibold">—</div></div>
+            <div class="rounded-2xl bg-zinc-50 p-3"><div class="text-xs text-zinc-400">Entitlement total</div><div id="entitlementTotal" class="mt-1 font-semibold">—</div></div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-zinc-200 bg-zinc-950 p-5 text-white">
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-500">On-chain action references</div>
+          <div id="txRefs" class="mt-4 space-y-3 text-xs"></div>
+        </div>
+
+        <div class="rounded-3xl border border-zinc-200 bg-white p-5">
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Why this proves the value</div>
+          <div class="mt-4 rounded-2xl bg-violet-50 p-4 text-sm leading-6 text-violet-900">
+            После snapshot A реально отправляет 4 KZB26 B: chain balances становятся 6/24/5.
+            Но entitlement вычисляется из уже зафиксированного snapshot 10/20/5.
+          </div>
+        </div>
+      </aside>
+    </section>
+
+
+    <!-- E2E BLACK-BOX VERIFIER -->
+    <section class="mt-12 rounded-3xl border border-zinc-200 bg-white p-6 md:p-8">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div class="max-w-3xl">
+          <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Black-box E2E oracle</div>
+          <h2 class="mt-2 text-2xl font-semibold">INPUT → real Solana → ACTUAL OUTPUT ≟ EXPECTED OUTPUT</h2>
+          <p class="mt-3 text-sm leading-6 text-zinc-600">
+            Это главный smoke/E2E тест продукта. Проверка не доверяет цифрам UI: она заново читает mint,
+            Token-2022 accounts, transaction statuses и signer'ов из RPC, после чего сравнивает их с заранее
+            зафиксированным ожидаемым результатом сценария.
+          </p>
+        </div>
+        <button id="e2eBtn" disabled class="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white">
+          Run E2E verification
+        </button>
+      </div>
+
+      <div class="mt-6 grid gap-4 lg:grid-cols-3">
+        <div class="rounded-2xl bg-zinc-950 p-4 text-white">
+          <div class="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Input fixture</div>
+          <pre id="e2eInput" class="mono mt-3 whitespace-pre-wrap text-[11px] leading-5 text-zinc-300"></pre>
+        </div>
+        <div class="rounded-2xl bg-zinc-950 p-4 text-white">
+          <div class="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Expected output</div>
+          <pre id="e2eExpected" class="mono mt-3 whitespace-pre-wrap text-[11px] leading-5 text-zinc-300"></pre>
+        </div>
+        <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <div class="flex items-center justify-between">
+            <div class="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">Actual output</div>
+            <span id="e2eBadge" class="rounded-full bg-zinc-200 px-2 py-1 text-[10px] font-bold text-zinc-600">NOT RUN</span>
+          </div>
+          <pre id="e2eActual" class="mono mt-3 max-h-80 overflow-auto whitespace-pre-wrap text-[11px] leading-5 text-zinc-700">Run verification after the full pipeline.</pre>
+        </div>
+      </div>
+
+      <div id="e2eChecks" class="mt-5 grid gap-2 md:grid-cols-2"></div>
+
+      <div class="mt-5 flex flex-wrap gap-2">
+        <button id="deploymentVerifyBtn" disabled class="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-semibold">
+          Verify deployment only
+        </button>
+        <button id="exportReportBtn" disabled class="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-semibold">
+          Export E2E report JSON
+        </button>
+      </div>
+    </section>
+
+    <!-- REAL VS FUTURE ANCHOR -->
+    <section class="mt-12 rounded-3xl border border-zinc-200 bg-white p-6 md:p-8">
+      <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Devnet v0 → hackathon target</div>
+      <h2 class="mt-2 text-2xl font-semibold">Что уже настоящее и что следующим коммитом переезжает в Anchor</h2>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full min-w-[900px] text-left text-sm">
+          <thead><tr class="border-b border-zinc-200 text-xs uppercase tracking-widest text-zinc-400">
+            <th class="py-3 pr-4">Domain</th><th class="py-3 pr-4">Этот HTML сейчас</th><th class="py-3 pr-4">Финальная Solana архитектура</th><th class="py-3">Статус</th>
+          </tr></thead>
+          <tbody class="divide-y divide-zinc-100">
+            <tr><td class="py-4 pr-4 font-medium">Instrument</td><td class="py-4 pr-4">Real Token-2022 mint + signed instrument memo</td><td class="py-4 pr-4">Instrument PDA + Token-2022 mint</td><td class="py-4 text-emerald-700">REAL V0</td></tr>
+            <tr><td class="py-4 pr-4 font-medium">Holders</td><td class="py-4 pr-4">Real keypairs + Token-2022 ATAs</td><td class="py-4 pr-4">ATAs + Token ACL / eligibility</td><td class="py-4 text-emerald-700">REAL</td></tr>
+            <tr><td class="py-4 pr-4 font-medium">Snapshot</td><td class="py-4 pr-4">RPC balances + signed immutable Memo tx</td><td class="py-4 pr-4">Snapshot PDA / Merkle root</td><td class="py-4 text-amber-700">BRIDGE</td></tr>
+            <tr><td class="py-4 pr-4 font-medium">Entitlement</td><td class="py-4 pr-4">Deterministic browser math from chain snapshot + Memo attestation</td><td class="py-4 pr-4">Anchor instruction</td><td class="py-4 text-amber-700">BRIDGE</td></tr>
+            <tr><td class="py-4 pr-4 font-medium">Approval</td><td class="py-4 pr-4">Real Phantom signature on approval tx</td><td class="py-4 pr-4">Authority / Squads multisig state transition</td><td class="py-4 text-emerald-700">REAL V0</td></tr>
+            <tr><td class="py-4 pr-4 font-medium">Settlement</td><td class="py-4 pr-4">Real KUSD-DEV Token-2022 transfers</td><td class="py-4 pr-4">Production settlement token / external fiat rail adapter</td><td class="py-4 text-amber-700">REAL TOKEN SETTLEMENT</td></tr>
+            <tr><td class="py-4 pr-4 font-medium">Receipt</td><td class="py-4 pr-4">Signed immutable receipt Memo tx</td><td class="py-4 pr-4">ActionReceipt PDA + event</td><td class="py-4 text-amber-700">BRIDGE</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mt-8 rounded-3xl border border-rose-200 bg-rose-50 p-5 text-sm leading-6 text-rose-950/80">
+      <b>Devnet safety:</b> код жёстко использует только <span class="mono">https://api.devnet.solana.com</span>.
+      Generated holder keys — disposable test identities stored in this browser. Не используй их для Mainnet и не отправляй на них реальные активы.
+      Для Phantom открой файл через localhost, например <span class="mono">python -m http.server 8000</span>, а не через <span class="mono">file://</span>.
+    </section>
+  </main>
+
+  <footer class="mt-12 border-t border-zinc-200 bg-white">
+    <div class="mx-auto max-w-7xl px-4 py-6 text-xs text-zinc-400 md:px-6">
+      KASE Corporate Actions Engine · Devnet vertical slice v4 · Token-2022 · KUSD settlement rail
+    </div>
+  </footer>
+</div>
+
+<script type="module">
+import {
+  Connection,
+  PublicKey,
+  Keypair,
+  Transaction,
+  TransactionInstruction,
+  SystemProgram,
+  LAMPORTS_PER_SOL
+} from "https://esm.sh/@solana/web3.js@1.99.0?bundle";
+
+import {
+  MINT_SIZE,
+  TOKEN_2022_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountInstruction,
+  createInitializeMintInstruction,
+  createMintToCheckedInstruction,
+  createTransferCheckedInstruction,
+  getAccount,
+  getMint
+} from "https://esm.sh/@solana/spl-token@0.4.15?bundle";
+
+const RPC = "https://api.devnet.solana.com";
+const connection = new Connection(RPC, "confirmed");
+const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+const INSTRUMENT = Object.freeze({
+  id: "KASE-BOND-001",
+  symbol: "KZB26",
+  faceValueUsd: 1000,
+  annualCouponRate: 0.10,
+  couponFrequency: 2,
+  maturityDate: "2028-12-01",
+  decimals: 0,
+  initialSupply: 35
+});
+
+// Real Token-2022 settlement rail used by the Devnet demo.
+// KUSD-DEV is NOT legal fiat/stablecoin. It is a test settlement asset whose unit maps 1:1 to the USD-denominated entitlement in this demo.
+const SETTLEMENT_SYMBOL = "KUSD-DEV";
+const SETTLEMENT_DECIMALS = 2;
+const SETTLEMENT_INITIAL_SUPPLY_UI = 10_000_000;
+const SETTLEMENT_BASE = 10 ** SETTLEMENT_DECIMALS;
+const SETTLEMENT_FEE_SAFETY_LAMPORTS = 200_000; // 0.0002 SOL gas guard
+
+const E2E_INPUT = Object.freeze({
+  instrument: {
+    symbol: INSTRUMENT.symbol,
+    supply: INSTRUMENT.initialSupply,
+    faceValueUsd: INSTRUMENT.faceValueUsd,
+    annualCouponRate: INSTRUMENT.annualCouponRate,
+    couponFrequency: INSTRUMENT.couponFrequency
+  },
+  initialHolderBalances: { A:10, B:20, C:5 },
+  postRecordTransfer: { from:"A", to:"B", units:4 }
+});
+
+const E2E_EXPECTED = Object.freeze({
+  mintSupply: 35,
+  snapshot: { A:10, B:20, C:5 },
+  currentAfterTransfer: { A:6, B:24, C:5 },
+  entitlementsUsd: { A:500, B:1000, C:250, total:1750 },
+  settlementKusd: { A:500, B:1000, C:250 },
+  finalStatus: "FINALIZED"
+});
+
+const LS = {
+  deployment: "kase_real_deployment_v2",
+  holders: "kase_real_holders_v2",
+  action: "kase_real_action_v2"
+};
+
+const state = {
+  provider: null,
+  operator: null,
+  operatorBalance: 0,
+  holders: [],
+  deployment: null,
+  action: null,
+  e2eReport: null,
+  busy: false
+};
+
+function el(id) { return document.getElementById(id); }
+function short(s, a=8, b=6) { return s ? `${s.slice(0,a)}…${s.slice(-b)}` : "—"; }
+function explorerTx(sig) { return `https://explorer.solana.com/tx/${sig}?cluster=devnet`; }
+function explorerAddress(addr) { return `https://explorer.solana.com/address/${addr}?cluster=devnet`; }
+function fmtSol(lamports) { return (Number(lamports) / LAMPORTS_PER_SOL).toFixed(9); }
+function money(v) { return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(v || 0); }
+
+function saveJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+function loadJSON(key) {
+  try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; }
+}
+function saveKeypair(kp) {
+  return Array.from(kp.secretKey);
+}
+function loadKeypair(arr) {
+  return Keypair.fromSecretKey(new Uint8Array(arr));
+}
+
+function loadOrCreateHolders() {
+  const stored = loadJSON(LS.holders);
+  if (stored?.length === 3) {
+    state.holders = stored.map(h => ({
+      id: h.id,
+      name: h.name,
+      keypair: loadKeypair(h.secretKey),
+      currentTokens: null,
+      solLamports: null,
+      ata: null,
+      settlementAta: null,
+      settlementUi: null
+    }));
+    return;
+  }
+
+  state.holders = ["A","B","C"].map(id => {
+    const kp = Keypair.generate();
+    return { id, name:`Investor ${id}`, keypair:kp, currentTokens:null, solLamports:null, ata:null, settlementAta:null, settlementUi:null };
+  });
+
+  saveJSON(LS.holders, state.holders.map(h => ({
+    id:h.id,
+    name:h.name,
+    secretKey:saveKeypair(h.keypair)
+  })));
+}
+
+function loadLocalState() {
+  state.deployment = loadJSON(LS.deployment);
+  state.action = loadJSON(LS.action);
+}
+
+function persistAction() {
+  saveJSON(LS.action, state.action);
+}
+
+function memoInstruction(payload, signerPubkey) {
+  const text = JSON.stringify(payload);
+  return new TransactionInstruction({
+    keys: signerPubkey ? [{pubkey: signerPubkey, isSigner:true, isWritable:false}] : [],
+    programId: MEMO_PROGRAM_ID,
+    data: new TextEncoder().encode(text)
+  });
+}
+
+async function phantomSignAndSend(originalTx, partialSigners=[], {label="transaction", maxBlockhashRetries=2}={}) {
+  if (!state.provider || !state.operator) throw new Error("Connect Phantom first");
+
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= maxBlockhashRetries; attempt++) {
+    // IMPORTANT: a new blockhash invalidates old signatures, so rebuild the legacy tx from instructions.
+    const tx = new Transaction();
+    for (const ix of originalTx.instructions) tx.add(ix);
+
+    const latest = await connection.getLatestBlockhashAndContext("confirmed");
+    tx.feePayer = state.operator;
+    tx.recentBlockhash = latest.value.blockhash;
+
+    if (partialSigners.length) tx.partialSign(...partialSigners);
+
+    try {
+      const signed = await state.provider.signTransaction(tx);
+
+      // If the user kept the Phantom popup open for too long, the blockhash may already be near expiry.
+      const currentHeight = await connection.getBlockHeight("confirmed");
+      if (currentHeight > latest.value.lastValidBlockHeight) {
+        throw new Error("BLOCKHASH_EXPIRED_BEFORE_SEND");
+      }
+
+      const sig = await connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+        maxRetries: 0,
+        minContextSlot: latest.context.slot
+      });
+
+      const confirmation = await connection.confirmTransaction({
+        signature: sig,
+        blockhash: latest.value.blockhash,
+        lastValidBlockHeight: latest.value.lastValidBlockHeight
+      }, "confirmed");
+
+      if (confirmation.value.err) {
+        throw new Error(`Transaction confirmed with error: ${JSON.stringify(confirmation.value.err)}`);
+      }
+
+      return sig;
+    } catch (e) {
+      lastError = e;
+      const message = String(e?.message || e);
+      const isBlockhashError =
+        /Blockhash not found/i.test(message) ||
+        /BlockhashNotFound/i.test(message) ||
+        /block height exceeded/i.test(message) ||
+        /BLOCKHASH_EXPIRED_BEFORE_SEND/i.test(message) ||
+        /TransactionExpiredBlockheightExceeded/i.test(message);
+
+      if (!isBlockhashError || attempt >= maxBlockhashRetries) {
+        // Expose useful simulation logs when web3.js provides them.
+        try {
+          if (typeof e?.getLogs === "function") {
+            const logs = await e.getLogs(connection);
+            console.error(`${label} logs`, logs);
+          }
+        } catch {}
+        throw e;
+      }
+
+      console.warn(`${label}: stale/expired blockhash; rebuilding with a fresh blockhash (retry ${attempt + 1}/${maxBlockhashRetries})`);
+      await new Promise(r => setTimeout(r, 250));
+      // Loop: fetch a new blockhash and ask Phantom to sign the rebuilt tx again.
+    }
+  }
+
+  throw lastError || new Error(`${label} failed`);
+}
+
+async function txFee(sig) {
+  try {
+    const tx = await connection.getTransaction(sig, { commitment:"confirmed", maxSupportedTransactionVersion:0 });
+    return tx?.meta?.fee ?? null;
+  } catch { return null; }
+}
+
+async function operatorBalance() {
+  if (!state.operator) return 0;
+  state.operatorBalance = await connection.getBalance(state.operator, "confirmed");
+  el("operatorSol").textContent = fmtSol(state.operatorBalance);
+  return state.operatorBalance;
+}
+
+async function connectPhantom() {
+  const provider = window.solana;
+  if (!provider?.isPhantom) {
+    alert("Phantom provider не найден. Открой страницу через localhost в браузере с установленным Phantom.");
+    return;
+  }
+
+  const resp = await provider.connect();
+  state.provider = provider;
+  state.operator = resp.publicKey;
+  el("operatorPubkey").textContent = state.operator.toBase58();
+  el("connectBtn").textContent = short(state.operator.toBase58());
+  el("deployBtn").disabled = false;
+
+  await operatorBalance();
+  await estimateSetupCost();
+  await hydrateDeployment();
+  await runNetworkSanityCheck({silent:true});
+  renderAll();
+}
+
+async function estimateSetupCost() {
+  try {
+    const mintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
+    // ATA rent is created by Associated Token Program; use standard base token-account size quote as a useful lower-bound.
+    const tokenAccountRent = await connection.getMinimumBalanceForRentExemption(165);
+    const estimate = mintRent + tokenAccountRent * 3;
+    el("setupCost").textContent = `≈ ${fmtSol(estimate)} SOL + fees`;
+  } catch {
+    el("setupCost").textContent = "RPC quote unavailable";
+  }
+}
+
+async function hydrateDeployment() {
+  if (!state.deployment?.mint) return;
+
+  try {
+    const mint = new PublicKey(state.deployment.mint);
+    const info = await connection.getAccountInfo(mint, "confirmed");
+    if (!info) {
+      // A prior attempt may have saved the candidate mint before tx1 landed.
+      state.deployment.stage = "NOT_CREATED";
+      saveJSON(LS.deployment, state.deployment);
+      return;
+    }
+    if (!info.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+      throw new Error("Saved mint address exists but is not owned by Token-2022");
+    }
+
+    const mintInfo = await getMint(connection, mint, "confirmed", TOKEN_2022_PROGRAM_ID);
+    state.deployment.stage = Number(mintInfo.supply) === INSTRUMENT.initialSupply ? "READY" : "MINT_CREATED";
+    state.deployment.observedSupply = Number(mintInfo.supply);
+
+    for (const h of state.holders) {
+      h.ata = getAssociatedTokenAddressSync(
+        mint,
+        h.keypair.publicKey,
+        false,
+        TOKEN_2022_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+    }
+
+    saveJSON(LS.deployment, state.deployment);
+    if (state.deployment?.settlementMint) {
+      try { await ensureSettlementRail(); } catch (e) { console.warn("Settlement rail hydrate skipped", e); }
+    }
+    await refreshChainState();
+  } catch (e) {
+    console.warn("Saved deployment verification failed", e);
+  }
+}
+
+async function ensureDeploymentCheckpoint() {
+  // Persist a candidate mint key before sending anything, so a blockhash/RPC failure can be resumed.
+  if (!state.deployment?.mint) {
+    const mint = Keypair.generate();
+    state.deployment = {
+      version:3,
+      mint: mint.publicKey.toBase58(),
+      mintSecretKey: Array.from(mint.secretKey),
+      stage:"CANDIDATE",
+      createdAt:new Date().toISOString(),
+      setupSpendLamports:0
+    };
+    saveJSON(LS.deployment, state.deployment);
+  }
+  return state.deployment;
+}
+
+async function deployBond() {
+  if (!state.operator) return;
+
+  setBusy(true, "Deploy / resume Token-2022 bond…");
+  const before = await operatorBalance();
+
+  try {
+    await ensureDeploymentCheckpoint();
+
+    const mintPubkey = new PublicKey(state.deployment.mint);
+    let mintInfoRaw = await connection.getAccountInfo(mintPubkey, "confirmed");
+
+    // Stage 1 — Mint account. If it already exists from a partial run, do NOT recreate it.
+    if (!mintInfoRaw) {
+      if (!state.deployment.mintSecretKey) throw new Error("Missing temporary mint key for deployment resume");
+      const mint = loadKeypair(state.deployment.mintSecretKey);
+      const rent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
+
+      const tx1 = new Transaction().add(
+        SystemProgram.createAccount({
+          fromPubkey: state.operator,
+          newAccountPubkey: mint.publicKey,
+          space: MINT_SIZE,
+          lamports: rent,
+          programId: TOKEN_2022_PROGRAM_ID
+        }),
+        createInitializeMintInstruction(
+          mint.publicKey,
+          INSTRUMENT.decimals,
+          state.operator,
+          state.operator,
+          TOKEN_2022_PROGRAM_ID
+        ),
+        memoInstruction({
+          v:0,
+          type:"KASE_INSTRUMENT_CREATE",
+          instrument:INSTRUMENT,
+          mint:mint.publicKey.toBase58()
+        }, state.operator)
+      );
+
+      state.deployment.instrumentSig = await phantomSignAndSend(tx1, [mint], {label:"create mint"});
+      state.deployment.stage = "MINT_CREATED";
+      // Mint authority is Phantom after initialization; private mint key is no longer needed.
+      delete state.deployment.mintSecretKey;
+      saveJSON(LS.deployment, state.deployment);
+      mintInfoRaw = await connection.getAccountInfo(mintPubkey, "confirmed");
+    }
+
+    if (!mintInfoRaw?.owner?.equals(TOKEN_2022_PROGRAM_ID)) {
+      throw new Error("Mint account is not a Token-2022 account");
+    }
+
+    // derive ATAs
+    for (const h of state.holders) {
+      h.ata = getAssociatedTokenAddressSync(
+        mintPubkey,
+        h.keypair.publicKey,
+        false,
+        TOKEN_2022_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+    }
+
+    // Stage 2 — Create only missing ATAs (idempotent/resumable).
+    const missing = [];
+    for (const h of state.holders) {
+      const info = await connection.getAccountInfo(h.ata, "confirmed");
+      if (!info) missing.push(h);
+    }
+
+    if (missing.length) {
+      const tx2 = new Transaction();
+      for (const h of missing) {
+        tx2.add(createAssociatedTokenAccountInstruction(
+          state.operator,
+          h.ata,
+          h.keypair.publicKey,
+          mintPubkey,
+          TOKEN_2022_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        ));
+      }
+      state.deployment.ataSig = await phantomSignAndSend(tx2, [], {label:"create holder token accounts"});
+      state.deployment.stage = "ATAS_CREATED";
+      saveJSON(LS.deployment, state.deployment);
+    }
+
+    // Stage 3 — Mint only the missing target deltas.
+    await readHolderState();
+    const targets = {A:10, B:20, C:5};
+    const tx3 = new Transaction();
+    let needMint = false;
+
+    for (const h of state.holders) {
+      const current = Number(h.currentTokens || 0);
+      const delta = targets[h.id] - current;
+      if (delta < 0) throw new Error(`Holder ${h.id} already has ${current}, above target ${targets[h.id]}`);
+      if (delta > 0) {
+        needMint = true;
+        tx3.add(createMintToCheckedInstruction(
+          mintPubkey,
+          h.ata,
+          state.operator,
+          delta,
+          INSTRUMENT.decimals,
+          [],
+          TOKEN_2022_PROGRAM_ID
+        ));
+      }
+    }
+
+    if (needMint) {
+      state.deployment.mintSig = await phantomSignAndSend(tx3, [], {label:"mint initial allocations"});
+    }
+
+    const mintInfo = await getMint(connection, mintPubkey, "confirmed", TOKEN_2022_PROGRAM_ID);
+    await readHolderState();
+
+    const balances = currentBalances();
+    const ready =
+      Number(mintInfo.supply) === INSTRUMENT.initialSupply &&
+      balances.A === 10 && balances.B === 20 && balances.C === 5;
+
+    if (!ready) {
+      throw new Error(`Deployment verification failed: supply=${mintInfo.supply.toString()}, balances=${JSON.stringify(balances)}`);
+    }
+
+    state.deployment.stage = "READY";
+    state.deployment.observedSupply = Number(mintInfo.supply);
+    state.deployment.readyAt = new Date().toISOString();
+
+    localStorage.removeItem(LS.action);
+    state.action = null;
+
+    const after = await operatorBalance();
+    state.deployment.setupSpendLamports =
+      (state.deployment.setupSpendLamports || 0) + Math.max(0, before - after);
+    saveJSON(LS.deployment, state.deployment);
+
+    await refreshChainState();
+    renderAll();
+  } catch (e) {
+    console.error(e);
+    // Keep deployment checkpoint so the same button can resume rather than creating another mint.
+    if (state.deployment) saveJSON(LS.deployment, state.deployment);
+    alert(`Deploy/resume failed: ${e.message || e}\n\nState checkpoint сохранён. Нажми Deploy ещё раз — код сначала проверит сеть и продолжит с незавершённого шага.`);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function readHolderState() {
+  if (!state.deployment?.mint) return;
+  const mint = new PublicKey(state.deployment.mint);
+
+  for (const h of state.holders) {
+    h.ata = getAssociatedTokenAddressSync(
+      mint,
+      h.keypair.publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    try {
+      const acc = await getAccount(connection, h.ata, "confirmed", TOKEN_2022_PROGRAM_ID);
+      h.currentTokens = Number(acc.amount);
+    } catch {
+      h.currentTokens = 0;
+    }
+
+    h.solLamports = await connection.getBalance(h.keypair.publicKey, "confirmed");
+  }
+}
+
+async function refreshChainState() {
+  await readHolderState();
+  if (state.deployment?.settlementMint) await readSettlementBalances();
+  await operatorBalance();
+  renderAll();
+  await runNetworkSanityCheck({silent:true});
+}
+
+function currentBalances() {
+  return Object.fromEntries(state.holders.map(h => [h.id, h.currentTokens]));
+}
+
+function expectedInitialBalances() {
+  return {A:10,B:20,C:5};
+}
+
+async function makeSnapshot() {
+  requireDeployment();
+  setBusy(true, "Reading Token-2022 balances & writing snapshot…");
+  try {
+    await readHolderState();
+    const balances = currentBalances();
+    const slot = await connection.getSlot("confirmed");
+    const blockTime = await connection.getBlockTime(slot);
+    const actionId = `CA-COUPON-${Date.now()}`;
+
+    const snapshotBase = {
+      v:0,
+      type:"KASE_RECORD_DATE_SNAPSHOT",
+      actionId,
+      mint:state.deployment.mint,
+      slot,
+      blockTime,
+      holders:state.holders.map(h => ({
+        id:h.id,
+        owner:h.keypair.publicKey.toBase58(),
+        units:h.currentTokens
+      }))
+    };
+
+    const snapshotHash = await sha256(JSON.stringify(snapshotBase));
+    const payload = {...snapshotBase, snapshotHash};
+
+    const tx = new Transaction().add(memoInstruction(payload, state.operator));
+    const sig = await phantomSignAndSend(tx);
+
+    state.action = {
+      actionId,
+      status:"SNAPSHOTTED",
+      snapshot: payload,
+      snapshotSig:sig,
+      snapshotFee:await txFee(sig),
+      transferSig:null,
+      entitlements:null,
+      entitlementSig:null,
+      approvalSig:null,
+      settlementSig:null,
+      receiptSig:null,
+      createdAt:new Date().toISOString()
+    };
+    persistAction();
+    await refreshChainState();
+  } catch (e) {
+    console.error(e); alert(`Snapshot failed: ${e.message || e}`);
+  } finally { setBusy(false); }
+}
+
+async function transferAtoB() {
+  requireDeployment();
+  if (!state.action?.snapshotSig) return alert("Сначала сделай Record Date snapshot.");
+  setBusy(true, "A signs transfer 4 KZB26 → B…");
+
+  try {
+    const mint = new PublicKey(state.deployment.mint);
+    const A = state.holders.find(h => h.id==="A");
+    const B = state.holders.find(h => h.id==="B");
+
+    const tx = new Transaction().add(
+      createTransferCheckedInstruction(
+        A.ata,
+        mint,
+        B.ata,
+        A.keypair.publicKey,
+        4,
+        INSTRUMENT.decimals,
+        [],
+        TOKEN_2022_PROGRAM_ID
+      ),
+      memoInstruction({
+        v:0,
+        type:"KASE_POST_RECORD_TRANSFER",
+        actionId:state.action.actionId,
+        from:"A",
+        to:"B",
+        units:4,
