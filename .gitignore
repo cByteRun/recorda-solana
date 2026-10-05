@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.vite/
+target/
+.anchor/
+test-ledger/
+.validator/
+.env
+.env.*
+!.env.example
+*.keypair.json
+*.secret.json
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
