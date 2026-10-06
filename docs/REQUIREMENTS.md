@@ -6,6 +6,14 @@ Phase 1 Devnet reproduction for **UC-CP-01 / NFR-10** is described in [README](.
 
 ## 6. Users and roles
 
+### Protocol role views — planned acceptance
+
+`/protocol` must allow Operator / Investor / Auditor view selection without changing the current Action PDA. Operator includes Paying Agent for MVP and sees lifecycle controls, all holders, total obligation and vault. Investor sees the connected holder's current units, record-date units, entitlement, destination, payment status and proof. Auditor can open the action without a wallet and sees all rights, totals, hashes, receipt and transaction links with no mutation controls.
+
+For judge demos, Investor may explicitly select A/B/C/D in **read-only demo mode**; this selection is not wallet authentication and cannot sign as the selected holder. Role selection never grants authority: wallet identity and on-chain authorization govern mutations. Disconnected or unknown investors see a connect/no-position state, never another holder presented as their own.
+
+Role golden/E2E acceptance uses the same action and `golden/coupon-tz-section-22.json`: A current/snapshot/payout = 6/10/500, B = 9/5/250, C = 2/2/100, D = 0/0/0; Operator/Auditor total = 850. Tests must cover switching without losing the action, field/control visibility, unauthorized wallets and wallet-free audit. These role views are planned, not implemented acceptance; Redemption/Voting expectations follow their own fixtures when delivered.
+
 ### R1. Market / Corporate Actions Operator
 A representative of KASE, depository infrastructure or an authorized operator.
 
@@ -242,14 +250,16 @@ Why this action:
 
 The MVP is complete only if the live demo can show the following in sequence:
 
-- [ ] A Token-2022 test bond exists on-chain.
-- [ ] There are 3+ registered holders.
-- [ ] Balances are allocated.
-- [ ] A Coupon corporate action is created.
-- [ ] A record-date snapshot is actually recorded.
-- [ ] Entitlements are actually calculated.
-- [ ] Coupon settlement actually executes through Solana or settlement initiation is clearly demonstrated.
-- [ ] The transaction/receipt can be verified.
+Checked foundation/Coupon items were demonstrated by the human-signed Devnet golden on 2026-10-06 (action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`). Redemption, Voting and full three-action acceptance remain open.
+
+- [x] A Token-2022 test bond exists on-chain.
+- [x] There are 3+ registered holders.
+- [x] Balances are allocated.
+- [x] A Coupon corporate action is created.
+- [x] A record-date snapshot is actually recorded.
+- [x] Entitlements are actually calculated.
+- [x] Coupon settlement actually executes through Solana or settlement initiation is clearly demonstrated.
+- [x] The transaction/receipt can be verified.
 - [ ] Redemption calculates principal.
 - [ ] Redemption actually burns/retires/locks the corresponding units.
 - [ ] A second redemption is impossible.
@@ -257,5 +267,5 @@ The MVP is complete only if the live demo can show the following in sequence:
 - [ ] Voting power is based on the record-date snapshot.
 - [ ] Each scenario has a final on-chain record.
 - [ ] The UI clearly distinguishes IMPLEMENTED and SIMULATED.
-- [ ] README enables judges to reproduce the demo.
+- [x] README enables judges to reproduce the demo.
 - [ ] The demo video shows complete E2E beyond the interface.

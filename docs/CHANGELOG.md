@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-06 — Plan protocol role views and golden acceptance
+
+- Define Operator/Investor/Auditor switching, wallet authorization boundaries, explicit read-only holder demos and shared Coupon golden expectations in REQUIREMENTS and roadmap; implementation/E2E remain unchecked.
+
+## 2026-10-06 — Align hackathon DoD with verified Coupon delivery
+
+- [x] Mark demonstrated Token-2022 issuance, holder allocation, Coupon snapshot/calculation/settlement/receipt and reproduction README in REQUIREMENTS §24. Keep Redemption, Voting, full role/UI journeys and demo video open.
+- [x] Clarify roadmap Phase 1 acceptance wording; Phase 4 still requires all three actions.
+
 ## 2026-10-06 — Human Devnet Coupon golden accepted
 
 - [x] Verify saved human-signed replay: snapshot 10/5/2/0 → current 6/9/2/0, real payment deltas 500/250/100/0, total 850; finalized receipt and read-only hash audit. Action: `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`.

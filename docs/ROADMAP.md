@@ -23,7 +23,7 @@ Audit: **2026-10-06**. [Test results and artifacts](ARCHITECTURE.md#test-evidenc
 
 ## Phase 1 — MVP: Coupon foundation
 
-Checked M1.0–M1.5 features mean implemented and locally verified, not deployed/accepted on public Devnet. The matching local evidence source/IDL/binary hashes were rechecked on 2026-10-06. Phase 1 Coupon human Devnet golden passed as recorded below. Full TZ acceptance also requires the unfinished Phase 2 actions.
+Checked M1.0–M1.5 features are implemented and locally verified; the Coupon happy path also passed human-signed Devnet acceptance. The matching local evidence source/IDL/binary hashes were rechecked on 2026-10-06. Phase 1 Coupon human Devnet golden passed as recorded below. Full TZ acceptance also requires the unfinished Phase 2 actions.
 
 ### M1.0 — Browser reference
 
@@ -118,6 +118,13 @@ Optional setup utility: `solana:airdrop` is implemented with unit-tested network
 
 ### M3.2 — Operator, Investor and Auditor
 
+- [ ] Add `/protocol` role selector: Operator / Investor / Auditor, preserving the selected Action PDA when switching views.
+- [ ] Operator: show all holders, total obligation, vault, lifecycle controls and transaction approval; combine Paying Agent for MVP.
+- [ ] Investor: show connected holder's current units, record-date units, entitlement, payment destination/status and proof; provide explicit A/B/C/D read-only demo selection.
+- [ ] Auditor: wallet-free view of all rights, totals, hashes, receipt and transaction links; no mutation controls.
+- [ ] Role selection changes presentation only; wallet identity and program authorization still govern mutations. Demo holder selection never signs as that holder.
+- [ ] Define role golden expectations from the same Coupon fixture/action: A 6 current / 10 snapshot / 500 due; B 9 / 5 / 250; C 2 / 2 / 100; D 0 / 0 / 0; Operator/Auditor total 850.
+- [ ] E2E: switch roles on one action, verify expected fields/control visibility, disconnected/unauthorized wallets and read-only reopening; add Redemption/Voting role checks when implemented.
 - [ ] Complete Instrument, Registry and Action Detail views for all actions.
 - [ ] Complete Operator/Investor/Auditor journeys and role restrictions.
 - [ ] Consistent IMPLEMENTED/SIMULATED labels.
