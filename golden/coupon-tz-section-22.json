@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "coupon-tz-section-22",
   "source": "docs/TZ.md §§8,12,22,23",
-  "scope": "Independent expected values for the offline/client contract; not on-chain execution evidence",
+  "scope": "Independent expected values shared by client, local-validator and human Devnet golden checks; the fixture alone is not on-chain execution evidence",
   "input": {
     "terms": { "faceValueMinor": 100000, "annualCouponBps": 1000, "paymentsPerYear": 2 },
     "snapshot": { "A": 10, "B": 5, "C": 2, "D": 0 },

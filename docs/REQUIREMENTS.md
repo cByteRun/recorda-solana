@@ -2,6 +2,8 @@
 
 This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained. Delivery status belongs in [ROADMAP](ROADMAP.md); evidence is maintained in [ROADMAP](ROADMAP.md#verification-and-gaps).
 
+Phase 1 Devnet reproduction for **UC-CP-01 / NFR-10** is described in [README](../README.md#phase-1-golden-on-devnet--real-phantom). Airdrop supplies test SOL for fees/rent; it is a setup aid, not coupon funding or a new business requirement. Human Devnet golden evidence supplements the local acceptance matrix; it does not replace TC-04/15–19 negative tests or extend delivery to redemption/voting. The connected human demo wallet is R1 Operator; R3 demo holder identities remain disposable.
+
 ## 6. Users and roles
 
 ### R1. Market / Corporate Actions Operator
@@ -257,4 +259,3 @@ The MVP is complete only if the live demo can show the following in sequence:
 - [ ] The UI clearly distinguishes IMPLEMENTED and SIMULATED.
 - [ ] README enables judges to reproduce the demo.
 - [ ] The demo video shows complete E2E beyond the interface.
-

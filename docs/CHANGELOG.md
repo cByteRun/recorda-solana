@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-10-06 — Audit Phase 1 scope and clarify golden evidence
+
+- [x] Reconcile M1.0–M1.6 with Rust instructions, client/local-validator tests and saved evidence; source/IDL/binary hashes match the existing local run.
+- [x] Distinguish client golden simulation, actual local Solana execution and unverified human Devnet replay; keep NFR-10 and full TZ DoD open.
+- [x] Remove automatic airdrop from Devnet golden runner; existing wallet SOL is used, optional faucet tooling is outside the business-feature checklist. No successful live airdrop is claimed.
+- [x] Check official Devnet RPC: neither the declared program ID nor the deployment keypair public address has an account; document ID synchronization, build/deploy and subsequent Phantom replay.
+- [x] Explain TZ/historical golden inputs, minor-unit expected payouts, role boundaries and the remaining Redemption/Voting scope.
+
+## 2026-10-06 — Phase 1 Devnet golden and airdrop
+
+- [x] Correct Devnet genesis guard to the full hash returned by the official Devnet RPC; the truncated value incorrectly rejected Devnet before requesting funds.
+
+- [x] Add `solana:airdrop`: request 1 test SOL for a public address, enforce Devnet genesis, confirm actual faucet signature and expose faucet fallback.
+- [x] Add `test:e2e:golden:devnet`: attach to a user's Phantom browser without wallet/RPC substitution; drive existing Phase 1 coupon controls with human signatures.
+- [x] Independently compare required golden snapshot/current units, rights, Token-2022 payout deltas, total and receipt; retain public Devnet evidence and read-only hash audit.
+- [x] Link TZ → REQUIREMENTS → ROADMAP → golden tests; document Operator versus disposable Investor identities and distinguish local/controlled tests from Devnet acceptance.
+- [x] Verification: build passes; existing golden 36/36; airdrop guard/confirmation tests 3/3 (also added to CI); `/protocol` browser controls render with no page errors. Devnet runner syntax checked; human end-to-end execution remains pending.
+- [x] Require the configured Recorda ID to match generated IDL; explain that Deploy KZTB26/token mint and ComputeBudget/Associated Token IDs are not Rust program deployment evidence.
+- [ ] Live Devnet replay remains pending matching program deployment and human wallet signatures; no Devnet PASS claimed.
+
 ## 2026-10-06 — Simplify roadmap
 
 - [x] Use current focus → phases → milestones → feature checklists; preserve completion states.
