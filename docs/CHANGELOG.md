@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-10-06 — Human Devnet Coupon golden accepted
+
+- [x] Verify saved human-signed replay: snapshot 10/5/2/0 → current 6/9/2/0, real payment deltas 500/250/100/0, total 850; finalized receipt and read-only hash audit. Action: `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`.
+- [x] Update README, roadmap and architecture acceptance status; retain local public evidence in `target/devnet-evidence/coupon.json` / `coupon.png`.
+- [x] RPC recovery tests pass 6/6, including web3 account read recovery and no automatic send/faucet retry.
+
+- Fix Devnet golden verifier transport: serialize RPC requests and retry failed reads / HTTP 429, 502, 503, 504 with bounded backoff and request timeouts. Transaction sends and faucet requests are never retried by this transport.
+
+## 2026-10-06 — Fix record-date readiness in UI and Devnet golden
+
+- [x] Use Clock sysvar `unix_timestamp`, matching Rust's `Clock::get()`, instead of estimated `getBlockTime`; base runner/default UI scheduling on chain time.
+- [x] Show live record-time readiness and disable early snapshot; controller rechecks Clock before BeginSnapshot and carries its context slot into simulation/broadcast.
+- [x] Add Clock wait, unavailable-clock and timeout regressions plus minimum-slot propagation; build and golden 44/44 pass, validator integration 16/16 and protocol UI 4/4 pass.
+- [x] Protocol UI checks early snapshot blocking and waits for transfer, approval, funding and finalization completion rather than short fixed assertion windows.
+- [x] Document Custom:6007 recovery by waiting/resuming the same Action PDA; Rust's date guard remains intact and no program redeployment is required.
+
+## 2026-10-06 — Validate the first manual Devnet coupon
+
+- [x] Independently read action `CE5ueNhvatzRjinSwDcrpbad16AzveNgEzkcNDKPiR4S`: FINALIZED, four processed holders, exact transaction payment deltas 500/250/100/0, total 850, empty vault and verified snapshot/receipt hashes.
+- [x] Verify A→B:4 at slot 508141220, after finalization at slot 508140588; current units are now 6/9/2/0, but the intended transfer-before-payout golden lifecycle is not yet proven by this run.
+- [x] Save a separate public read-only audit under `target/devnet-evidence/action-CE5ueNhvatzRjinSwDcrpbad16AzveNgEzkcNDKPiR4S.json`; explain on-chain persistence, manual versus runner artifacts and the snapshot → transfer → calculate → payout demo order in README.
+
+## 2026-10-06 — Reproducible user setup and troubleshooting
+
+- [x] Order README as quick application start → three-terminal Devnet golden replay → technical installation/build/deploy → troubleshooting.
+- [x] Document Chromium installation, dedicated debugging profile on port 9222, Phantom testnet setup, per-terminal environment loading and Action PDA resume.
+- [x] Preserve current deployment/evidence boundaries and record encountered PATH, CLI wallet, rent/funding, faucet, ID/RPC, disabled-stage and payment-recovery issues.
+
+## 2026-10-06 — Fix human Devnet runner stage synchronization
+
+- [x] Replace default 30-second disabled-button clicks with five-minute stage-aware waits; wait for busy/audit refresh and surface application errors immediately.
+- [x] Skip already completed stages, support `RECORDA_DEVNET_ACTION` pre-payment resume, and check on-chain holder balances before repeating the demo transfer.
+- [x] Retain public action/error diagnostics and screenshot after failure; refuse payout-delta replay once payments have started without an original baseline.
+- [x] Build passes; client/runner regression 40/40, including four synchronization tests. Human Devnet settlement/receipt acceptance remains open.
+- [x] Read-only CLI confirms the user's Devnet deployment at `CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF`, slot 508134659; update deployment status without claiming full live acceptance.
+
 ## 2026-10-06 — Audit Phase 1 scope and clarify golden evidence
 
 - [x] Reconcile M1.0–M1.6 with Rust instructions, client/local-validator tests and saved evidence; source/IDL/binary hashes match the existing local run.

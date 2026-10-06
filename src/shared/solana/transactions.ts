@@ -42,6 +42,7 @@ export async function phantomSignAndSend({
   label = "transaction",
   maxBlockhashRetries = 2,
   onSubmitted,
+  minContextSlot = 0,
   rpc = connection
 }: {
   provider: PhantomProvider;
@@ -51,6 +52,7 @@ export async function phantomSignAndSend({
   label?: string;
   maxBlockhashRetries?: number;
   onSubmitted?: (signature: string) => void;
+  minContextSlot?: number;
   rpc?: Connection;
 }) {
   if (!provider.publicKey?.equals(operator)) {
@@ -62,6 +64,7 @@ export async function phantomSignAndSend({
     let broadcastSignature: string | null = null;
     const tx = transactionFromInstructions(instructions);
     const latest = await rpc.getLatestBlockhashAndContext("confirmed");
+    const requiredContextSlot = Math.max(minContextSlot, latest.context.slot);
     tx.feePayer = operator;
     tx.recentBlockhash = latest.value.blockhash;
     // Use a canonical v0 wire transaction for both simulation and Phantom.
@@ -81,7 +84,7 @@ export async function phantomSignAndSend({
       const simulation = await rpc.simulateTransaction(walletTransaction, {
         sigVerify: false,
         commitment: "confirmed",
-        minContextSlot: latest.context.slot
+        minContextSlot: requiredContextSlot
       });
       if (simulation.value.err) {
         const logs = (simulation.value.logs ?? []).slice(-6).join("\n");
@@ -109,7 +112,7 @@ export async function phantomSignAndSend({
         skipPreflight: false,
         preflightCommitment: "confirmed",
         maxRetries: 0,
-        minContextSlot: latest.context.slot
+        minContextSlot: requiredContextSlot
       });
       onSubmitted?.(broadcastSignature);
       const confirmation = await rpc.confirmTransaction(

@@ -2,7 +2,9 @@
 anchor_version = "0.32.1"
 solana_version = "2.3.0"
 [programs.localnet]
-recorda = "Fg6PaFpoGXkYsidMpWxTWqkZ7FEfcYkgMQHGhUhF9J3x"
+recorda = "CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF"
+[programs.devnet]
+recorda = "CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF"
 [provider]
 cluster = "Localnet"
 wallet = "~/.config/solana/id.json"

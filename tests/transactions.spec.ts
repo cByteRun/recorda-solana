@@ -84,6 +84,20 @@ test("successful simulation still requires operator signing before broadcast", a
   expect(h.calls).toEqual({ simulate: 1, sign: 1, send: 1 });
 });
 
+test("snapshot readiness slot is preserved for simulation and broadcast across RPC banks", async () => {
+  const h = harness();
+  h.rpc.simulateTransaction = (async (_tx, config) => {
+    if (Array.isArray(config)) throw new Error("Expected simulation config, not signer array");
+    expect(config?.minContextSlot).toBe(25);
+    return { context: { slot: 25 }, value: { err: null, logs: [] } };
+  }) as Connection["simulateTransaction"];
+  h.rpc.sendRawTransaction = async (_tx, options) => {
+    expect(options?.minContextSlot).toBe(25);
+    return "submitted-signature";
+  };
+  await expect(phantomSignAndSend({ provider: h.provider, operator: operator.publicKey, instructions: [memo], rpc: h.rpc, minContextSlot: 25 })).resolves.toBe("submitted-signature");
+});
+
 test("changed Phantom account is rejected before simulation or signing", async () => {
   const h = harness();
   h.provider.publicKey = Keypair.generate().publicKey;

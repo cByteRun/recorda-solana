@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts tests/transactions.spec.ts tests/rpc-fetch.spec.ts tests/coupon-precision.spec.ts tests/bridge-lifecycle.spec.ts",
+    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts tests/transactions.spec.ts tests/rpc-fetch.spec.ts tests/coupon-precision.spec.ts tests/bridge-lifecycle.spec.ts tests/devnet-runner.spec.ts tests/chain-clock.spec.ts",
     "solana:airdrop": "node scripts/devnet-airdrop.mjs",
     "test:devnet:setup": "node --test --test-isolation=none scripts/devnet.test.mjs",
     "test:e2e:golden:devnet": "node scripts/devnet-golden.mjs",

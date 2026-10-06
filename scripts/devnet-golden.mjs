@@ -6,6 +6,8 @@ import { PublicKey } from '@solana/web3.js';
 import { Program } from '@coral-xyz/anchor';
 import { TOKEN_2022_PROGRAM_ID, getAccount, getMint, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { devnetConnection } from './devnet.mjs';
+import { protocolStage } from './protocol-stage.mjs';
+import { readChainClock, waitForRecordDate } from '../src/shared/solana/chain-clock.mjs';
 
 const output = 'target/devnet-evidence';
 mkdirSync(output, { recursive: true });
@@ -22,12 +24,14 @@ const fixture = JSON.parse(readFileSync('golden/coupon-tz-section-22.json', 'utf
 const browser = await chromium.connectOverCDP(process.env.RECORDA_BROWSER_CDP || 'http://127.0.0.1:9222');
 const context = browser.contexts()[0];
 const page = await context.newPage();
+page.setDefaultTimeout(300_000);
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 const expect = baseExpect.configure({ timeout: 300_000 });
 const origin = process.env.RECORDA_APP_URL || 'http://localhost:4444';
 try {
-  await page.goto(`${origin}/protocol`);
+  const resumeAction = process.env.RECORDA_DEVNET_ACTION;
+  await page.goto(`${origin}/protocol${resumeAction ? `?action=${new PublicKey(resumeAction).toBase58()}` : ''}`);
   // Vite development modules expose only public runtime configuration.
   const config = await page.evaluate(async () => {
     const { connection } = await import('/src/shared/solana/config.ts');
@@ -43,42 +47,53 @@ try {
   const operatorBalanceLamports = await rpc.getBalance(new PublicKey(operator));
   assert.ok(operatorBalanceLamports > 0, 'Operator wallet has no Devnet SOL for fees/account rent. Fund the wallet before replay.');
   console.log(`Operator Devnet balance: ${operatorBalanceLamports} lamports. No faucet request is made.`);
-  // Each replay uses new PDAs and disposable demo holders, preserving prior evidence/cache.
-  await page.getByLabel('Demo instrument ID', { exact: true }).fill(String(Date.now()));
   async function click(name, state) {
     console.log(`Stage: ${name} — confirm Phantom prompts`);
-    const button = page.getByRole('button', { name, exact: true });
-    await expect(button).toBeEnabled();
-    await button.click();
-    await expect(button).toBeEnabled();
-    await expect(page.getByRole('alert')).toHaveCount(0);
-    if (state) await expect(page.getByTestId('protocol-summary')).toContainText(state);
+    return protocolStage(page, name, state);
   }
-  // Stage buttons usually become disabled after a transition, so await next state instead.
   async function transition(name, state) {
-    console.log(`Stage: ${name} — confirm Phantom prompts`);
-    await page.getByRole('button', { name, exact: true }).click();
-    await expect(page.getByTestId('protocol-summary')).toContainText(state);
-    await expect(page.getByRole('alert')).toHaveCount(0);
+    return click(name, state);
   }
-  await click('Create / resume demo instrument');
+  if (!resumeAction) {
+    // Fresh replays use a new instrument; resume preserves the existing action.
+    await page.getByLabel('Demo instrument ID', { exact: true }).fill(String(Date.now()));
+    await click('Create / resume demo instrument');
+  }
   // Derive only public demo addresses inside the browser; never export holder secrets.
   const holderAddresses = await page.evaluate(async () => {
     const { Keypair } = await import('/node_modules/.vite/deps/@solana_web3__js.js');
     return JSON.parse(localStorage.getItem('recorda:protocol:disposable-holders:v1')).map(secret => Keypair.fromSecretKey(Uint8Array.from(secret)).publicKey.toBase58());
   });
-  await page.getByLabel('Record timestamp (ISO UTC)').fill(new Date(Date.now() + 60_000).toISOString());
-  await transition('Schedule coupon', 'SCHEDULED');
+  assert.equal(holderAddresses.length, 4, 'Resume requires the original demo holder cache in this browser profile');
+  if (!resumeAction) {
+    const clock = await readChainClock(rpc);
+    await page.getByLabel('Record timestamp (ISO UTC)').fill(new Date(Number(clock.timestamp + 60n) * 1000).toISOString());
+    await click('Schedule coupon');
+    await expect(page.getByTestId('protocol-summary')).toHaveAttribute('data-state', 'scheduled');
+  } else {
+    await expect(page.getByTestId('protocol-summary')).toBeVisible();
+    await expect(page.getByTestId('protocol-root')).toHaveAttribute('data-busy', 'false');
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  }
   const actionAddress = new PublicKey(await page.getByTestId('protocol-action-input').inputValue());
   const scheduled = await program.account.corporateAction.fetch(actionAddress);
-  while ((await rpc.getBlockTime(await rpc.getSlot())) < Number(scheduled.recordTimestamp.toString())) await new Promise(resolve => setTimeout(resolve, 1000));
-  await transition('Begin / resume snapshot → finalize', 'SNAPSHOTTED');
-  await click('Demo: A transfers 4 → B');
-  await transition('Calculate protocol rights', 'AWAITINGAPPROVAL');
-  await transition('Approve in Phantom', 'APPROVED');
-  await transition('Fund vault with mock USD', 'FUNDED');
   const terms = await program.account.instrument.fetch(scheduled.instrument);
   assert.ok(terms.authority.equals(new PublicKey(operator)));
+  if ('scheduled' in scheduled.status) {
+    console.log(`Waiting for Solana Clock to reach record timestamp ${scheduled.recordTimestamp}`);
+    await waitForRecordDate(rpc, scheduled.recordTimestamp.toString());
+  }
+  await transition('Begin / resume snapshot → finalize', 'snapshotted');
+  const bondAddress = holder => PublicKey.findProgramAddressSync([Buffer.from('bond-account'), scheduled.instrument.toBuffer(), new PublicKey(holder).toBuffer()], programId)[0];
+  const units = await Promise.all(holderAddresses.map(async holder => (await getAccount(rpc, bondAddress(holder), 'confirmed', TOKEN_2022_PROGRAM_ID)).amount.toString()));
+  const expectedCurrent = Object.values(fixture.expected.currentAfterTransfer).map(String);
+  if (JSON.stringify(units) !== JSON.stringify(expectedCurrent)) {
+    assert.deepEqual(units, Object.values(fixture.input.snapshot).map(String), 'Unexpected balances: refusing to repeat A→B transfer');
+    await click('Demo: A transfers 4 → B');
+  } else console.log('A→B transfer already present on chain; skipping');
+  await transition('Calculate protocol rights', 'awaitingApproval');
+  await transition('Approve in Phantom', 'approved');
+  await transition('Fund vault with mock USD', 'funded');
   assert.equal(terms.faceValueMinor.toString(), String(fixture.input.terms.faceValueMinor));
   assert.equal(terms.couponBps, fixture.input.terms.annualCouponBps);
   assert.equal(terms.paymentsPerYear, fixture.input.terms.paymentsPerYear);
@@ -93,8 +108,9 @@ try {
   });
   const destinations = rights.map(r => getAssociatedTokenAddressSync(terms.paymentMint, r.account.holder, false, TOKEN_2022_PROGRAM_ID));
   const before = await Promise.all(destinations.map(async address => (await rpc.getAccountInfo(address)) ? (await getAccount(rpc, address, 'confirmed', TOKEN_2022_PROGRAM_ID)).amount : 0n));
-  await transition('Settle / resume unpaid holders', 'SETTLED');
-  await transition('Finalize on-chain receipt', 'FINALIZED');
+  assert.ok(rights.every(r => !r.account.settled), 'Payments already started: reconcile the existing action; a new golden payout-delta replay requires an unpaid action');
+  await transition('Settle / resume unpaid holders', 'settled');
+  await transition('Finalize on-chain receipt', 'finalized');
   const actual = [];
   for (const [index, name] of Object.keys(fixture.input.snapshot).entries()) {
     const right = await program.account.entitlementPosition.fetch(rights[index].publicKey);
@@ -132,6 +148,13 @@ try {
   writeFileSync(`${output}/coupon.json`, JSON.stringify({ network: 'devnet', genesis: await rpc.getGenesisHash(), program: programId.toBase58(), operator, operatorBalanceLamports, fixture: fixture.id, action: actionAddress.toBase58(), instrument: scheduled.instrument.toBase58(), receipt: receiptAddress.toBase58(), actual, signatures, instrumentSignatures, verifiedAt: new Date().toISOString(), scope: 'Human Phantom-signed Phase 1 golden happy path; negative acceptance remains in local suites' }, null, 2) + '\n');
   await auditContext.close();
   console.log(`PASS: Devnet golden payouts, immutable rights, receipt and read-only audit. Evidence: ${output}/coupon.json`);
+} catch (error) {
+  const action = await page.getByTestId('protocol-action-input').inputValue().catch(() => '');
+  const alerts = await page.getByRole('alert').allTextContents().catch(() => []);
+  await page.screenshot({ path: `${output}/failure.png`, fullPage: true }).catch(() => {});
+  writeFileSync(`${output}/failure.json`, JSON.stringify({ action, url: page.url(), alerts, error: error.message, failedAt: new Date().toISOString() }, null, 2) + '\n');
+  if (action) console.error(`Existing action: ${action}\nBefore payments start, resume with: RECORDA_DEVNET_ACTION=${action} npm run test:e2e:golden:devnet`);
+  throw error;
 } finally {
   await browser.close(); // Disconnect CDP; user's Chrome remains open.
 }

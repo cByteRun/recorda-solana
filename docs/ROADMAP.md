@@ -1,6 +1,6 @@
 # Roadmap
 
-**Current focus:** Phase 1 human Devnet golden acceptance; Phase 2 — Redemption and Voting remains next.
+**Current focus:** Phase 1 Coupon human Devnet golden passed; Phase 2 — Redemption and Voting remains next.
 
 [Specification](TZ.md) · [Requirements](REQUIREMENTS.md) · [Verification](#verification-and-gaps)
 
@@ -14,16 +14,16 @@ Audit: **2026-10-06**. [Test results and artifacts](ARCHITECTURE.md#test-evidenc
 | FR-16,20–22; TC-01–03,05 | `coupon_minor`, `calculate_entitlement` | Rust tests + integration golden/rounding/overflow | A/B/C/D: snapshot 10/5/2/0 → current 6/9/2/0 → coupon 500/250/100/0; total 850 |
 | FR-23–27; TC-04,15,17–19 | approve/fund/settle/finalize instructions | Integration + `protocol-ui-tests/coupon.spec.ts` | Actual transfers, funded-vault checks, CPI rollback, duplicate protection and partial reload/resume |
 | FR-38–42; TC-16 | receipt/events; `protocol.ts`, `protocol-audit.ts`, protocol page | Integration + `protocol-ui-tests/audit.spec.ts` and browser lifecycle | Independent formula/hash/destination checks; forged rights/receipt and wrong owner fail closed; read-only reopen after clearing storage |
-| R1 client boundary | Browser/Memo controller; `coupon.ts`, `transactions.ts`, `rpc-fetch.ts` | Six files in `tests/` selected by `test:e2e:golden` | 36 tests (including integer-codec compatibility): model/UI, decoded transfers, bad RPC/accounts, rejected approval, funding, corrupted cache and uncertain-signature guard; controlled RPC only |
-| UC-CP-01; TC-01–03,05; FR-24–25,40–42; NFR-10 | Existing `/protocol` controls + `scripts/devnet-golden.mjs` | `test:e2e:golden:devnet`; expected artifact `target/devnet-evidence/coupon.json` | Runner code/syntax reviewed; intended human Phantom + independent PDA/payment verification has not completed live E2E; NFR-10 remains open |
+| R1 client boundary / Devnet runner synchronization | Browser/Memo controller; `coupon.ts`, `transactions.ts`, `rpc-fetch.ts`; `scripts/protocol-stage.mjs`, `chain-clock.mjs` | Eight files in `tests/` selected by `test:e2e:golden` | 44 tests: original 36 plus stage waits/progression/errors, program Clock readiness/fail-closed timeout and readiness-slot propagation; controlled RPC/DOM only |
+| UC-CP-01; TC-01–03,05; FR-24–25,40–42; NFR-10 | Existing `/protocol` controls + `scripts/devnet-golden.mjs` | `test:e2e:golden:devnet`; saved artifact `target/devnet-evidence/coupon.json` | PASS: human Phantom + independent PDA/payment verification; Coupon happy path accepted, complete NFR-10 scope remains open |
 | NFR-01–08,11,12 | Checked program math, constraints, immutable rights, per-holder progress; Phantom operator key | Rust/integration/browser suites + source inspection | Coupon guarantees exercised locally; no comprehensive security review or exhaustive authorization matrix claimed |
-| NFR-09–10; TZ §19/21 | React/Vite Coupon views and setup | Build + browser tests | Coupon UX locally verified; Next.js mismatch, complete role journeys and human Devnet replay open |
+| NFR-09–10; TZ §19/21 | React/Vite Coupon views and setup | Build + browser tests | Coupon UX locally verified; Next.js mismatch, complete role journeys remain open; Coupon human Devnet replay passed |
 | UC-BR-01; FR-17–18,28–32; TC-06–10 | Only preparatory principal/final-coupon fields | No redemption E2E | Open; field assertions do not satisfy the scenario |
 | UC-VOTE-01; FR-19,33–37; TC-11–14 | Only preparatory voting-power field | No voting E2E | Open |
 
 ## Phase 1 — MVP: Coupon foundation
 
-Checked M1.0–M1.5 features mean implemented and locally verified, not deployed/accepted on public Devnet. The matching local evidence source/IDL/binary hashes were rechecked on 2026-10-06. Phase 1 Devnet acceptance remains open below. Full TZ acceptance also requires the unfinished Phase 2 actions.
+Checked M1.0–M1.5 features mean implemented and locally verified, not deployed/accepted on public Devnet. The matching local evidence source/IDL/binary hashes were rechecked on 2026-10-06. Phase 1 Coupon human Devnet golden passed as recorded below. Full TZ acceptance also requires the unfinished Phase 2 actions.
 
 ### M1.0 — Browser reference
 
@@ -73,9 +73,13 @@ Checked M1.0–M1.5 features mean implemented and locally verified, not deployed
 - [x] Actual validator PDA/token-account verification.
 - [x] Authorization, mutation, funding and duplicate-payment negatives.
 - [x] Browser signature rejection, reload/resume and forged-proof rejection.
-- [x] Human Phantom golden runner code using existing Phase 1 controls, independent payment deltas and public evidence (live E2E unverified).
-- [ ] Synchronize deployment keypair public ID with Rust/Anchor/IDL, build and deploy the matching program on Devnet.
-- [ ] Execute human Devnet golden replay against the deployed matching program; retain signatures and receipt.
+- [x] Human Phantom golden runner code using existing Phase 1 controls, independent payment deltas and public evidence (live Coupon golden passed).
+- [x] Five-minute stage waits, busy/audit completion, error diagnostics and pre-payment resume by Action PDA; already completed snapshot/transfer is not repeated.
+- [x] Snapshot readiness and default scheduling use Solana Clock sysvar; UI countdown/disable and simulation/broadcast minimum slot prevent early RecordDate calls.
+- [x] Synchronize program ID across Rust/Anchor/IDL and deploy on Devnet: `CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF`; CLI confirms deployment at slot 508134659 (on-chain binary hash comparison still separate).
+- [x] Execute human Devnet Coupon golden replay; retain signatures, token balance deltas and finalized receipt in `target/devnet-evidence/coupon.json` (2026-10-06, action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`).
+
+Partial human Devnet evidence: action `CE5ueNhvatzRjinSwDcrpbad16AzveNgEzkcNDKPiR4S` has verified FINALIZED coupon payments/receipt (850 total, four holders). A→B:4 occurred after finalization, the later action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx` passed the transfer-before-payout golden replay. Independent read-only audit is `target/devnet-evidence/action-CE5ueNhvatzRjinSwDcrpbad16AzveNgEzkcNDKPiR4S.json`; it is not `coupon.json` from a completed runner.
 
 Optional setup utility: `solana:airdrop` is implemented with unit-tested network/confirmation guards. A live faucet request returned `Internal error`; successful funding is not claimed. The golden runner does not call this utility or depend on faucet availability. Airdrop is not a TZ business feature.
 

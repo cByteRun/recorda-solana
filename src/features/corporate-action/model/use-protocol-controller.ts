@@ -7,6 +7,7 @@ import { auditProtocol, type ProtocolAudit } from "@/shared/solana/protocol-audi
 import { connection } from "@/shared/solana/config";
 import { getPhantom } from "@/shared/solana/phantom";
 import { phantomSignAndSend } from "@/shared/solana/transactions";
+import { readChainClock, waitForRecordDate, type ChainClock } from "@/shared/solana/chain-clock.mjs";
 
 const CACHE_KEY = "recorda:protocol:addresses:v1";
 const HOLDER_KEY = "recorda:protocol:disposable-holders:v1";
@@ -40,13 +41,18 @@ export function useProtocolController() {
   const [report, setReport] = useState<ProtocolReport | null>(null);
   const [audit, setAudit] = useState<ProtocolAudit | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  const [recordDate, setRecordDate] = useState(new Date(Date.now() + 60_000).toISOString().slice(0, 19) + "Z");
+  const [recordDate, setRecordDateValue] = useState(new Date(Date.now() + 60_000).toISOString().slice(0, 19) + "Z");
+  const recordDateEdited = useRef(false);
+  function setRecordDate(value: string) { recordDateEdited.current = true; setRecordDateValue(value); }
+  const [chainClock, setChainClock] = useState<ChainClock | null>(null);
+  const [clockError, setClockError] = useState("");
   const [holderWallet, setHolderWallet] = useState(""), [holderUnits, setHolderUnits] = useState("0");
   const [setupId, setSetupId] = useState(references.id || String(Date.now()));
   const lock = useRef(false);
   const state = stage(report);
   const authorized = !!operator && !!report && report.instrument.authority.equals(operator);
   const pending = busy || !authorized || !audit || audit.issues.length > 0;
+  const snapshotReady = state === "snapshotPending" || (state === "scheduled" && !!chainClock && !!report && chainClock.timestamp >= BigInt(report.action.recordTimestamp.toString()));
   const expectedUnits = [10n, 5n, 2n, 0n];
 
   function save(next: { instrument?: string; action?: string; id?: string }) {
@@ -74,11 +80,17 @@ export function useProtocolController() {
     }
     finally { lock.current = false; setBusy(false); }
   }
-  async function send(instructions: TransactionInstruction[], signers: Keypair[] = []) {
+  async function send(instructions: TransactionInstruction[], signers: Keypair[] = [], minContextSlot = 0) {
     if (!operator) throw new Error("Connect the authorized Operator wallet");
-    return phantomSignAndSend({ provider: getPhantom(), operator, instructions, partialSigners: signers, rpc: connection, label: "Recorda protocol" });
+    return phantomSignAndSend({ provider: getPhantom(), operator, instructions, partialSigners: signers, minContextSlot, rpc: connection, label: "Recorda protocol" });
   }
-  async function connect() { const wallet = await getPhantom().connect(); setOperator(wallet.publicKey); }
+  async function connect() {
+    const wallet = await getPhantom().connect(); setOperator(wallet.publicKey);
+    if (!recordDateEdited.current) {
+      const clock = await readChainClock(connection);
+      setRecordDateValue(new Date(Number(clock.timestamp + 60n) * 1000).toISOString());
+    }
+  }
   async function setup() {
     if (!operator) throw new Error("Connect Phantom");
     const executable = await connection.getAccountInfo(protocol.program.programId);
@@ -114,7 +126,10 @@ export function useProtocolController() {
     if (!operator || !report) return;
     const address = new PublicKey(action);
     const live = await protocol.read(address);
-    if (stage(live) === "scheduled") await send([await protocol.manage(address, operator, "beginSnapshot")]);
+    if (stage(live) === "scheduled") {
+      const clock = await waitForRecordDate(connection, live.action.recordTimestamp.toString());
+      await send([await protocol.manage(address, operator, "beginSnapshot")], [], clock.contextSlot);
+    }
     for (const { account: p } of live.positions) if (p.approved && !(await connection.getAccountInfo(protocol.pdas.entitlement(address, p.holder)))) {
       await send([await protocol.snapshotHolder(address, operator, p.holder)]);
     }
@@ -159,8 +174,26 @@ export function useProtocolController() {
   }
   useEffect(() => { if (action) void run(() => refresh(action)); /* explicit subsequent refresh */ }, []);
 
+  useEffect(() => {
+    setChainClock(null); setClockError("");
+    if (state !== "scheduled") return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    async function poll() {
+      try {
+        const clock = await readChainClock(connection);
+        if (active) { setChainClock(clock); setClockError(""); }
+      } catch (e) {
+        if (active) { setChainClock(null); setClockError(e instanceof Error ? e.message : String(e)); }
+      }
+      if (active) timer = setTimeout(poll, 2000);
+    }
+    void poll();
+    return () => { active = false; clearTimeout(timer); };
+  }, [action, state]);
+
   return { protocol, operator, instrument, setInstrument, action, setAction, report, setReport,
     busy, error, audit, recordDate, setRecordDate, holderWallet, setHolderWallet, holderUnits, setHolderUnits,
     setupId, setSetupId, state, pending, run, send, connect, setup, createAction, refresh,
-    snapshot, calculate, fund, settle, transferDemo };
+    snapshot, snapshotReady, chainClock, clockError, calculate, fund, settle, transferDemo };
 }

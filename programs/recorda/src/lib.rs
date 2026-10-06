@@ -8,7 +8,7 @@ use anchor_spl::token_2022::{
 use anchor_spl::token_interface::{Mint, TokenAccount};
 use solana_sha256_hasher::hashv;
 
-declare_id!("Fg6PaFpoGXkYsidMpWxTWqkZ7FEfcYkgMQHGhUhF9J3x");
+declare_id!("CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF");
 
 #[program]
 pub mod recorda {

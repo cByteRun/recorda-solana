@@ -16,8 +16,8 @@ export function ProtocolPage() {
   const { protocol, operator, instrument, setInstrument, action, setAction, report, setReport,
     busy, error, audit, recordDate, setRecordDate, holderWallet, setHolderWallet, holderUnits, setHolderUnits,
     setupId, setSetupId, state, pending, run, send, connect, setup, createAction, refresh,
-    snapshot, calculate, fund, settle, transferDemo } = useProtocolController();
-  return <main className="mx-auto max-w-7xl px-4 py-8">
+    snapshot, snapshotReady, chainClock, clockError, calculate, fund, settle, transferDemo } = useProtocolController();
+  return <main data-testid="protocol-root" data-busy={busy} className="mx-auto max-w-7xl px-4 py-8">
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div><a href="/" className="text-sm text-blue-700">React bridge reference</a><h1 className="mt-2 text-3xl font-semibold">Coupon Core · Record Date → Right → Execution → Proof</h1></div>
       <Button disabled={busy} onClick={() => void run(connect)}>{operator ? operator.toBase58().slice(0, 12) : "Connect Phantom"}</Button>
@@ -41,7 +41,7 @@ export function ProtocolPage() {
       </CardContent></Card>
     </section>
     {report && <>
-      <section className="mt-6 rounded-2xl bg-zinc-950 p-5 text-white" data-testid="protocol-summary">
+      <section className="mt-6 rounded-2xl bg-zinc-950 p-5 text-white" data-testid="protocol-summary" data-state={state}>
         <h2 className="text-xl font-semibold">{state.toUpperCase()} · {minor(report.action.totalObligationMinor)} Mock USD due</h2>
         <p className="mt-2">Record date: {new Date(Number(report.action.recordTimestamp.toString()) * 1000).toISOString()} · Record slot: {report.action.recordSlot.toString()}</p>
         <p className="mt-2">Captured at: {report.action.snapshotTimestamp.isZero() ? "Pending" : new Date(Number(report.action.snapshotTimestamp.toString()) * 1000).toISOString()} · Transfers stop at the scheduled record date until snapshot finalization.</p>
@@ -50,8 +50,11 @@ export function ProtocolPage() {
         <p className="mt-2">Formula: snapshot units × {minor(report.instrument.faceValueMinor)} × {report.instrument.couponBps}/10000 ÷ {report.instrument.paymentsPerYear}. Floor once per holder in minor units.</p>
         <p className="mt-2 break-all text-xs">Snapshot hash: {Buffer.from(report.action.snapshotHash).toString("hex")}</p>
       </section>
+      {state === "scheduled" && <p className="mt-3 text-sm" data-testid="protocol-record-time">
+        {clockError ? `Cannot verify Solana record time: ${clockError}` : !chainClock ? "Checking record date against Solana time…" : snapshotReady ? "Record date reached on Solana. Snapshot is ready." : `Waiting for record date on Solana: ${new Date(Number(chainClock.timestamp) * 1000).toISOString()} · approximately ${BigInt(report.action.recordTimestamp.toString()) - chainClock.timestamp} seconds remaining.`}
+      </p>}
       <section className="mt-5 flex flex-wrap gap-3" aria-label="Operator actions">
-        <Button disabled={pending || !["scheduled", "snapshotPending"].includes(state)} onClick={() => void run(snapshot)}>Begin / resume snapshot → finalize</Button>
+        <Button disabled={pending || !snapshotReady} onClick={() => void run(snapshot)}>Begin / resume snapshot → finalize</Button>
         <Button disabled={pending || state !== "scheduled"} onClick={() => void run(async () => { await send([await protocol.manage(new PublicKey(action), operator!, "cancelAction")]); await refresh(); })}>Cancel scheduled coupon</Button>
         <Button disabled={pending || state !== "snapshotted"} onClick={() => void run(calculate)}>Calculate protocol rights</Button>
         <Button disabled={pending || state !== "awaitingApproval"} onClick={() => void run(async () => { await send([await protocol.manage(new PublicKey(action), operator!, "approveAction")]); await refresh(); })}>Approve in Phantom</Button>
