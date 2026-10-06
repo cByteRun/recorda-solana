@@ -1,293 +1,154 @@
-# Recorda — KASE Corporate Actions Engine on Solana
+# Recorda
 
-<p>
-  <img src="https://camo.githubusercontent.com/08cef40a9105b6526ca22088bc514fbfdbc9aac1ddbf8d4e6c750e3a88a44dca/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4c6963656e73652d4d49542d626c75652e737667" alt="License: MIT" data-canonical-src="https://img.shields.io/badge/License-MIT-blue.svg" style="max-width: 100%;">
-  <img src="https://img.shields.io/badge/Solana-Devnet-9945FF" alt="Solana Devnet">
-  <img src="https://img.shields.io/badge/Token--2022-enabled-14F195" alt="Token-2022">
-  <img src="https://img.shields.io/badge/E2E-Coupon%20PASS-brightgreen" alt="Coupon E2E PASS">
-  <img src="https://img.shields.io/badge/Status-Protocol%20Core%20Next-orange" alt="Protocol Core Next">
-</p>
+### Holder rights and corporate actions on Solana
 
-**Recorda** is a Solana-native corporate-actions lifecycle engine for tokenized securities, built for the **Superteam Kazakhstan × KASE Corporate Actions on Blockchain** side track.
+![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-9945FF?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square)
+[![Rights](https://img.shields.io/badge/Rights-All%20rights%20reserved-555555?style=flat-square)](LICENSE)
 
-> **Tokenization tells us who owns the asset. Recorda determines what that ownership entitled the holder to on the record date, controls execution of the corporate action, and leaves a verifiable proof of what happened next.**
+[Product](#business-problem) · [Demo](#demonstrate-the-idea-in-3060-seconds) · [Quick start](#run-locally) · [Documentation](#documentation-and-source-of-truth)
 
-## Source of truth
+> **“Tokenization tells you who owns the asset. We determine what that ownership entitled them to on the record date, execute the corporate action and prove what happened next.”**
 
-Repository precedence is intentionally explicit:
+**Recorda** links ownership of a tokenized security on the record date to a holder's entitlement, controlled corporate-action execution and a verifiable outcome.
 
-1. [\`docs/TZ.md\`](docs/TZ.md) — **authoritative product and technical requirements**.
-2. [\`docs/PRODUCT.md\`](docs/PRODUCT.md) — plain-language interpretation of the business problem and product value.
-3. [\`ROADMAP.md\`](ROADMAP.md) — delivery phases, milestones, UC/FR/NFR coverage and Definition of Done.
-4. [\`docs/plan.md\`](docs/plan.md) — current implementation plan and trust-boundary migration.
-5. [\`golden/\`](golden/) — deterministic E2E input/output oracles.
-6. [\`prototype/\`](prototype/) — reference implementations and evidence, not the final source of protocol truth.
+**Central product axis: Record Date → Right → Controlled Execution → Verifiable Proof.**
 
-If documents conflict, **\`docs/TZ.md\` wins**.
+## Business problem
 
----
+A tokenized bond continues its lifecycle after issuance: coupons must be paid, principal redeemed, votes conducted and each investor's entitlement explained.
 
-## The problem in plain language
+The current balance shows ownership today. Corporate actions require answers to different questions:
 
-Issuing a tokenized bond is only **day zero**.
+- Who owned the instrument **on the record date**, and how many units did they hold?
+- What right arose: a coupon amount, redemption payment or vote?
+- Which parameters determined that entitlement?
+- Who authorized execution, and what actually happened?
+- Where can the investor and auditor verify the outcome?
 
-A bond continues to live after issuance. Someone still has to determine:
+Without a shared link between the registry, calculation, execution and history, these questions require separate data reconciliation. Recorda creates one process for servicing rights after instrument issuance.
 
-- who held it on a legally/economically meaningful **record date**;
-- how many units each eligible holder had at that moment;
-- what coupon, principal, voting power or other right those units created;
-- who approved the action;
-- what was actually paid / redeemed / voted;
-- whether the same entitlement can be executed twice;
-- how an investor or auditor can prove the complete result later.
+## Solution and domain features
 
-A Token-2022 balance can tell us that an investor owns \`6 KZB26\` **now**. It does not by itself tell us that the same investor held \`10 KZB26\` on a past record date and therefore earned a \`$500\` coupon.
+| Central-axis stage | Product function | User outcome |
+| --- | --- | --- |
+| Record Date | Identifies eligible holders and records their positions at the required date | The entitled holders are known |
+| Right | Calculates coupon, principal or voting power from the snapshot and instrument terms | Each holder knows what they are entitled to and why |
+| Controlled Execution | Previews the distribution, requires authority approval and executes the action | Payment, redemption or voting follows defined rules |
+| Verifiable Proof | Links the action to its outcome, transactions and receipt | Users can verify who acquired which right, when and how it was executed |
 
-That missing link is the product.
+Required MVP scenarios from the [technical specification](docs/TZ.md):
 
-### Useful analogy
+1. **Coupon Payment:** snapshot → coupon → approval → payment → proof.
+2. **Bond Redemption:** snapshot → principal and final coupon → execution → burn/retire/lock → proof.
+3. **Bondholder Voting:** snapshot → voting power → vote → double-vote protection → result.
 
-Recorda is similar to a **payroll engine for tokenized securities**:
+A shared registry/snapshot/entitlement layer must serve all three scenarios.
 
-\`\`\`text
-Employee state       → payroll cutoff → salary entitlement → approval → payment → payslip
-Token holder state   → record date    → investor right      → approval → settlement → ActionReceipt
-\`\`\`
+## Users and value
 
----
+| User | Task | Recorda value |
+| --- | --- | --- |
+| Corporate-actions operator / market infrastructure | Identify holders, verify calculations and execute an event | One reproducible workflow with less manual reconciliation |
+| Issuer / paying agent | Determine obligations and prepare payment or redemption | Transparent amounts, approvals and execution status |
+| Holder / investor | Understand their entitlement and verify the outcome | Record-date position, formula, amount and proof |
+| Auditor | Verify inputs and actual results | A linked snapshot → entitlement → execution → receipt chain |
 
-## Product axis
-
-Everything in the project should reinforce one chain:
-
-\`\`\`text
-TOKENIZED INSTRUMENT
-        ↓
-RECORD DATE
-        ↓
-IMMUTABLE SNAPSHOT
-        ↓
-ELIGIBLE HOLDER
-        ↓
-DETERMINISTIC ENTITLEMENT
-        ↓
-HUMAN / AUTHORITY APPROVAL
-        ↓
-SETTLEMENT / REDEMPTION / VOTE
-        ↓
-VERIFIABLE ON-CHAIN RESULT
-\`\`\`
-
-Or, shorter:
-
-> **Record Date → Right → Controlled Execution → Verifiable Proof**
-
-This is the decision filter for architecture, UX and scope.
-
----
-
-## Who is this for?
-
-Primary users are **financial-market infrastructure participants**, not retail users first:
-
-- KASE / market or corporate-actions operator;
-- issuer / paying agent;
-- central-depository / servicing infrastructure;
-- custodian / broker integration layer;
-- auditor / observer.
-
-The holder / investor is the beneficiary and must be able to understand **why** a right exists and verify the outcome.
-
----
-
-## Why the product can exist
-
-Traditional market infrastructure already services coupons, redemptions and other corporate actions. The KASE challenge asks a different question:
-
-> **If ownership of the financial instrument itself moves on-chain, what is the blockchain-native servicing layer that keeps its lifecycle operational?**
-
-The value is not “blockchain because blockchain”. The value comes from a reusable lifecycle engine that can reduce duplicated state and reconciliation between ownership, calculations, execution status and audit evidence while making the rules reproducible.
-
-We do **not** claim the existing KASE/KCSD infrastructure is broken. We are prototyping the lifecycle infrastructure required for **tokenized financial instruments**.
-
----
+Economic hypothesis: fewer fragmented operations and errors, faster verification and audit, and engine reuse for new events. Savings percentages require separate measurement.
 
 ## Our edge
 
-We are **not** building:
+**Linking historical ownership to entitlement and proven execution is Recorda's core.**
 
-- an exchange;
-- an order book;
-- a generic RWA marketplace;
-- a DeFi protocol;
-- “a bond token for the sake of minting a token”.
+Token-2022 provides basic asset operations. Recorda's domain layer adds:
 
-Commodity / reusable primitives can cover issuance, token accounts, transfers, ACLs or distribution mechanics.
+- one record-date mechanism for payments, redemption and voting;
+- holder rights that survive a post-record transfer;
+- explainable calculations from the snapshot and instrument terms;
+- explicit execution approval and protection against repeated processing;
+- corporate-action history and a verifiable ActionReceipt.
 
-**Recorda owns the domain semantics:**
+These are target product capabilities. Implemented scope and limitations appear below; detailed milestones and current focus are in [ROADMAP](docs/ROADMAP.md).
 
-- record-date truth;
-- immutable holder snapshots;
-- corporate-action state machine;
-- fixed-point financial entitlement logic;
-- explicit execution authority / HITL;
-- redemption lifecycle and token retirement;
-- record-date voting power;
-- per-holder corporate-action history;
-- final ActionReceipt / auditability.
+## Demonstrate the idea in 30–60 seconds
 
----
+Investor A held **10 bonds on the record date**. A then transferred 4 bonds to B: A currently holds **6**, but the coupon entitlement remains based on the recorded **10**.
 
-## Current milestone: M0 reference prototype ✅
+| TZ §22 coupon metric | A | B | C | D | Total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Record-date position | 10 | 5 | 2 | 0 | 17 |
+| Current ownership after A → B: 4 | 6 | 9 | 2 | 0 | 17 |
+| Snapshot-based coupon, KUSD-DEV | 500 | 250 | 100 | 0 | 850 |
 
-The current Devnet prototype proves the core coupon story with **real Solana state**:
+A's formula: **10 × 1000 × 10% ÷ 2 = 500**. The operator reviews the distribution and approves execution in Phantom; the outcome must then be verifiable through transactions and a receipt.
 
-- real Token-2022 \`KZB26\` mint;
-- real holder keypairs and Token-2022 accounts;
-- initial on-chain balances \`A=10 / B=20 / C=5\`;
-- real post-record transfer \`A → B: 4 KZB26\` producing \`6 / 24 / 5\`;
-- immutable record-date attestation preserving \`10 / 20 / 5\`;
-- deterministic entitlements \`$500 / $1,000 / $250\`;
-- real Phantom operator approval;
-- real Token-2022 \`KUSD-DEV\` settlement \`500 / 1000 / 250\`;
-- final receipt transaction;
-- black-box E2E verifier comparing known input → actual chain state → expected output.
+> **If the demo does not make this idea obvious in 30–60 seconds, simplify the UI or scope.**
 
-The reference HTML is stored at:
+The [TZ §22 golden dataset](golden/coupon-tz-section-22.json) fixes the required four-holder demo, including zero-balance D. The [historical golden](golden/coupon-happy-path.json) preserves 10/20/5 → 6/24/5 and 1750 as a separate regression. Coupon calculations use checked BigInt products in settlement minor units; USD numbers are display values only.
 
-[\`prototype/kase-real-devnet-v4-kusd.html\`](prototype/kase-real-devnet-v4-kusd.html)
+## Implementation and evidence boundaries
 
-### What is still a bridge
+| Layer | Implemented | Still required for the full MVP |
+| --- | --- | --- |
+| Client | React + TypeScript + Vite, Tailwind v4, local shadcn-style components, FSD-style structure | Complete Operator / Investor / Auditor journeys |
+| Coupon bridge | Phantom signing, Token-2022 operations and RPC, browser snapshot/calculation, Memo attestations | Repeat manual React Devnet acceptance with signatures and payout deltas |
+| Automated verification | Playwright: two golden contracts, full client lifecycle with controlled RPC/Phantom, failure and resume checks | Real protocol E2E and negative on-chain checks |
+| Protocol core | Target architecture documented | Anchor PDAs, immutable snapshot, program-owned integer math, authority and idempotency |
+| Other corporate actions | Requirements and plan | Redemption and Voting |
 
-The prototype proves the business flow, but the critical middle layer is not yet enforced by our own program:
+**Offline oracle PASS verifies the scenario model.** The offline oracle calculates expected amounts without executing payment. Actual outcomes are verified by reading Solana state and transactions.
 
-\`\`\`text
-Token-2022 state                 REAL ON-CHAIN
-        ↓
-Browser record-date orchestration / entitlement math
-        ↓
-Solana Memo attestations        REAL TX, NOT DOMAIN ENFORCEMENT
-\`\`\`
+The Browser/Memo bridge still stores domain state in the browser; Memo records submitted data but does not enforce entitlement correctness or prevent double payment. The target source of finalized state is the Recorda Anchor program.
 
-The next milestone moves this truth into Anchor:
+## Run locally
 
-\`\`\`text
-React / client
-        ↓
-Recorda Anchor Program
-        ├── Instrument PDA
-        ├── HolderPosition PDA
-        ├── CorporateAction PDA
-        ├── SnapshotPosition PDA
-        ├── EntitlementPosition PDA
-        └── ActionReceipt PDA
-        ↓
-Token-2022 / KUSD settlement CPI
-\`\`\`
+Requires Node.js **22.12+**, npm and repository access.
 
----
+```bash
+git clone --branch feat/phase-1-react https://github.com/cByteRun/recorda-solana.git
+cd recorda-solana
+npm ci
+npm run dev
+```
 
-## Golden coupon scenario
+Open the URL printed in the terminal, usually http://localhost:4444. The interface and offline golden are available without a wallet. Start the TZ §22 demo in a fresh browser origin/profile; old 35-unit deployments cannot be resumed into the 17-unit scenario. Existing A/B/C holder keys are preserved and D is added, but old three-holder actions are not converted into four-holder settlement. Real operations require Phantom, Solana Devnet, SOL for gas and manual transaction approval. A/B/C/D are disposable Devnet identities.
 
-The first protocol implementation must reproduce the exact known fixture in [\`golden/coupon-happy-path.json\`](golden/coupon-happy-path.json):
+To view the built version:
 
-\`\`\`text
-Initial ownership       10 / 20 / 5 KZB26
-Record-date snapshot    10 / 20 / 5
-Post-record transfer    A → B : 4
-Current ownership        6 / 24 / 5
-Coupon entitlement      500 / 1000 / 250 KUSD
-Total entitlement        1750 KUSD
-Final state              FINALIZED
-\`\`\`
+```bash
+npm run build
+npm run preview
+```
 
-The most important invariant is:
+## Verify implementation
 
-> **Post-record-date transfers must never change an already finalized entitlement.**
+```bash
+npm run build
+npx playwright install --with-deps chromium
+npm run test:e2e:golden
+```
 
----
+On Linux, `--with-deps` installs the system libraries required by Chromium as well as the browser. This may require a sudo password; installing only the browser can leave UI tests failing at launch with missing libraries such as `libnspr4.so`.
 
-## Required hackathon scenarios
+See the [R1 requirement coverage matrix](docs/R1_TEST_COVERAGE.md) for UC/FR/NFR/TC mappings and manual boundaries.
 
-The final MVP must demonstrate all three through the same lifecycle engine:
+Verification chain: **Specification and its axis → milestone/features → golden input/expected → implementation → Playwright and protocol tests → actual output/proof**.
 
-1. **Coupon Payment** — holder snapshot → entitlement → approval → settlement → proof.
-2. **Bond Redemption** — snapshot → principal/final coupon → settlement → burn/retire → proof.
-3. **Bondholder Voting** — snapshot → voting power → vote → no double vote → final tally.
+Playwright automatically checks the model and browser interface without signing transactions. Follow [Manual Devnet Acceptance](docs/MANUAL_DEVNET_ACCEPTANCE.md) for the real flow. The full MVP requires Coupon, Redemption and Voting, authorization checks and protection against repeated execution.
 
-See [\`ROADMAP.md\`](ROADMAP.md) for milestone-level UC/FR/NFR coverage and DoD.
+## Documentation and source of truth
 
----
+1. [Technical specification](docs/TZ.md) — central idea, UC, FR/NFR and acceptance; takes precedence in a conflict.
+2. [ROADMAP](docs/ROADMAP.md) — phases, milestones, FEATURES, current focus and verified progress.
+3. [PRODUCT](docs/PRODUCT.md) — business-problem explanation.
+4. [ARCHITECTURE](docs/ARCHITECTURE.md) — stack, file structure and responsibility boundaries.
+5. [Implementation plan](docs/plan.md) — technical implementation sequence.
+6. [Operations](docs/OPERATIONS.md) — CI/deployment configuration and troubleshooting.
+7. [TZ golden dataset](golden/coupon-tz-section-22.json), [historical regression](golden/coupon-happy-path.json), [audit](docs/PHASE_1_AUDIT.md) and [reference prototype](prototype/kase-real-devnet-v4-kusd.html) — verification and evidence.
 
-## Repository layout
+Specification success metric: **100% correctly and reproducibly processed holder entitlements with verifiable on-chain outcomes**. MVP targets: 0 mismatches, 0 repeated executions, 0 unauthorized executions, and 3/3 scenarios with proof.
 
-\`\`\`text
-recorda-solana/
-├── README.md
-├── ROADMAP.md
-├── LICENSE
-├── docs/
-│   ├── TZ.md
-│   ├── PRODUCT.md
-│   └── plan.md
-├── golden/
-│   └── coupon-happy-path.json
-└── prototype/
-    └── kase-real-devnet-v4-kusd.html
-\`\`\`
+## Rights
 
-The Anchor workspace and React/Vite app are created in the next milestone rather than prematurely copying prototype business logic into React.
-
----
-
-## Run the current reference prototype
-
-Do not open it through \`file://\`. Serve the repository locally so Phantom sees a normal origin:
-
-\`\`\`bash
-python -m http.server 4444
-\`\`\`
-
-Open:
-
-\`\`\`text
-http://localhost:4444/prototype/kase-real-devnet-v4-kusd.html
-\`\`\`
-
-Use **Solana Devnet** only. Generated holder keys are disposable development identities; never send Mainnet assets to them.
-
----
-
-## Current implementation direction
-
-We intentionally do **not** start by polishing React.
-
-The next engineering objective is:
-
-> **Move Corporate Action Truth On-Chain.**
-
-The existing HTML is frozen as a behavioral reference and golden oracle. The Anchor implementation must reproduce the same outputs while making the validator/program — not browser JavaScript — responsible for finalized snapshot, entitlement, authorization, idempotency and receipt state.
-
-See [\`docs/plan.md\`](docs/plan.md).
-
----
-
-## Challenge success metric
-
-The primary product metric from the source-of-truth TZ is:
-
-> **100% correctly and reproducibly processed corporate-action entitlements for all holders in the test scenario, with a verifiable on-chain outcome.**
-
-Target demo KPIs:
-
-- entitlement mismatch: **0**;
-- double settlement: **0**;
-- unauthorized execution: **0**;
-- required corporate actions demonstrated E2E: **3/3**;
-- finalized actions with verifiable proof: **100%**.
-
----
-
-## License
-
-MIT. See [\`LICENSE\`](LICENSE).
+All rights reserved. See [LICENSE](LICENSE). Third-party dependencies retain their own licenses.

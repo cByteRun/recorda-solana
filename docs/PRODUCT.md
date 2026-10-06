@@ -255,3 +255,4 @@ Before adding a feature ask:
 > **Does this improve Record Date → Right → Controlled Execution → Verifiable Proof or directly satisfy a required KASE scenario?**
 
 If not, it is probably not MVP.
+

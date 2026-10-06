@@ -7,6 +7,8 @@
       "symbol": "KZB26",
       "supply": 35,
       "faceValueUsd": 1000,
+      "faceValueMinor": 100000,
+      "annualCouponBps": 1000,
       "annualCouponRate": 0.1,
       "couponFrequency": 2,
       "bondDecimals": 0,

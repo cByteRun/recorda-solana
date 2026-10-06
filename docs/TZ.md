@@ -1,184 +1,184 @@
-# Техническое задание (ТЗ)
+# Technical Specification (TZ)
 ## KASE Corporate Actions Engine — lifecycle infrastructure for tokenized securities on Solana
 
-**Статус:** Hackathon MVP / KASE Side Track  
-**Источник истины:** это ТЗ → затем UC → FR/NFR → архитектура → реализация.  
-**Сеть MVP:** Solana Devnet / Local Validator.  
-**Принцип:** сначала корректность корпоративного действия, затем UX и инфраструктура.
+**Status:** Hackathon MVP / KASE Side Track  
+**Source of truth:** this specification → UC → FR/NFR → architecture → implementation.  
+**MVP network:** Solana Devnet / Local Validator.  
+**Principle:** corporate-action correctness first, then UX and infrastructure.
 
 ---
 
-# 1. Контекст задачи
+# 1. Challenge context
 
-KASE и Superteam Kazakhstan требуют рабочий прототип, автоматизирующий корпоративные действия для токенизированных финансовых инструментов на Solana.
+KASE and Superteam Kazakhstan require a working prototype that automates corporate actions for tokenized financial instruments on Solana.
 
-Обязательная цепочка:
+Required chain:
 
 > **Identify eligible holders → Calculate entitlements → Execute/initiate action → Record outcome on-chain**
 
-Обязательные сценарии:
+Required scenarios:
 1. Coupon Payment.
 2. Bond Redemption.
-3. Минимум одно дополнительное corporate action.
+3. At least one additional corporate action.
 
-Минимум прототип должен содержать:
-- тестовый токенизированный финансовый инструмент;
+At minimum, the prototype must include:
+- a test tokenized financial instrument;
 - holder registry;
 - record-date mechanism;
 - entitlement calculation;
 - coupon payment;
 - bond redemption;
-- дополнительное corporate action;
-- проверяемую on-chain запись результата.
+- an additional corporate action;
+- a verifiable on-chain outcome record.
 
-Внешние/фиатные платёжные рельсы разрешено симулировать, но entitlement logic и Solana corporate-action flow должны реально работать.
-
----
-
-# 2. Главная бизнес-проблема
-
-## 2.1 Проблема верхнего уровня
-
-**Токенизация финансового инструмента сама по себе не решает его обслуживание после выпуска.**
-
-После выпуска облигация продолжает жить: появляются даты фиксации реестра, купоны, погашение, досрочные события, голосования, изменения условий и необходимость доказать, кому и сколько было положено и что в итоге произошло.
-
-Если эти процессы остаются разрозненными или ручными, блокчейн превращается только в новый формат учёта актива, а lifecycle по-прежнему требует отдельной сверки реестров, расчётов, платёжных инструкций и аудита.
-
-### Суть проблемы одной строкой
-
-> **Нужен единый детерминированный механизм, который связывает состояние токенизированного инструмента на record date с правом конкретного держателя и с доказуемым результатом corporate action.**
+External/fiat payment rails may be simulated, but entitlement logic and the Solana corporate-action flow must actually work.
 
 ---
 
-# 3. Ключевая цель продукта
+# 2. Core business problem
 
-Создать **Corporate Actions Engine** для токенизированных ценных бумаг, который на Solana превращает корпоративное событие в воспроизводимый end-to-end процесс:
+## 2.1 High-level problem
+
+**Tokenizing a financial instrument does not by itself solve post-issuance servicing.**
+
+After issuance, a bond continues its lifecycle: record dates, coupons, redemption, early events, voting, changes of terms and the need to prove who was entitled to what and what ultimately happened.
+
+If these processes remain fragmented or manual, blockchain becomes only a new asset-accounting format, while the lifecycle still requires separate reconciliation of registries, calculations, payment instructions and audit records.
+
+### The problem in one sentence
+
+> **A shared deterministic mechanism is needed to link a tokenized instrument's state at the record date to a specific holder's right and a provable corporate-action outcome.**
+
+---
+
+# 3. Core product goal
+
+Build a **Corporate Actions Engine** for tokenized securities that turns a corporate event into a reproducible end-to-end process on Solana:
 
 > **Instrument → Record Date Snapshot → Eligible Holders → Entitlements → Approval → Settlement/Execution → Redemption/State Change → On-chain Receipt**
 
-Продукт должен доказать, что lifecycle токенизированной облигации может обслуживаться программируемо, прозрачно и проверяемо, а не только её выпуск/передача.
+The product must prove that a tokenized bond's lifecycle can be serviced programmatically, transparently and verifiably beyond issuance and transfer.
 
 ---
 
-# 4. Ценность и ожидаемый эффект
+# 4. Value and expected impact
 
-## 4.1 Для KASE / инфраструктуры рынка
-- единый стандартный workflow для corporate actions токенизированных инструментов;
-- меньше ручной сверки между состоянием держателей, расчётами и фактом исполнения;
-- неизменяемый audit trail ключевых этапов;
-- возможность независимо перепроверить расчёт и результат;
-- переиспользуемый движок для разных эмитентов и типов событий;
-- основа для масштабирования tokenized securities после стадии issuance.
+## 4.1 For KASE / market infrastructure
+- one standard workflow for corporate actions on tokenized instruments;
+- less manual reconciliation between holder state, calculations and actual execution;
+- an immutable audit trail of key stages;
+- independent verification of calculations and outcomes;
+- a reusable engine for different issuers and event types;
+- a foundation for scaling tokenized securities beyond issuance.
 
-## 4.2 Для эмитента
-- автоматический расчёт обязательств по каждому держателю;
-- снижение риска неправильного entitlement;
-- прозрачный статус события: Draft → Snapshotted → Approved → Funded → Settled → Finalized;
-- один источник данных о результате corporate action.
+## 4.2 For the issuer
+- automatic calculation of each holder's obligation;
+- reduced risk of incorrect entitlement;
+- transparent event status: Draft → Snapshotted → Approved → Funded → Settled → Finalized;
+- one source of corporate-action outcome data.
 
-## 4.3 Для инвестора
-- понятно, почему он eligible / not eligible;
-- видно snapshot balance на record date;
-- видно формулу и сумму entitlement;
-- можно проверить transaction signature / on-chain receipt;
-- при голосовании — проверяемый voting power и результат.
+## 4.3 For the investor
+- a clear explanation of eligibility or ineligibility;
+- visible record-date snapshot balance;
+- visible entitlement formula and amount;
+- verifiable transaction signature / on-chain receipt;
+- verifiable voting power and result for voting actions.
 
-## 4.4 Экономический эффект
+## 4.4 Economic impact
 
-В MVP не заявляются недоказанные проценты экономии. Прототип должен показать механизмы, из которых возникает экономический эффект:
+The MVP makes no unproven savings-percentage claims. The prototype must demonstrate mechanisms that generate economic value:
 
-1. **меньше операционных шагов** между фиксацией реестра и исполнением;
-2. **меньше reconciliation** между независимыми таблицами/системами;
-3. **меньше риска human error** в расчётах и распределениях;
-4. **быстрее проверка и аудит**, потому что входные параметры, snapshot, entitlement и outcome связаны on-chain;
-5. **масштабируемость:** новый corporate action строится поверх общего registry/snapshot/entitlement/audit слоя.
-
----
-
-# 5. Продуктовый тезис
-
-**Мы не строим биржу, DeFi-протокол или “облигацию ради токена”.**
-
-Мы строим **lifecycle servicing layer** для tokenized securities.
-
-Ключевая ценность прототипа — не сам SPL-токен, а доказуемая цепочка:
-
-> **кто владел → на какую дату → какое право получил → по какой формуле → что было исполнено → что произошло с инструментом → где доказательство.**
+1. **fewer operational steps** between registry capture and execution;
+2. **less reconciliation** between independent tables/systems;
+3. **less human-error risk** in calculations and allocations;
+4. **faster verification and audit**, because input parameters, snapshot, entitlement and outcome are linked on-chain;
+5. **scalability:** new corporate actions build on the shared registry/snapshot/entitlement/audit layer.
 
 ---
 
-# 6. Пользователи и роли
+# 5. Product thesis
+
+**We are not building an exchange, a DeFi protocol or a bond merely to issue a token.**
+
+We are building a **lifecycle servicing layer** for tokenized securities.
+
+The prototype's key value is the provable chain rather than the SPL token itself:
+
+> **who owned → on what date → what right arose → by which formula → what executed → what happened to the instrument → where is the proof.**
+
+---
+
+# 6. Users and roles
 
 ## R1. Market / Corporate Actions Operator
-Представитель KASE, депозитарной инфраструктуры или уполномоченного оператора.
+A representative of KASE, depository infrastructure or an authorized operator.
 
-Может:
-- создать/зарегистрировать тестовый инструмент;
-- создать corporate action;
-- установить record date;
-- запустить snapshot;
-- проверить рассчитанные entitlements;
-- подтвердить действие;
-- инициировать settlement;
-- финализировать событие;
-- видеть audit trail.
+Can:
+- create/register a test instrument;
+- create a corporate action;
+- set the record date;
+- initiate a snapshot;
+- review calculated entitlements;
+- approve the action;
+- initiate settlement;
+- finalize the event;
+- view the audit trail.
 
 ## R2. Issuer / Paying Agent
-Может:
-- просматривать параметры обязательства;
-- пополнять settlement vault;
-- подтверждать готовность выплаты;
-- видеть итоговый отчёт.
+Can:
+- view obligation parameters;
+- fund the settlement vault;
+- confirm payment readiness;
+- view the final report.
 
-Для MVP роль может быть объединена с Operator.
+For MVP, this role may be combined with Operator.
 
 ## R3. Holder / Investor
-Может:
-- видеть свои токены;
-- видеть eligibility на record date;
-- видеть entitlement;
-- видеть статус выплаты/погашения;
-- проверять Solana transaction;
-- участвовать в bondholder voting.
+Can:
+- view their tokens;
+- view record-date eligibility;
+- view their entitlement;
+- view payment/redemption status;
+- verify the Solana transaction;
+- participate in bondholder voting.
 
 ## R4. Auditor / Observer
-Read-only роль.
+Read-only role.
 
-Может проверить:
-- параметры инструмента;
+Can verify:
+- instrument parameters;
 - snapshot;
-- формулу;
+- the formula;
 - entitlement;
 - settlement transaction;
 - burn/retirement;
-- финальный receipt.
+- the final receipt.
 
 ---
 
-# 7. Главный E2E сценарий
+# 7. Main E2E scenario
 
-1. Operator создаёт тестовую облигацию.
-2. Система создаёт Token-2022 mint и on-chain `Instrument` state.
-3. Токены распределяются между 3–5 тестовыми держателями.
-4. Operator создаёт corporate action и задаёт record date.
-5. В момент snapshot система фиксирует состав и балансы eligible holders.
-6. После фиксации snapshot становится immutable для данного action.
-7. Программа рассчитывает entitlement каждого holder детерминированной формулой.
-8. UI показывает preview: holders, balances, amounts, total obligation.
-9. Operator явно подтверждает исполнение.
-10. Settlement выполняется on-chain mock payment token либо создаётся verifiable settlement instruction.
-11. Для redemption соответствующее количество bond tokens сжигается/retire/lock.
-12. Программа создаёт/обновляет on-chain `ActionReceipt`.
-13. Investor/Auditor может открыть действие и независимо проверить результат.
+1. The Operator creates a test bond.
+2. The system creates a Token-2022 mint and on-chain `Instrument` state.
+3. Tokens are distributed among 3–5 test holders.
+4. The Operator creates a corporate action and sets its record date.
+5. At snapshot time, the system records eligible holders and their balances.
+6. Once finalized, the snapshot becomes immutable for that action.
+7. The program calculates each holder's entitlement using a deterministic formula.
+8. The UI previews holders, balances, amounts and total obligation.
+9. The Operator explicitly approves execution.
+10. Settlement uses an on-chain mock payment token or creates a verifiable settlement instruction.
+11. For redemption, the corresponding bond-token units are burned/retired/locked.
+12. The program creates/updates the on-chain `ActionReceipt`.
+13. The Investor/Auditor can open the action and independently verify the outcome.
 
 ---
 
-# 8. Модель тестовой облигации
+# 8. Test bond model
 
-Для базового demo использовать параметры из challenge:
+Use the challenge parameters for the baseline demo:
 
-| Поле | Значение MVP |
+| Field | MVP value |
 |---|---:|
 | Face value | 1,000 |
 | Currency | Mock USD / Mock KZT |
@@ -199,7 +199,7 @@ coupon_per_holder =
   ÷ payments_per_year
 ```
 
-Пример:
+Example:
 
 ```text
 10 bonds × $1,000 × 10% ÷ 2 = $500
@@ -211,66 +211,66 @@ coupon_per_holder =
 principal_due = snapshot_balance × face_value
 ```
 
-При final coupon:
+With a final coupon:
 
 ```text
 final_settlement = principal_due + final_coupon_due
 ```
 
-Все финансовые расчёты — только integer/fixed-point arithmetic. Float запрещён.
+All financial calculations must use integer/fixed-point arithmetic. Floating-point arithmetic is prohibited.
 
 ---
 
-# 9. Record Date — критический механизм
+# 9. Record Date — critical mechanism
 
-## 9.1 Требование
+## 9.1 Requirement
 
-Entitlement должен определяться **балансом на зафиксированную record date**, а не текущим балансом в момент выплаты.
+Entitlement must be determined by **the balance at the fixed record date**, rather than the current balance at payment time.
 
-## 9.2 MVP-механизм
+## 9.2 MVP mechanism
 
-Использовать управляемый snapshot flow:
+Use a controlled snapshot flow:
 
-1. `Action` заранее содержит `record_timestamp`.
-2. При наступлении record date Operator вызывает `begin_snapshot`.
-3. Переводы инструмента временно блокируются (`Paused/SnapshotPending`).
-4. Система фиксирует holder balances в `SnapshotPosition / Entitlement` accounts.
-5. Проверяется, что сумма snapshot balances соответствует eligible outstanding supply.
-6. Вычисляется и сохраняется snapshot hash/root.
-7. Operator вызывает `finalize_snapshot`.
-8. Snapshot становится immutable.
-9. Для coupon transfers могут быть снова разрешены.
-10. Для maturity redemption инструмент остаётся ограниченным до завершения погашения.
+1. `Action` contains `record_timestamp` in advance.
+2. When the record date arrives, the Operator calls `begin_snapshot`.
+3. Instrument transfers are temporarily blocked (`Paused/SnapshotPending`).
+4. The system records holder balances in `SnapshotPosition / Entitlement` accounts.
+5. The sum of snapshot balances is checked against eligible outstanding supply.
+6. The snapshot hash/root is calculated and stored.
+7. The Operator calls `finalize_snapshot`.
+8. The snapshot becomes immutable.
+9. For coupon actions, transfers may be enabled again.
+10. For maturity redemption, the instrument remains restricted until redemption is complete.
 
-Это делает демо детерминированным и не позволяет изменить право на выплату переводом токена после record date.
+This makes the demo deterministic and prevents a post-record token transfer from changing payment entitlement.
 
 ## 9.3 Production evolution
 
-В production возможна замена короткой transfer pause на slot-based snapshot/indexing с криптографическим commitment/Merkle root и интеграцией с внешним реестром/депозитарием.
+In production, a short transfer pause may be replaced by slot-based snapshots/indexing with a cryptographic commitment/Merkle root and external registry/depository integration.
 
-Для hackathon это post-MVP и не должно усложнять обязательный working flow.
+For the hackathon, this is Post-MVP and must not complicate the required working flow.
 
 ---
 
 # 10. Holder Registry
 
-Система обязана иметь однозначный реестр участников, которые могут владеть инструментом.
+The system must maintain an unambiguous registry of participants permitted to hold the instrument.
 
-Для MVP:
+For MVP:
 - holder = Solana public key;
-- каждому holder соответствует Token-2022 token account;
-- создаётся protocol-level `HolderPosition`/registry account;
-- holder должен быть approved для данного instrument;
-- запрещено учитывать произвольный кошелёк, не входящий в registry;
-- transfer control должен не позволять обходить registry.
+- each holder has a corresponding Token-2022 token account;
+- a protocol-level `HolderPosition`/registry account is created;
+- the holder must be approved for that instrument;
+- arbitrary wallets outside the registry must not be included;
+- transfer control must prevent registry bypass.
 
-Рекомендуемая реализация:
+Recommended implementation:
 - Token-2022;
-- Allowlist/Default Frozen State для permissioned security flow;
-- Transfer Hook или эквивалентная protocol-level проверка для контролируемого transfer lifecycle;
-- Permanent Delegate только для строго определённых admin/redemption операций.
+- Allowlist/Default Frozen State for the permissioned-security flow;
+- Transfer Hook or equivalent protocol-level validation for the controlled transfer lifecycle;
+- Permanent Delegate only for strictly defined admin/redemption operations.
 
-KYC/AML-провайдер в MVP симулируется флагом `approved=true`; реальный KYC не является частью hackathon MVP.
+The MVP simulates a KYC/AML provider with `approved=true`; real KYC is outside the hackathon MVP.
 
 ---
 
@@ -309,18 +309,18 @@ INSUFFICIENT_FUNDS
 PARTIALLY_SETTLED
 ```
 
-Каждый переход должен иметь:
+Every transition must have:
 - authority check;
 - timestamp/slot;
 - transaction signature;
 - event log;
-- невозможность нелегального перехода состояния.
+- protection against invalid state transitions.
 
 ---
 
 # 12. Required Scenario A — Coupon Payment
 
-## UC-CP-01: Выплата купона
+## UC-CP-01: Coupon payment
 
 ### Preconditions
 - instrument active;
@@ -331,179 +331,179 @@ PARTIALLY_SETTLED
 - settlement vault sufficiently funded.
 
 ### Flow
-1. Operator открывает Coupon Action.
-2. Система показывает record date и snapshot holders.
-3. Для каждого holder рассчитывается coupon entitlement.
-4. Система показывает `total_due`.
-5. Operator подтверждает action.
-6. Program переводит mock payment token каждому holder либо создаёт on-chain settlement instruction per holder.
-7. Для каждого holder фиксируется `paid/initiated` и transaction reference.
-8. После полной обработки action = `FINALIZED`.
+1. The Operator opens the Coupon Action.
+2. The system displays the record date and snapshot holders.
+3. Coupon entitlement is calculated for each holder.
+4. The system displays `total_due`.
+5. The Operator approves the action.
+6. The program transfers mock payment tokens to each holder or creates an on-chain settlement instruction per holder.
+7. Each holder's `paid/initiated` status and transaction reference are recorded.
+8. After complete processing, action = `FINALIZED`.
 
 ### Acceptance
-- holder with 10 bonds receives exactly 500 units при параметрах примера;
-- holder, который получил токены после record date, не получает entitlement;
-- holder, который продал токены после snapshot, сохраняет entitlement на этот action;
-- повторный settlement одного entitlement невозможен;
-- сумма индивидуальных entitlements совпадает с `total_due`.
+- a holder with 10 bonds receives exactly 500 units using the example parameters;
+- a holder who received tokens after the record date does not receive entitlement for those units;
+- a holder who sold tokens after the snapshot retains entitlement for this action;
+- the same entitlement cannot be settled twice;
+- the sum of individual entitlements matches `total_due`.
 
 ---
 
 # 13. Required Scenario B — Bond Redemption
 
-## UC-BR-01: Погашение облигации в maturity
+## UC-BR-01: Bond redemption at maturity
 
 ### Flow
 1. Maturity date reached.
-2. Создаётся/finalizes redemption snapshot.
-3. Для каждого holder рассчитывается principal due.
-4. При необходимости добавляется final coupon.
-5. Operator подтверждает settlement.
-6. Holder получает payment token / settlement record.
-7. Соответствующие bond tokens burn/retire/lock.
-8. `redeemed_supply` увеличивается.
-9. Когда `redeemed_supply == eligible outstanding supply`, instrument получает статус `MATURED/REDEEMED`.
-10. ActionReceipt фиксирует финальный outcome.
+2. The redemption snapshot is created/finalized.
+3. Principal due is calculated for each holder.
+4. A final coupon is added if required.
+5. The Operator approves settlement.
+6. The holder receives payment tokens / a settlement record.
+7. The corresponding bond tokens are burned/retired/locked.
+8. `redeemed_supply` increases.
+9. When `redeemed_supply == eligible outstanding supply`, the instrument receives `MATURED/REDEEMED` status.
+10. ActionReceipt records the final outcome.
 
 ### Acceptance
 - 10 bonds × 1,000 = 10,000 principal;
-- final coupon учитывается отдельно и виден в UI;
-- один и тот же token unit нельзя redeem дважды;
-- redeemed units больше не могут обращаться как активные облигации;
-- total redeemed principal совпадает с snapshot obligation.
+- the final coupon is accounted for separately and visible in the UI;
+- the same token unit cannot be redeemed twice;
+- redeemed units can no longer circulate as active bonds;
+- total redeemed principal matches the snapshot obligation.
 
 ---
 
 # 14. Required Scenario C — Bondholder Voting
 
-Выбранное дополнительное corporate action: **Bondholder Voting**.
+Selected additional corporate action: **Bondholder Voting**.
 
-Почему именно оно:
-- использует тот же record-date/holder snapshot;
-- показывает, что движок обслуживает не только выплаты;
-- демонстрирует generic lifecycle infrastructure;
-- добавляет инновационность без необходимости внешнего payment rail.
+Why this action:
+- uses the same record-date/holder snapshot;
+- shows that the engine serves more than payments;
+- demonstrates generic lifecycle infrastructure;
+- adds innovation without requiring an external payment rail.
 
-## UC-VOTE-01: Голосование держателей облигаций
+## UC-VOTE-01: Bondholder voting
 
 ### Example proposal
 
 > “Approve modification of maturity date / coupon terms.”
 
 ### Flow
-1. Operator создаёт Proposal.
-2. Задаёт record date и voting window.
-3. Фиксируется snapshot holders.
+1. The Operator creates a Proposal.
+2. The Operator sets the record date and voting window.
+3. A holder snapshot is recorded.
 4. `voting_power = snapshot_balance`.
-5. Holder выбирает `YES / NO / ABSTAIN`.
-6. Program не позволяет проголосовать повторно тем же voting power.
-7. После deadline рассчитываются totals и quorum.
-8. Result записывается on-chain и связывается с instrument/action.
+5. The holder chooses `YES / NO / ABSTAIN`.
+6. The program prevents voting twice with the same voting power.
+7. After the deadline, totals and quorum are calculated.
+8. The result is recorded on-chain and linked to the instrument/action.
 
 ### Acceptance
-- voting power не меняется после передачи токенов после record date;
-- двойное голосование невозможно;
-- сумма использованного voting power не превышает snapshot supply;
-- итог и quorum независимо проверяемы.
+- voting power does not change after a post-record token transfer;
+- double voting is impossible;
+- total used voting power does not exceed snapshot supply;
+- the result and quorum are independently verifiable.
 
 ---
 
-# 15. Human-in-the-Loop / контроль исполнения
+# 15. Human-in-the-Loop / execution control
 
-Ни одно денежное или необратимое corporate action не должно автоматически исполняться только потому, что наступила дата.
+No monetary or irreversible corporate action may execute automatically merely because a date has arrived.
 
-MVP обязан требовать явное подтверждение Operator перед:
+The MVP must require explicit Operator approval before:
 - settlement;
 - burn/retirement;
-- досрочным закрытием action;
-- изменением instrument status.
+- closing an action early;
+- changing instrument status.
 
-Automation рассчитывает и подготавливает действие; authority подтверждает исполнение.
+Automation calculates and prepares the action; the authority approves execution.
 
 ---
 
 # 16. Functional Requirements (FR)
 
 ## Instrument
-- **FR-01** Создать tokenized bond instrument.
-- **FR-02** Хранить face value, currency, coupon rate, frequency, maturity, issuer, mint.
-- **FR-03** Выпустить test supply Token-2022.
-- **FR-04** Распределить токены между test holders.
-- **FR-05** Отображать outstanding / redeemed supply.
+- **FR-01** Create a tokenized bond instrument.
+- **FR-02** Store face value, currency, coupon rate, frequency, maturity, issuer and mint.
+- **FR-03** Issue a Token-2022 test supply.
+- **FR-04** Distribute tokens among test holders.
+- **FR-05** Display outstanding / redeemed supply.
 
 ## Registry & transfer control
-- **FR-06** Создать holder registry.
+- **FR-06** Create a holder registry.
 - **FR-07** Approve/revoke test holder.
-- **FR-08** Запретить обход registry при переводе инструмента.
-- **FR-09** Показывать текущий баланс каждого registered holder.
+- **FR-08** Prevent registry bypass during instrument transfers.
+- **FR-09** Display each registered holder's current balance.
 
 ## Record date
-- **FR-10** Создать corporate action с record date.
-- **FR-11** Запустить snapshot только authorized role.
-- **FR-12** Зафиксировать balance каждого eligible holder.
-- **FR-13** Финализировать immutable snapshot.
-- **FR-14** Сохранить snapshot timestamp/slot/hash.
-- **FR-15** Не использовать post-record transfers для пересчёта уже final snapshot.
+- **FR-10** Create a corporate action with a record date.
+- **FR-11** Allow only an authorized role to initiate a snapshot.
+- **FR-12** Record each eligible holder's balance.
+- **FR-13** Finalize an immutable snapshot.
+- **FR-14** Store snapshot timestamp/slot/hash.
+- **FR-15** Do not use post-record transfers to recalculate an already finalized snapshot.
 
 ## Entitlements
-- **FR-16** Рассчитывать coupon entitlement.
-- **FR-17** Рассчитывать redemption principal.
-- **FR-18** Рассчитывать final coupon отдельно.
-- **FR-19** Рассчитывать voting power.
-- **FR-20** Использовать fixed-point/integer math.
-- **FR-21** Сохранять per-holder entitlement on-chain.
-- **FR-22** Сохранять aggregate total obligation.
+- **FR-16** Calculate coupon entitlement.
+- **FR-17** Calculate redemption principal.
+- **FR-18** Calculate the final coupon separately.
+- **FR-19** Calculate voting power.
+- **FR-20** Use fixed-point/integer math.
+- **FR-21** Store per-holder entitlement on-chain.
+- **FR-22** Store aggregate total obligation.
 
 ## Coupon
 - **FR-23** Preview coupon distribution.
-- **FR-24** Требовать explicit approval.
-- **FR-25** Выполнить/инициировать settlement.
-- **FR-26** Защититься от double payment.
-- **FR-27** Финализировать coupon action.
+- **FR-24** Require explicit approval.
+- **FR-25** Execute/initiate settlement.
+- **FR-26** Prevent double payment.
+- **FR-27** Finalize the coupon action.
 
 ## Redemption
-- **FR-28** Запустить redemption по maturity.
-- **FR-29** Выполнить/инициировать principal settlement.
+- **FR-28** Initiate redemption at maturity.
+- **FR-29** Execute/initiate principal settlement.
 - **FR-30** Burn/retire/lock redeemed bond units.
-- **FR-31** Защититься от double redemption.
-- **FR-32** Mark instrument redeemed после полного погашения.
+- **FR-31** Prevent double redemption.
+- **FR-32** Mark the instrument redeemed after full redemption.
 
 ## Voting
-- **FR-33** Создать proposal.
-- **FR-34** Задать voting record date/window/quorum.
+- **FR-33** Create a proposal.
+- **FR-34** Set voting record date/window/quorum.
 - **FR-35** Vote YES/NO/ABSTAIN.
-- **FR-36** Запретить double vote.
-- **FR-37** Финализировать tally on-chain.
+- **FR-36** Prevent double voting.
+- **FR-37** Finalize the tally on-chain.
 
 ## Audit
-- **FR-38** Для каждого action иметь unique ID/PDA.
-- **FR-39** Логировать ключевые state transitions.
-- **FR-40** Показывать transaction signatures.
-- **FR-41** Создавать финальный ActionReceipt.
-- **FR-42** Auditor должен иметь read-only verification view.
+- **FR-38** Give each action a unique ID/PDA.
+- **FR-39** Log key state transitions.
+- **FR-40** Display transaction signatures.
+- **FR-41** Create a final ActionReceipt.
+- **FR-42** Provide the Auditor with a read-only verification view.
 
 ---
 
 # 17. Non-Functional Requirements (NFR)
 
-- **NFR-01 Determinism:** одинаковые snapshot inputs всегда дают одинаковые entitlement outputs.
-- **NFR-02 Precision:** никаких floating-point денежных расчётов.
-- **NFR-03 Idempotency:** повторный вызов settle/redeem не создаёт повторную выплату.
-- **NFR-04 Authorization:** privileged actions только соответствующим authority.
-- **NFR-05 Auditability:** любой finalized action связан с on-chain state и transaction signatures.
-- **NFR-06 Immutability:** finalized snapshot нельзя изменить.
-- **NFR-07 Atomicity where possible:** irreversible token state change и соответствующая settlement state должны быть связаны одной транзакцией либо строгой state machine.
-- **NFR-08 Recoverability:** partial batch failure можно безопасно продолжить без double settlement.
-- **NFR-09 UX clarity:** пользователь видит record date, formula, snapshot balance, entitlement, status и tx proof.
-- **NFR-10 Devnet reproducibility:** judge может воспроизвести demo по README.
-- **NFR-11 Separation:** UI/backend не являются источником истины для finalized entitlement; критический state хранится/валидируется Solana program.
-- **NFR-12 Security:** admin keys не хардкодятся в frontend/repository.
+- **NFR-01 Determinism:** identical snapshot inputs always produce identical entitlement outputs.
+- **NFR-02 Precision:** no floating-point monetary calculations.
+- **NFR-03 Idempotency:** repeated settle/redeem calls do not create repeated payments.
+- **NFR-04 Authorization:** privileged actions are restricted to the corresponding authority.
+- **NFR-05 Auditability:** every finalized action is linked to on-chain state and transaction signatures.
+- **NFR-06 Immutability:** a finalized snapshot cannot be changed.
+- **NFR-07 Atomicity where possible:** irreversible token state changes and corresponding settlement state must be linked by one transaction or a strict state machine.
+- **NFR-08 Recoverability:** partial batch failures can be resumed safely without double settlement.
+- **NFR-09 UX clarity:** users see record date, formula, snapshot balance, entitlement, status and transaction proof.
+- **NFR-10 Devnet reproducibility:** judges can reproduce the demo from README.
+- **NFR-11 Separation:** UI/backend are not the source of truth for finalized entitlement; critical state is stored/validated by the Solana program.
+- **NFR-12 Security:** admin keys are not hardcoded in the frontend/repository.
 
 ---
 
 # 18. On-chain data model
 
-Минимальные PDA/accounts:
+Minimum PDAs/accounts:
 
 ## `Instrument`
 ```text
@@ -702,7 +702,7 @@ On-chain Receipt
 
 # 22. Demo dataset
 
-Минимум 4 wallets:
+At least 4 wallets:
 
 | Holder | Record-date units | Coupon due |
 |---|---:|---:|
@@ -711,14 +711,14 @@ On-chain Receipt
 | C | 2 | 100 |
 | D | 0 | 0 |
 
-После snapshot:
-- A переводит 4 bonds B.
+After the snapshot:
+- A transfers 4 bonds to B.
 
-Ожидаемый результат:
-- Coupon action всё равно использует snapshot A=10, B=5.
-- Новый current balance не меняет уже зафиксированный entitlement.
+Expected result:
+- The Coupon action still uses snapshot A=10, B=5.
+- New current balances do not change the already recorded entitlement.
 
-Это обязательный demo edge case, потому что он наглядно доказывает смысл record date.
+This is a required demo edge case because it visibly demonstrates the purpose of record date.
 
 ---
 
@@ -755,52 +755,52 @@ On-chain Receipt
 
 # 24. Definition of Done — Hackathon MVP
 
-MVP считается готовым только если в live demo можно последовательно показать:
+The MVP is complete only if the live demo can show the following in sequence:
 
-- [ ] Token-2022 test bond существует on-chain.
-- [ ] Есть 3+ registered holders.
-- [ ] Балансы распределены.
-- [ ] Coupon corporate action создан.
-- [ ] Record-date snapshot реально фиксируется.
-- [ ] Entitlements реально рассчитываются.
-- [ ] Coupon settlement реально проходит через Solana или чётко демонстрируется settlement initiation.
-- [ ] Transaction/receipt можно проверить.
-- [ ] Redemption рассчитывает principal.
-- [ ] Redemption реально burn/retire/lock соответствующие units.
-- [ ] Нельзя redeem второй раз.
-- [ ] Bondholder Voting работает как третий action.
-- [ ] Voting power основан на record-date snapshot.
-- [ ] Есть final on-chain record для каждого scenario.
-- [ ] UI ясно различает IMPLEMENTED и SIMULATED.
-- [ ] README позволяет judge воспроизвести demo.
-- [ ] Demo video показывает полный E2E, а не только интерфейс.
+- [ ] A Token-2022 test bond exists on-chain.
+- [ ] There are 3+ registered holders.
+- [ ] Balances are allocated.
+- [ ] A Coupon corporate action is created.
+- [ ] A record-date snapshot is actually recorded.
+- [ ] Entitlements are actually calculated.
+- [ ] Coupon settlement actually executes through Solana or settlement initiation is clearly demonstrated.
+- [ ] The transaction/receipt can be verified.
+- [ ] Redemption calculates principal.
+- [ ] Redemption actually burns/retires/locks the corresponding units.
+- [ ] A second redemption is impossible.
+- [ ] Bondholder Voting works as the third action.
+- [ ] Voting power is based on the record-date snapshot.
+- [ ] Each scenario has a final on-chain record.
+- [ ] The UI clearly distinguishes IMPLEMENTED and SIMULATED.
+- [ ] README enables judges to reproduce the demo.
+- [ ] The demo video shows complete E2E beyond the interface.
 
 ---
 
-# 25. Что НЕ входит в MVP
+# 25. Outside MVP scope
 
-Не тратить hackathon-время на:
-- полноценную matching/trading engine;
+Do not spend hackathon time on:
+- a full matching/trading engine;
 - order book;
 - production-grade CSD replacement;
-- реальную интеграцию с банковскими rails;
+- real bank-rail integration;
 - production KYC/AML vendor;
-- юридическое признание токена как реальной ценной бумаги;
+- legal recognition of the token as a real security;
 - mainnet deployment;
-- сложный RWA marketplace;
+- a complex RWA marketplace;
 - secondary trading UI;
 - multi-chain;
-- DAO/governance framework общего назначения;
+- a general-purpose DAO/governance framework;
 - AI/LLM;
-- масштабную microservice architecture.
+- a large microservice architecture.
 
-Это всё не является ядром challenge.
+These are outside the challenge's core.
 
 ---
 
-# 26. Приоритет разработки
+# 26. Development priorities
 
-## P0 — обязательно
+## P0 — required
 1. Instrument + Token-2022.
 2. Holder registry.
 3. Record-date snapshot.
@@ -811,7 +811,7 @@ MVP считается готовым только если в live demo мож�
 8. Bondholder voting.
 9. Operator UI + audit view.
 
-## P1 — если P0 стабилен
+## P1 — after P0 is stable
 - batch processing;
 - richer transfer controls;
 - Merkle snapshot commitment;
@@ -831,13 +831,13 @@ MVP считается готовым только если в live demo мож�
 
 ---
 
-# 27. Mapping на judging criteria
+# 27. Mapping to judging criteria
 
 ## Technical Execution — 30%
-Показать не макет, а реальные Solana transactions, state machine, Token-2022, snapshot, settlement, burn/retirement и tests.
+Demonstrate real Solana transactions, a state machine, Token-2022, snapshots, settlement, burn/retirement and tests rather than a mockup.
 
 ## Corporate Action Logic — 25%
-Это главный слой продукта:
+This is the core product layer:
 - record date;
 - immutable snapshot;
 - eligibility;
@@ -846,10 +846,10 @@ MVP считается готовым только если в live demo мож�
 - correct redemption.
 
 ## Product & UX — 20%
-UI должен объяснять сложную финансовую механику простым визуальным pipeline и давать auditability.
+The UI must explain complex financial mechanics through a simple visual pipeline and provide auditability.
 
 ## Real-World Applicability — 15%
-Подчеркнуть:
+Emphasize:
 - permissioned holders;
 - explicit operator approval;
 - separation of on-chain entitlement and external settlement;
@@ -857,20 +857,20 @@ UI должен объяснять сложную финансовую меха�
 - ability to integrate with CSD/KASE/issuer systems later.
 
 ## Innovation — 10%
-Не продавать “blockchain because blockchain”.
+Do not pitch “blockchain because blockchain”.
 
-Инновация:
-> **универсальный programmable lifecycle engine**, где один record-date/snapshot/entitlement слой обслуживает выплаты, redemption и governance events.
+Innovation:
+> **a universal programmable lifecycle engine**, where one record-date/snapshot/entitlement layer serves payments, redemption and governance events.
 
 ---
 
-# 28. Главная метрика успешности MVP
+# 28. Primary MVP success metric
 
-Не TVL, не число кошельков и не скорость UI.
+Neither TVL, wallet count nor UI speed.
 
 ### Primary Product Metric
 
-> **100% корректно и воспроизводимо обработанные corporate-action entitlements для всех holders в тестовом сценарии с проверяемым on-chain outcome.**
+> **100% correctly and reproducibly processed corporate-action entitlements for all holders in the test scenario, with verifiable on-chain outcomes.**
 
 ### Demo KPIs
 - entitlement mismatch: **0**;
@@ -881,15 +881,15 @@ UI должен объяснять сложную финансовую меха�
 
 ---
 
-# 29. Критический demo narrative
+# 29. Critical demo narrative
 
-Не начинать презентацию со слов “мы выпустили токен на Solana”.
+Do not open the presentation with “we issued a token on Solana”.
 
-Начать с проблемы:
+Start with the problem:
 
-> “Выпустить токенизированную облигацию недостаточно. Через шесть месяцев кто-то должен точно определить, кто владел ею на record date, сколько купона положено каждому инвестору, провести выплату, затем при maturity погасить principal и доказать результат. Мы построили именно этот lifecycle layer.”
+> “Issuing a tokenized bond is not enough. Six months later, someone must determine exactly who held it on the record date, how much coupon each investor is owed, execute the payment, redeem principal at maturity and prove the outcome. We built that lifecycle layer.”
 
-Затем live flow:
+Then show the live flow:
 
 ```text
 Bond issued
@@ -907,24 +907,24 @@ Bond issued
 → audit receipt
 ```
 
-Это напрямую демонстрирует бизнес-смысл трека.
+This directly demonstrates the track's business purpose.
 
 ---
 
-# 30. Архитектурный принцип принятия решений
+# 30. Architectural decision principle
 
-При любом споре “что добавить?” использовать порядок:
+When deciding what to add, use this order:
 
-1. Улучшает ли это корректность **Record Date → Entitlement → Execution → Proof**?
-2. Требуется ли это Required Scenarios / Minimum Prototype Requirements?
-3. Повышает ли это Technical Execution / Corporate Action Logic / Product UX / Real-World Applicability?
-4. Можно ли это показать в live demo?
+1. Does it improve correctness of **Record Date → Entitlement → Execution → Proof**?
+2. Is it required by Required Scenarios / Minimum Prototype Requirements?
+3. Does it improve Technical Execution / Corporate Action Logic / Product UX / Real-World Applicability?
+4. Can it be shown in a live demo?
 
-Если ответ “нет” — функциональность не входит в MVP.
+If the answer is no, the feature is outside MVP scope.
 
 ---
 
-# 31. Источники и основание ТЗ
+# 31. Sources and specification basis
 
 1. Superteam Kazakhstan x KASE Side Track — Corporate Actions on Blockchain  
    https://superteam.fun/earn/listing/superteam-kazakhstan-x-kase-side-track-corporate-actions-on-blockchain
@@ -949,8 +949,8 @@ Bond issued
 
 ---
 
-# 32. Итоговая формулировка продукта
+# 32. Final product definition
 
-**KASE Corporate Actions Engine** — прототип infrastructure layer на Solana для обслуживания жизненного цикла токенизированных финансовых инструментов: он фиксирует eligible holders на record date, детерминированно рассчитывает права, исполняет или инициирует corporate action и оставляет проверяемый on-chain результат.
+**KASE Corporate Actions Engine** is a prototype infrastructure layer on Solana for servicing tokenized financial instruments throughout their lifecycle: it records eligible holders at the record date, deterministically calculates rights, executes or initiates the corporate action and leaves a verifiable on-chain outcome.
 
-**Главная бизнес-ценность:** сделать tokenized security не просто выпускаемым и передаваемым активом, а **операционно обслуживаемым финансовым инструментом на всём lifecycle**.
+**Primary business value:** make a tokenized security an **operationally serviceable financial instrument throughout its lifecycle**, beyond an asset that can merely be issued and transferred.
