@@ -310,13 +310,13 @@ Automation calculates and prepares the action; the authority approves execution.
 
 # 16. Functional Requirements (FR)
 
-See [FR-01–42: Functional requirements](REQUIREMENTS.md#16-functional-requirements-fr). This normative section is maintained in the TZ annex.
+See [FR-01–58: Functional requirements (MVP and explicitly scoped Post-MVP)](REQUIREMENTS.md#16-functional-requirements-fr). This normative section is maintained in the TZ annex.
 
 ---
 
 # 17. Non-Functional Requirements (NFR)
 
-See [NFR-01–12: Non-functional requirements](REQUIREMENTS.md#17-non-functional-requirements-nfr). This normative section is maintained in the TZ annex.
+See [NFR-01–19: Non-functional requirements (MVP and explicitly scoped Post-MVP)](REQUIREMENTS.md#17-non-functional-requirements-nfr). This normative section is maintained in the TZ annex.
 
 ---
 
@@ -701,6 +701,8 @@ If the answer is no, the feature is outside MVP scope.
 ---
 
 # 31. Sources and specification basis
+
+Reference repository assessment, verified scope and adaptation decisions are maintained in [ARCHITECTURE](ARCHITECTURE.md#reference-assessment-and-adaptation). Original MVP IDs remain stable; appended requirements and their MVP/Post-MVP boundary are defined in [REQUIREMENTS](REQUIREMENTS.md#scope-of-the-reference-driven-extension) and scheduled in [ROADMAP](ROADMAP.md#reference-driven-delivery-order).
 
 1. Superteam Kazakhstan x KASE Side Track — Corporate Actions on Blockchain  
    https://superteam.fun/earn/listing/superteam-kazakhstan-x-kase-side-track-corporate-actions-on-blockchain

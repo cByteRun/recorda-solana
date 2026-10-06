@@ -1,5 +1,15 @@
 # Changelog
 
+
+## 2026-10-06 — Reference-driven requirements and delivery plan
+
+- [x] Compare current Coupon source/client/acceptance with eight upstream reference groups; document verified README/specification scope, source links and limits of external validation.
+- [x] Preserve existing UC/FR/NFR/TC IDs and delivered Coupon evidence; append FR-43–58, NFR-13–19, TC-20–38 and explicitly scoped Post-MVP use cases.
+- [x] Specify typed actions/receipts, compatibility, persistent redemption restrictions, holder-signed atomic burn/payment, coupon-period deduplication and exact voting rules for the remaining MVP.
+- [x] Keep Bondholder Voting as third MVP action; detail early/partial redemption after full redemption and Merkle/indexer evolution after acceptance.
+- [x] Map requirements, code locations, dependencies and exit gates into each roadmap phase; note archived T-REX and distinguish source pattern reuse from incorporated/tested dependencies.
+- [x] Documentation-only update; no new functionality or fresh protocol/Devnet acceptance claimed.
+
 ## 2026-10-06 — Deliver Phase 1 Coupon UX/UI and roles
 
 - [x] Make `/` and `/protocol` the real Coupon entry; preserve the Browser/Memo example at `/reference` and update stale copy.
