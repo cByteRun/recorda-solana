@@ -1,258 +1,35 @@
-# Product context — Recorda / KASE Corporate Actions Engine
+# Product context — Recorda
 
-> This document explains the product in plain language. **`docs/TZ.md` remains the source of truth.**
+This document explains the domain and product positioning. [TZ](TZ.md) and its [REQUIREMENTS annex](REQUIREMENTS.md) define the requirements. [README](../README.md) gives the short pitch, example and quick validation; [ROADMAP](ROADMAP.md) records current delivery.
 
-## 1. The subject area in one example
+## The domain distinction
 
-A company issues a two-year bond:
+A tokenized bond changes owners throughout its life. A corporate action creates a right from ownership at a particular cutoff. Those are different facts: **current balance ≠ entitlement balance**.
 
-- face value: `$1,000`;
-- annual coupon: `10%`;
-- coupon frequency: twice per year.
+A later sale changes who owns the bond today; it must not rewrite a coupon already earned at the record date. The same distinction applies to voting power and redemption eligibility. [TZ §9](TZ.md#9-record-date--critical-mechanism) defines the record-date mechanism; [TZ §22](TZ.md#22-demo-dataset) fixes the demonstration inputs and expected result.
 
-Investor A owns 10 bonds on the coupon record date.
+## Why this matters to market infrastructure
 
-```text
-10 × $1,000 × 10% ÷ 2 = $500
-```
+Traditional securities infrastructure already has registries and corporate-action processes. The challenge is to make the lifecycle of an instrument whose ownership lives on Solana operational on that infrastructure, while keeping eligibility, calculation, authorization and outcome linked.
 
-The difficult part is not minting a token that represents the bond. The difficult part is servicing that bond correctly for its entire lifecycle.
+Recorda is positioned as a B2B servicing layer for market operators, issuers/paying agents and depository infrastructure. Custodians and brokers are potential integration channels; holders benefit from explainable rights, and auditors from traceable outcomes. Formal roles and permissions are maintained in [REQUIREMENTS §6](REQUIREMENTS.md#6-users-and-roles); role-specific value and the economic hypothesis are in [TZ §4](TZ.md#4-value-and-expected-impact).
 
-After issuance, the system must repeatedly answer:
+## A useful analogy
 
-1. **Who** was eligible?
-2. **When** was eligibility measured?
-3. **What right** did that ownership create?
-4. **How much** was due and by which formula?
-5. **Who approved** execution?
-6. **What was actually executed?**
-7. **What happened to the instrument?**
-8. **Can an investor/auditor prove the result later?**
+Payroll turns an employee's state at a cutoff into an approved payment and a payslip. Recorda applies the same servicing pattern to holders: ownership at a record date creates a right, followed by controlled execution and a receipt. The analogy explains the workflow; financial formulas and acceptance are defined by the specification.
 
-That is the corporate-actions domain.
+## Product differentiation
 
-## 2. Why record date exists
+Token-2022 supplies asset primitives such as minting, accounts and transfers. Recorda's domain layer connects historical ownership to a right and its execution history. The product must explain **why a holder was entitled**, **who approved execution** and **what actually happened**, even after ownership changes.
 
-Ownership can change every day.
+Required scenarios and acceptance are defined once in the annex:
 
-```text
-Record date:
-A = 10 bonds
-B = 20 bonds
-C = 5 bonds
+- [Coupon payment](REQUIREMENTS.md#12-required-scenario-a--coupon-payment).
+- [Bond redemption](REQUIREMENTS.md#13-required-scenario-b--bond-redemption).
+- [Bondholder voting](REQUIREMENTS.md#14-required-scenario-c--bondholder-voting).
 
-After A sells 4 to B:
-A = 6
-B = 24
-C = 5
-```
+Implementation/trust boundaries belong in [ARCHITECTURE](ARCHITECTURE.md); verified features, unfinished work and test evidence belong in [ROADMAP](ROADMAP.md#verification-and-gaps). A successful model demonstration and a verified on-chain outcome are distinct evidence.
 
-The coupon for the completed record date must still use `10 / 20 / 5`.
+## Product decisions
 
-Therefore:
-
-```text
-current balance ≠ entitlement balance
-```
-
-This is the simplest demonstration of why a plain token balance is not enough to operate a financial instrument.
-
-## 3. What exists today vs what the challenge asks
-
-Traditional securities infrastructure already has registries, settlement processes and corporate actions. The KASE challenge is not “replace a broken spreadsheet”.
-
-The challenge asks:
-
-> If a financial instrument becomes tokenized and its ownership lives on Solana, how do we make its post-issuance lifecycle operational on that same programmable infrastructure?
-
-Issuance is only day zero.
-
-A tokenized bond still needs:
-
-- record dates;
-- coupon payments;
-- redemption;
-- voting;
-- changes of terms / buybacks / other actions;
-- a reliable audit trail.
-
-## 4. Who needs Recorda
-
-### Primary B2B users
-
-- exchange / corporate-actions operator;
-- issuer / paying agent;
-- depository or servicing infrastructure;
-- custodian / broker integration layer;
-- auditor.
-
-### Beneficiary
-
-The holder / investor needs a clear explanation:
-
-```text
-I held 10 units on the record date
-× face value 1,000
-× annual coupon 10%
-÷ 2 payments per year
-= 500 KUSD entitlement
-```
-
-and should be able to verify the status and transaction proof.
-
-## 5. The business problem
-
-Tokenization alone solves representation and transfer of ownership. It does not automatically create the operational servicing layer that converts historical ownership into enforceable rights.
-
-Without that layer, a tokenized security still requires separate logic for:
-
-- historical holder state;
-- eligibility;
-- entitlement calculation;
-- approval;
-- settlement coordination;
-- redemption state changes;
-- voting rights;
-- audit / proof.
-
-> **A tokenized financial instrument needs a deterministic lifecycle mechanism that binds ownership at a record date to a specific holder right and to a provable execution outcome.**
-
-## 6. The solution
-
-Recorda is a **lifecycle servicing layer for tokenized securities**.
-
-```text
-Instrument
-→ Record Date
-→ Immutable Snapshot
-→ Eligible Holders
-→ Entitlements
-→ Explicit Approval
-→ Settlement / Redemption / Voting
-→ Instrument State Change
-→ ActionReceipt
-```
-
-The system creates an auditable causal chain:
-
-> **who owned → on what date → what right arose → by which formula → who approved → what executed → what changed → where is the proof**
-
-## 7. Payroll analogy
-
-```text
-PAYROLL
-employee state
-→ cutoff
-→ eligible employees
-→ salary calculation
-→ approval
-→ payment
-→ payslip / audit
-
-RECORDA
-holder state
-→ record date
-→ eligible holders
-→ entitlement calculation
-→ approval
-→ settlement
-→ ActionReceipt / audit
-```
-
-## 8. Economic / operational value
-
-The MVP does not claim an unproven percentage of savings.
-
-It demonstrates mechanisms from which value can arise:
-
-- less reconciliation between independent ownership/calculation/execution datasets;
-- deterministic financial calculations;
-- fewer manual opportunities for entitlement error;
-- explicit execution authority;
-- faster audit because snapshot, formula, execution and result are linked;
-- reusable infrastructure for multiple instruments and action types;
-- programmable integration point for future KASE/CSD/issuer/payment systems.
-
-## 9. What is commodity and what is our edge
-
-### Reusable infrastructure
-
-- Token-2022 mint/accounts/transfers;
-- Token ACL / holder permissioning patterns;
-- Merkle snapshot/distributor patterns for future scale;
-- Squads / multisig patterns for production authorization;
-- governance patterns for voting.
-
-### Recorda-owned domain layer
-
-- record-date semantics;
-- snapshot immutability;
-- corporate-action state machine;
-- fixed-point coupon/principal calculations;
-- per-holder entitlement state;
-- no double settlement / redemption;
-- redemption lifecycle and token retirement;
-- snapshot-based voting power;
-- holder corporate-action history;
-- ActionReceipt and verification UX.
-
-This is why Recorda is not “one more RWA minting app”.
-
-## 10. What the current prototype proved
-
-```text
-Real Token-2022 bond
-A/B/C = 10/20/5
-        ↓
-Record-date snapshot = 10/20/5
-        ↓
-Real A → B transfer of 4 bonds
-        ↓
-Current = 6/24/5
-        ↓
-Entitlement still calculated from snapshot
-A = 500
-B = 1000
-C = 250
-        ↓
-Operator approval
-        ↓
-Real KUSD-DEV settlement
-500/1000/250
-        ↓
-Receipt
-        ↓
-Black-box E2E PASS
-```
-
-This proves the product hypothesis.
-
-It does **not** yet prove protocol enforcement because the browser still performs the corporate-action calculation/state orchestration and writes signed Memo attestations.
-
-## 11. The next product boundary
-
-> **Move Corporate Action Truth On-Chain.**
-
-```text
-Browser/React
-   ↓ request
-Recorda Anchor Program
-   ├── validates state
-   ├── stores record-date snapshot
-   ├── calculates entitlement
-   ├── enforces authorization
-   ├── prevents double execution
-   ├── performs Token-2022 CPI settlement/redemption
-   └── finalizes ActionReceipt
-```
-
-The browser becomes presentation + transaction initiation rather than the source of financial truth.
-
-## 12. Scope filter
-
-Before adding a feature ask:
-
-> **Does this improve Record Date → Right → Controlled Execution → Verifiable Proof or directly satisfy a required KASE scenario?**
-
-If not, it is probably not MVP.
-
+Use [TZ §30](TZ.md#30-architectural-decision-principle) to decide whether a feature belongs in scope, [§25–26](TZ.md#25-outside-mvp-scope) for exclusions/priorities, and [§28](TZ.md#28-primary-mvp-success-metric) for success metrics. The presentation narrative is maintained in [TZ §29](TZ.md#29-critical-demo-narrative), rather than repeated here.

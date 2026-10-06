@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-06 — Preserve TZ detail and refine documentation navigation
+
+- [x] Keep full TZ context, domain rules and architecture; replace only sections already preserved verbatim in REQUIREMENTS with normative links.
+- [x] Remove repeated requirements, metrics, datasets and stale implementation claims from PRODUCT; link to their authoritative sections.
+- [x] Order README as business problem → solution/value/example → quick start → visible golden validation → protocol/manual/CI details.
+- [x] Verify unchanged TZ sections, normative definitions and local file/section links; application code is unchanged.
+
+## 2026-10-06 — Documentation consolidation and cross-layer audit
+
+- [x] Consolidate docs into TZ, REQUIREMENTS, ROADMAP, CHANGELOG, ARCHITECTURE and PRODUCT; setup/operations/manual replay live in README.
+- [x] Preserve UC/FR/NFR/TC and MVP DoD definitions in the normative TZ annex; retain section numbers and requirement authority.
+- [x] Replace duplicate implementation plan and stale audits with one requirement → code → test → evidence matrix in ROADMAP.
+- [x] Rewrite README around the 30–60 second coupon example, actual scope, build and reproducible acceptance.
+- [x] Record Next.js/Vite mismatch, preparatory rights fields, RPC-history/snapshot recovery limits and unfinished Redemption/Voting/Devnet work.
+- [x] Fresh build/SBF/IDL pass, Rust 4/4, R1 35/35, validator 16/16 and protocol browser/audit 4/4; real payouts, rejected signature, reload/resume and forged-proof rejection verified.
+- [x] Install agent-browser outside the repository and verify `/` and `/protocol`: content/controls render, no runtime errors or Vite overlay.
+- [x] Rerun protocol E2E without document edits after Vite reloaded the first browser session; final run passed without application/test changes.
+
 ## 2026-10-06 — Phase 1 / M1.1–M1.6: Anchor Coupon Core
 
 - [x] Anchor workspace, pinned Rust/Solana dependencies and generated IDL/types.
@@ -34,7 +52,7 @@
 - [x] Negative tests: RPC failure, wrong account owner, rejected approval, insufficient funds, corrupted entitlement and failed confirmation.
 - [x] Display IMPLEMENTED/client-owned and SIMULATED boundaries.
 - [x] Update README, ROADMAP, architecture, audit and manual Devnet acceptance.
-- [x] Add UC/FR/NFR/TC coverage matrix: [R1_TEST_COVERAGE.md](R1_TEST_COVERAGE.md).
+- [x] Add UC/FR/NFR/TC coverage matrix: [ROADMAP verification](ROADMAP.md#verification-and-gaps).
 - [x] Verify build and 35/35 Playwright tests with controlled wallet/RPC.
 - [x] Fix Linux Playwright setup: install Chromium with system dependencies.
 - [ ] Retain real Phantom/Devnet signatures and payout deltas from manual acceptance.

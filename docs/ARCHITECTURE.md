@@ -1,114 +1,66 @@
-# Recorda architecture
+# Architecture
 
-## Current scope
+Authority: [TZ](TZ.md) + [REQUIREMENTS](REQUIREMENTS.md). Current delivery/evidence: [ROADMAP](ROADMAP.md#verification-and-gaps).
 
-React Browser/Memo reference at `/` plus Anchor Coupon Core at `/protocol`. Product axis:
-**Record Date → Right → Controlled Execution → Verifiable Proof**.
-Requirements authority: [TZ](TZ.md). Delivery: [ROADMAP](ROADMAP.md).
+## Runtime and trust
 
-## Stack and purpose
+```text
+React page → controller → generated Anchor client → signed transaction
+→ Recorda program → Token-2022 CPI → PDA/token state
+→ RPC reads → independent audit → holder rights / receipt / history
+```
 
-| Component | Purpose |
-| --- | --- |
-| React 19 + TypeScript | Dashboard, holder views, workflow controls and typed state |
-| Vite | Local development and static production bundle |
-| Tailwind v4 / @tailwindcss/vite | Utility CSS compiled through npm |
-| Local shadcn-style Button/Card, CVA, clsx, tailwind-merge | Reusable UI variants and class composition; no Radix runtime installed |
-| Lucide React | Icons |
-| @solana/web3.js | Devnet RPC, keypairs, transaction construction and confirmation |
-| @solana/spl-token | Token-2022 mint, ATA and checked transfer instructions |
-| Phantom injected provider | Operator connection and explicit transaction signing |
-| buffer | Browser-compatible instruction data |
-| localStorage | Disposable Devnet holder keys and deployment/action resume references |
-| Playwright | Domain oracle and real browser UI checks without wallet signing |
-| GitHub Actions | npm ci → TypeScript/Vite build → Chromium tests → report artifacts |
-| Vercel | Prebuilt production deployment only after a merged PR; Git auto-deployments disabled |
+There is no application backend/database. Coupon Core at `/protocol` stores finalized truth in Solana accounts. Phantom holds the operator key and signs explicitly. LocalStorage caches addresses and disposable demo-holder keys, scoped by RPC/program; losing it does not erase protocol rights. Holder keys are a test custody model.
 
-## Folder and file responsibilities
+The `/` Browser/Memo reference uses real Token-2022 instructions but browser-owned snapshot/entitlement/lifecycle state. Memo attests bytes; it does not enforce rights, immutability or once-only payment. Its offline oracle and mocked tests are simulation evidence.
+
+## Stack and code map
+
+React 19/TypeScript/Vite, Tailwind v4, local shadcn-style primitives, Lucide; Anchor 0.32.1, Solana web3.js/spl-token and Token-2022. FSD import direction: app → pages → widgets → features → entities → shared.
 
 | Path | Responsibility |
 | --- | --- |
-| `index.html`, `src/main.tsx` | Browser entry and React mount |
-| `src/app/App.tsx`, `src/app/styles/globals.css` | Application composition and styles |
-| `src/pages/dashboard/ui/dashboard-page.tsx` | Operator dashboard and lifecycle controls |
-| `src/widgets/holder-grid/` | A/B/C/D ownership, snapshot and entitlement cards |
-| `src/widgets/pipeline/` | Ordered workflow step component |
-| `src/widgets/golden-oracle/` | Expected/actual deterministic model comparison |
-| `src/features/corporate-action/model/use-recorda-controller.ts` | Coupon orchestration, signing, RPC refresh and resume state |
-| `src/features/corporate-action/model/coupon.ts` | Checked BigInt coupon products, per-holder minor-unit rounding and aggregate overflow validation |
-| `src/features/corporate-action/model/golden.ts` | Input-derived offline model and full output comparison |
-| `src/features/corporate-action/model/types.ts` | Client action state types |
-| `src/entities/holder/`, `src/entities/instrument/` | Holder types and demo instrument parameters |
-| `src/shared/solana/config.ts` | Devnet connection and Explorer links |
-| `src/shared/solana/phantom.ts` | Injected wallet interface |
-| `src/shared/solana/transactions.ts` | Simulate/sign/send/confirm adapter |
-| `src/shared/solana/persistence.ts` | v4-compatible localStorage keys and disposable identities |
-| `src/shared/ui/`, `src/shared/lib/` | Button/Card and shared helpers |
-| `golden/coupon-happy-path.json` | Historical three-holder regression; existing expected output retained |
-| `golden/coupon-tz-section-22.json` | Required TZ four-holder scenario, supply 17, coupon total 850 USD |
-| `tests/bridge-lifecycle.spec.ts`, `tests/helpers/bridge.ts` | Browser → controller → decoded transaction → controlled RPC token-account results, with a test wallet |
-| `tests/coupon-precision.spec.ts` | TZ dataset, minor-unit precision and invalid/overflow inputs |
-| `docs/R1_TEST_COVERAGE.md` | Requirement-to-test coverage and remaining protocol/manual boundaries |
-| `tests/golden-domain.spec.ts`, `tests/golden-ui.spec.ts` | Domain and browser regression checks |
-| `docs/MANUAL_DEVNET_ACCEPTANCE.md` | Human-signed real-chain acceptance |
-| `docs/TZ.md`, `docs/PRODUCT.md`, `docs/plan.md` | Requirements, product interpretation and implementation plan |
-| `docs/PHASE_1_AUDIT.md` | Traceability, evidence and remaining gaps |
-| `prototype/` | Frozen v4 HTML behavioral reference |
-| `.github/workflows/e2e.yml`, `.github/workflows/deploy.yml`, `playwright.config.ts` | PR CI, merge-only production deployment and browser test configuration |
-| `package.json`, `package-lock.json`, `tsconfig*.json`, `vite.config.ts` | npm dependencies, reproducible resolution, typing and bundling |
-| `components.json`, `vercel.json` | UI generator aliases and hosting configuration |
+| `programs/recorda/src/lib.rs` | Coupon instructions, authority/account constraints, math, state and events |
+| `src/shared/solana/idl/` | Compiler-generated IDL and TypeScript contract |
+| `src/shared/solana/protocol.ts` | PDAs, instructions, validated chain reads and history |
+| `src/shared/solana/protocol-audit.ts` | Independent formula, snapshot and receipt reconciliation |
+| `src/pages/protocol/`, protocol controller in `src/features/corporate-action/` | Operator lifecycle, holder rights, restore and read-only proof |
+| `src/features/corporate-action/model/` | R1 controller, checked client coupon math and offline golden model |
+| `src/shared/solana/transactions.ts`, `rpc-fetch.ts`, `persistence.ts` | Simulation/sign/send/confirm, bounded RPC retry and local resume references |
+| `golden/`, `tests/`, `protocol-tests/`, `protocol-ui-tests/` | Independent fixtures, client checks and real-validator integration/browser checks |
+| `scripts/`, `.github/workflows/` | IDL/build/validator orchestration, PR CI and merged-PR deployment |
+| `prototype/` | Historical HTML reference |
 
-Layers follow FSD direction: app → pages → widgets → features → entities → shared.
-This is FSD-style organization, with direct imports rather than enforced public slice APIs.
-No application backend/database is required. `programs/recorda/src/lib.rs` owns Coupon Core truth; generated IDL/types live in `src/shared/solana/idl/`. `protocol.ts` constructs instructions/reads PDAs; `protocol-audit.ts` independently verifies formula, totals and hashes. The protocol controller/page orchestrate explicit signing, chain recovery and read-only history. See [Coupon Core](COUPON_PROTOCOL.md).
+## Coupon accounts and lifecycle
 
-## Data flow and trust boundary
+| PDA | Stored truth |
+| --- | --- |
+| Instrument | Combined issuer/operator authority, terms, mint/payment mint, outstanding/redeemed supply and transfer/snapshot barriers |
+| HolderPosition | Instrument, wallet, registered token account and approval |
+| CorporateAction | Unique ID/instrument, scheduled/capture dates, stage, counts/totals, hash and approval |
+| EntitlementPosition | Immutable snapshot units/index, calculated coupon, preparatory principal/final coupon/voting power, paid amount/destination/slot |
+| ActionReceipt | Final status, settled total, processed count, final slot/time and summary hash |
 
-Dashboard invokes controller → controller reads Devnet accounts → operator reviews
-and signs in Phantom → checked Token-2022 transaction executes → confirmed signature
-and client workflow references are persisted → holder cards refresh from RPC.
+SnapshotPosition is embedded in EntitlementPosition. Snapshot commitment follows stored holder order; audit recomputes it. Signatures are fetched from RPC, not stored inside the PDA.
 
-Token balances and transaction signatures are real-chain data. Snapshot metadata,
-entitlements and lifecycle status are browser-owned and attested using Memo.
-Memo proves submitted bytes, not the correctness or immutability of domain rules.
-Offline oracle calculates the TZ §22 distribution; its SIMULATED/PASS label is not a Devnet receipt. Tests intercept RPC and use a test wallet; their token movements are harness state, not validator evidence.
+Implemented successful stages follow TZ §11. PARTIALLY_SETTLED is represented by EXECUTING plus per-holder progress; insufficient funds/invalid calls reject and roll back rather than persisting separate FAILED/INSUFFICIENT_FUNDS states. CANCELLED is supported for scheduled coupons only. This is a representation difference to track against TZ, not additional implemented action types.
 
-Holder private keys are disposable Devnet identities stored locally, not operator
-keys. Storage is scoped to browser origin: localhost, 127.0.0.1 and each Vercel
-preview do not share state. Never use this storage model for production custody.
+## Correctness and restrictions
 
-## Coupon Core architecture
+- Instrument PDA controls bond mint/freeze/registered-account close authority. Accounts stay frozen outside atomic thaw → checked transfer → freeze; transfers require holder signature and approved sender/recipient.
+- Scheduled record time blocks ownership/registry changes even if snapshot starts late. Capture accounts for every approved holder and outstanding unit; finalize makes rights immutable and releases coupon transfer restrictions.
+- One scheduled/pending snapshot per instrument. Registration/issuance seals at first snapshot; approval changes require zero units. No post-begin snapshot-abort recovery is implemented.
+- Mock payment mint is plain two-decimal Token-2022; extensions that alter credits are rejected. Amounts are u64 minor units, checked u128 products, floor once per holder; aggregate is the sum of rounded amounts. R1 uses checked BigInt and safe integer conversion.
+- Authority approves after calculation; vault funding is checked. Payment CPI and paid-state update are atomic; failed calls roll back. Restart reads unpaid entitlements; repeats are rejected. Finalization requires every holder, including zero holders, and exact settled/obligation totals.
+- Audit checks account owner/canonical PDAs, formula, snapshot order/hash, units/counts/totals, historical paid amounts/destinations and final receipt identity/hash. Current payment balance can change after payment and is not treated as its historical amount.
+- Action history currently queries up to 100 signatures; archival/paginated history is not implemented. Principal/final-coupon/voting-power fields do not execute Redemption or Voting.
 
-Implemented: Instrument, HolderPosition, CorporateAction, EntitlementPosition
-and ActionReceipt PDAs. Immutable snapshot fields are stored inside
-EntitlementPosition as permitted by TZ §§9/18; snapshot_index records commitment
-order. Scheduled record timestamps block ownership/registry changes even when
-begin_snapshot is late. Token-2022 bond accounts remain frozen except during
-atomic protocol-mediated transfers; Instrument PDA also controls close authority.
-Coupon calculation, approval, funding, resumable settlement and receipt execute
-on-chain. React reads the generated contract and verifies outcomes independently.
-One scheduled/pending snapshot per instrument; issuance is sealed after the first
-snapshot; approval changes require zero units. Issuer/operator share one authority.
-Plain two-decimal Token-2022 Mock USD is the test payment rail.
+## R1 recovery and RPC
 
-The browser caches addresses and disposable holder keys, never finalized amounts
-or operator secrets. Payment history records destination, paid amount and slot;
-RPC signatures link to events. Current holder balances are separate from past
-snapshot rights and past paid amounts. Instrument history links each action URL.
-Validator golden tests read actual PDA/token state; the protocol browser suite
-uses a controlled signer with real validator RPC. Real Phantom/Devnet acceptance
-remains separate. Phase 2 Redemption/Voting is still pending.
+The shared adapter simulates before signing, validates connected account, preserves partial holder signatures and adds Memo compute budget. Snapshot reads fail on bad accounts/RPC errors. Unknown balances display `—`; allocation/settlement fail closed. Broadcast payment signature is saved before confirmation; uncertain confirmation blocks another submission across reload and requires manual reconciliation. It is not durable protocol idempotency. Partial R1 settlement-rail setup has no safe-resume guarantee.
 
-## Transaction verification
+## Requirements deviations and verification boundary
 
-The shared TypeScript transaction adapter adds a compute budget for Memo attestations, simulates against Devnet before requesting Phantom signing, checks the connected account and avoids automatic retry after a known broadcast signature. Snapshot acquisition reads validated holder accounts directly and fails on RPC errors. `tests/transactions.spec.ts` covers these boundaries with mocked RPC and wallet responses; actual Phantom/Devnet execution remains manual acceptance.
+TZ §19 requires **Next.js + TypeScript**; implementation is **React + Vite**. Keep this open until implementation conforms or TZ is explicitly revised. Issuer/operator is one authority (allowed by MVP role rules); a separate issuer identity and full role-specific journeys are unfinished.
 
-## R1 calculation and recovery contract
-
-New deployments target A/B/C/D = 10/5/2/0. Existing holder keys are retained and D is added. Start a fresh origin/profile for the new 17-unit demo; a historical 35-unit deployment is not overwritten or redistributed. The historical golden expected output remains unchanged.
-
-Financial products and totals use BigInt, validated integer inputs and checked conversion to safe integer minor units. The client rounds down once per holder in minor units; USD formatting divides the result only for display. Stored entitlements include amountMinor and totalMinor. Settlement validates each amount against its snapshot and sends integer Token-2022 amounts rather than rounding USD floats.
-
-Unavailable token balances render as unknown (—). Deployment cannot treat unavailable balances as zero and mint again; settlement cannot use unknown pre-payment balances. Snapshot reads fail closed and validate token-account owner and mint.
-
-The transaction adapter invokes onSubmitted immediately after broadcast and before confirmation. Settlement saves pendingSettlementSignature at that point. Failure/ambiguous confirmation leaves payment blocked across reload; only successful confirmation promotes it to the confirmed settlement signature. This is a browser safeguard, not protocol idempotency or automatic reconciliation.
+Local-validator tests execute actual Anchor/Token-2022 state transitions with a controlled signer; client tests mock wallet/RPC. Neither proves Phantom extension compatibility, Devnet deployment, remote CI success or a complete security review. See [ROADMAP verification](ROADMAP.md#verification-and-gaps) and [README acceptance](../README.md#manual-acceptance).
