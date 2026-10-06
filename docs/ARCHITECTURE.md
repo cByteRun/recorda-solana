@@ -31,6 +31,8 @@ React 19/TypeScript/Vite, Tailwind v4, local shadcn-style primitives, Lucide; An
 | `scripts/`, `.github/workflows/` | IDL/build/validator orchestration, PR CI and merged-PR deployment |
 | `prototype/` | Historical HTML reference |
 
+Dependency overrides keep the Solana/Anchor versions pinned while using jayson 5 and toml 5. `vendor/bigint-buffer/` provides the four unsigned conversion functions in JS, avoiding the vulnerable native binding; `tests/coupon-precision.spec.ts` verifies exact endian bytes and limits in CJS/ESM.
+
 ## Coupon accounts and lifecycle
 
 | PDA | Stored truth |

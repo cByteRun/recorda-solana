@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-06 — Resolve npm dependency vulnerabilities
+
+- [x] Override jayson to 5.0.0 and toml to 5.0.0; remove vulnerable uuid/stream-json chains without downgrading Solana/Anchor.
+- [x] Replace native bigint-buffer with a small local unsigned JS codec; validate exact LE/BE bytes, u64/u128/u256 limits and invalid inputs in CJS/ESM.
+- [x] Regenerate portable lockfile: clean npm ci and npm audit report 0 vulnerabilities; build and IDL check pass.
+- [x] Verification: golden 36/36, validator 16/16, protocol browser/audit 4/4; agent-browser page checks pass.
+
 ## 2026-10-06 — Preserve TZ detail and refine documentation navigation
 
 - [x] Keep full TZ context, domain rules and architecture; replace only sections already preserved verbatim in REQUIREMENTS with normative links.
