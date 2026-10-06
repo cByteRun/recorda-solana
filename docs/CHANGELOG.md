@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-06 — Plan Phase 1 Coupon UX/UI
+
+- Add unchecked M1.7 from a source-based UI audit: primary protocol entry, lifecycle guidance, business summaries, transaction recovery feedback, Coupon role views, shared visual components and accessible/responsive rights/proof presentation.
+- Move planned Coupon role presentation into Phase 1; retain multi-action role extensions in M3.2. Preserve on-chain authority, financial invariants and existing golden/recovery acceptance; no UI implementation or visual browser audit is claimed.
+
 ## 2026-10-06 — Plan protocol role views and golden acceptance
 
 - Define Operator/Investor/Auditor switching, wallet authorization boundaries, explicit read-only holder demos and shared Coupon golden expectations in REQUIREMENTS and roadmap; implementation/E2E remain unchecked.

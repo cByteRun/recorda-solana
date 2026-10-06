@@ -1,6 +1,6 @@
 # Roadmap
 
-**Current focus:** Phase 1 Coupon human Devnet golden passed; Phase 2 — Redemption and Voting remains next.
+**Current focus:** Phase 1 Coupon human Devnet golden passed; M1.7 plans Coupon usability and role views before extending the engine with Phase 2 Redemption and Voting.
 
 [Specification](TZ.md) · [Requirements](REQUIREMENTS.md) · [Verification](#verification-and-gaps)
 
@@ -83,6 +83,25 @@ Partial human Devnet evidence: action `CE5ueNhvatzRjinSwDcrpbad16AzveNgEzkcNDKPi
 
 Optional setup utility: `solana:airdrop` is implemented with unit-tested network/confirmation guards. A live faucet request returned `Internal error`; successful funding is not claimed. The golden runner does not call this utility or depend on faucet availability. Airdrop is not a TZ business feature.
 
+### M1.7 — Coupon UX/UI and role views (planned)
+
+Source audit: **2026-10-06**, against TZ §§3–4, REQUIREMENTS §6 and NFR-09. The current `/protocol` exposes the correct Coupon data but presents setup, all lifecycle buttons, registry controls and technical proof on one page. Disabled controls lack explicit reasons; long addresses and raw statuses compete with amounts and outcomes. `/` is a more styled Browser/Memo reference with stale Phase 1 copy. This is a source-based audit; responsive rendering, contrast and keyboard usability still require browser verification.
+
+Goal: make **Record Date → Right → Controlled Execution → Verifiable Proof** understandable in 30–60 seconds and reduce operator mistakes without changing protocol rules or weakening independent verification. All items below remain unimplemented.
+
+- [ ] **P0 · Entry and truthful copy:** make the protocol Coupon journey the clear primary entry; explicitly label the Browser/Memo reference and test payment asset. Remove stale “moves into Anchor in Phase 1” messaging. Keep environment and wallet identity visible; move RPC/program details into a technical disclosure.
+- [ ] **P0 · Lifecycle guidance:** show current stage, completed stages and one primary next action derived from chain state; retain secondary actions and partial-run resume. Explain blocked controls inline (record date not reached, wallet missing/unauthorized, funding missing or audit mismatch). Do not represent the optional demo transfer as a required protocol stage.
+- [ ] **P0 · Business summary:** prioritize instrument/action identity, record date, total due, paid, remaining and vault funding; keep formula and per-holder breakdown accessible. Distinguish snapshot units from current units and show why post-snapshot transfers do not change rights. Display UTC explicitly, with an optional local-time equivalent; readiness still uses Solana Clock.
+- [ ] **P0 · Transaction feedback and recovery:** distinguish waiting for wallet, submitted, confirmed, refreshing and failed/unknown outcome; show transaction links when known. Give actionable error/recovery guidance and preserve action context. Ambiguous sends require chain reconciliation before retry; never add automatic settlement/send retries or weaken existing duplicate guards.
+- [ ] **P0 · Coupon role views:** implement Operator / Investor / Auditor presentation on the same Action PDA. Operator sees lifecycle controls, registry, all holders and funding; Investor sees their own current/snapshot balance, entitlement, destination and payment proof; Auditor sees wallet-free read-only reconciliation and receipt. Paying Agent remains combined with Operator for MVP.
+- [ ] **P0 · Identity boundaries:** role selection grants no authority. Unknown/disconnected Investor gets a no-position/connect state; explicit A/B/C/D demo selection is visibly read-only and never impersonates a connected holder. Auditor view has no mutation controls; program authorization remains authoritative.
+- [ ] **P1 · Shared visual system:** reuse React, Tailwind and the existing shadcn-style `shared/ui` conventions for inputs, labels, badges, alerts, tables and disclosures. Standardize typography, spacing, semantic colors and primary/secondary/destructive buttons. Status must remain understandable without color; prioritize hierarchy and readability over decorative effects.
+- [ ] **P1 · Readable rights and proof:** use aligned numeric columns and explicit units; distinguish “not calculated”, zero entitlement, unpaid, paid and verification pending/mismatch. Shorten addresses visually with full value, copy and Explorer access; collapse raw hashes/signature lists while keeping independent verification reachable.
+- [ ] **P1 · Form and responsive usability:** validate addresses, nonnegative integer units and date input before wallet prompts; show field-level guidance. Add clear empty/loading states, visible keyboard focus and accessible labels/status announcements. At narrow widths, preserve holder-to-amount association and usable controls without page-wide overflow.
+- [ ] **Acceptance:** role switching preserves the action; same golden action shows A current/snapshot/due = 6/10/500, B = 9/5/250, C = 2/2/100, D = 0/0/0; Operator/Auditor total 850. Verify wallet-free audit, wrong-wallet boundaries, record-time blocking, rejection, reload and partial-settlement recovery. Existing build, golden, validator and protocol browser suites must remain green; update runner selectors deliberately when labels change.
+
+Scope: presentation, navigation and client feedback over the existing Coupon engine. No new corporate action, on-chain role model, financial formula, snapshot rule or payment behavior is introduced. Full multi-action role journeys remain M3.2; a framework migration, theme system and decorative animation are not prerequisites for this milestone.
+
 ## Phase 2 — MVP: Three actions on one engine
 
 ### M2.1 — Redemption
@@ -118,13 +137,8 @@ Optional setup utility: `solana:airdrop` is implemented with unit-tested network
 
 ### M3.2 — Operator, Investor and Auditor
 
-- [ ] Add `/protocol` role selector: Operator / Investor / Auditor, preserving the selected Action PDA when switching views.
-- [ ] Operator: show all holders, total obligation, vault, lifecycle controls and transaction approval; combine Paying Agent for MVP.
-- [ ] Investor: show connected holder's current units, record-date units, entitlement, payment destination/status and proof; provide explicit A/B/C/D read-only demo selection.
-- [ ] Auditor: wallet-free view of all rights, totals, hashes, receipt and transaction links; no mutation controls.
-- [ ] Role selection changes presentation only; wallet identity and program authorization still govern mutations. Demo holder selection never signs as that holder.
-- [ ] Define role golden expectations from the same Coupon fixture/action: A 6 current / 10 snapshot / 500 due; B 9 / 5 / 250; C 2 / 2 / 100; D 0 / 0 / 0; Operator/Auditor total 850.
-- [ ] E2E: switch roles on one action, verify expected fields/control visibility, disconnected/unauthorized wallets and read-only reopening; add Redemption/Voting role checks when implemented.
+- [ ] Reuse the Coupon role views and identity boundaries planned in [M1.7](#m17--coupon-uxui-and-role-views-planned) for Redemption and Voting.
+- [ ] Add action-specific Investor rights/outcomes and Operator/Auditor controls and proof for Redemption/Voting, backed by their own fixtures and role E2E.
 - [ ] Complete Instrument, Registry and Action Detail views for all actions.
 - [ ] Complete Operator/Investor/Auditor journeys and role restrictions.
 - [ ] Consistent IMPLEMENTED/SIMULATED labels.
