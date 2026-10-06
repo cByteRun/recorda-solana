@@ -93,20 +93,20 @@ The [TZ §22 golden dataset](golden/coupon-tz-section-22.json) fixes the require
 | --- | --- | --- |
 | Client | React + TypeScript + Vite, Tailwind v4, local shadcn-style components, FSD-style structure | Complete Operator / Investor / Auditor journeys |
 | Coupon bridge | Phantom signing, Token-2022 operations and RPC, browser snapshot/calculation, Memo attestations | Repeat manual React Devnet acceptance with signatures and payout deltas |
-| Automated verification | Playwright: two golden contracts, full client lifecycle with controlled RPC/Phantom, failure and resume checks | Real protocol E2E and negative on-chain checks |
-| Protocol core | Target architecture documented | Anchor PDAs, immutable snapshot, program-owned integer math, authority and idempotency |
+| Automated verification | R1 client golden plus real-validator Coupon protocol golden, security, browser recovery and independent audit | Remote CI and manual Phantom/Devnet replay |
+| Protocol core | Anchor Coupon PDAs, immutable snapshot, integer math, authority, once-only payment and receipt; local golden acceptance | Devnet deployment/acceptance and security coverage for the remaining MVP scenarios |
 | Other corporate actions | Requirements and plan | Redemption and Voting |
 
 **Offline oracle PASS verifies the scenario model.** The offline oracle calculates expected amounts without executing payment. Actual outcomes are verified by reading Solana state and transactions.
 
-The Browser/Memo bridge still stores domain state in the browser; Memo records submitted data but does not enforce entitlement correctness or prevent double payment. The target source of finalized state is the Recorda Anchor program.
+The Browser/Memo bridge still stores domain state in the browser; Memo records submitted data but does not enforce entitlement correctness or prevent double payment. The `/protocol` Coupon Core uses Recorda-owned Anchor state for finalized rights and outcomes. See [Coupon Core](docs/COUPON_PROTOCOL.md) for setup, local verification and restrictions.
 
 ## Run locally
 
 Requires Node.js **22.12+**, npm and repository access.
 
 ```bash
-git clone --branch feat/phase-1-react https://github.com/cByteRun/recorda-solana.git
+git clone https://github.com/cByteRun/recorda-solana.git
 cd recorda-solana
 npm ci
 npm run dev
@@ -135,7 +135,23 @@ See the [R1 requirement coverage matrix](docs/R1_TEST_COVERAGE.md) for UC/FR/NFR
 
 Verification chain: **Specification and its axis → milestone/features → golden input/expected → implementation → Playwright and protocol tests → actual output/proof**.
 
-Playwright automatically checks the model and browser interface without signing transactions. Follow [Manual Devnet Acceptance](docs/MANUAL_DEVNET_ACCEPTANCE.md) for the real flow. The full MVP requires Coupon, Redemption and Voting, authorization checks and protection against repeated execution.
+R1 Playwright checks the model and bridge using controlled wallet/RPC. Coupon Core tests also execute actual Anchor/Token-2022 transactions on a local validator with a controlled signer. Follow [Manual Devnet Acceptance](docs/MANUAL_DEVNET_ACCEPTANCE.md) for the real flow. The full MVP requires Coupon, Redemption and Voting, authorization checks and protection against repeated execution.
+
+For the on-chain Coupon Core, install host Rust 1.90, Solana CLI/SBF 2.3.0
+and C build tools, then:
+
+```bash
+npm run protocol:test:rust
+npm run protocol:build
+npm run protocol:idl:check
+npm run protocol:test:ui
+```
+
+Local verification on 2026-10-06: Rust **4/4**, validator integration **16/16**,
+protocol browser/audit **4/4**, R1 golden **35/35**. Both coupon golden fixtures
+produce exact on-chain payments and receipts. See [Coupon Core setup and
+coverage](docs/COUPON_PROTOCOL.md). This does not establish a Devnet deployment
+or real Phantom acceptance. Redemption and Voting execution remain pending.
 
 ## Documentation and source of truth
 

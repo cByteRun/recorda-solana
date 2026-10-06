@@ -12,9 +12,16 @@
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts tests/transactions.spec.ts tests/rpc-fetch.spec.ts tests/coupon-precision.spec.ts tests/bridge-lifecycle.spec.ts"
+    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts tests/transactions.spec.ts tests/rpc-fetch.spec.ts tests/coupon-precision.spec.ts tests/bridge-lifecycle.spec.ts",
+    "protocol:build": "cargo-build-sbf --manifest-path programs/recorda/Cargo.toml -- --locked",
+    "protocol:idl": "node scripts/build-idl.mjs",
+    "protocol:idl:check": "node scripts/build-idl.mjs --check",
+    "protocol:test:rust": "cargo test --workspace --locked",
+    "protocol:test": "node scripts/protocol-test.mjs",
+    "protocol:test:ui": "node scripts/protocol-test.mjs --ui"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
     "@solana/spl-token": "0.4.15",
     "@solana/web3.js": "1.99.0",
     "buffer": "^6.0.3",

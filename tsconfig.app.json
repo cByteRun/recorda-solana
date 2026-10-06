@@ -23,5 +23,5 @@
       "@golden/*": ["./golden/*"]
     }
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "protocol-ui-tests"]
 }

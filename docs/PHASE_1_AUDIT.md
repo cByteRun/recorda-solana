@@ -1,5 +1,13 @@
 # Phase 1 PR audit — historical review 2026-10-05
 
+## Current Coupon Core status — 2026-10-06
+
+M1.1–M1.6 now have Local Validator acceptance: Rust 4/4, integration 16/16,
+protocol browser/audit 4/4 and R1 regression 35/35. See [Coupon Core](COUPON_PROTOCOL.md).
+The R1 review below is historical and retains its client-only boundary; its
+unimplemented-Anchor statements describe that earlier baseline. Devnet/human
+Phantom acceptance and Phase 2 remain open.
+
 ## Current R1 follow-up (2026-10-06)
 
 The owner scoped this follow-up to the current React bridge R1. See [R1_TEST_COVERAGE](R1_TEST_COVERAGE.md) for the current requirement matrix and verification. TZ §22 now drives the four-holder client demo; the historical expected fixture is preserved. Client monetary products/totals now use integer minor units, unavailable balances are unknown, and pending settlement signatures persist before confirmation. The following review records the earlier baseline and must not be read as the current test count or implementation. Manual Devnet evidence and Anchor milestones remain open.

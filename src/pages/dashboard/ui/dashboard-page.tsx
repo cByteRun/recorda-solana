@@ -36,6 +36,7 @@ export function DashboardPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
         <Hero />
+        <a className="mt-4 inline-block text-sm font-semibold text-blue-700 underline" href="/protocol">Open Anchor Coupon Core · protocol state and audit</a>
 
         {recorda.error && (
           <div data-testid="app-error" className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">

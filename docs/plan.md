@@ -542,3 +542,17 @@ next protocol milestone remains M1.1–M1.6. See ROADMAP and PHASE_1_AUDIT.
 ## R1 test coverage update (2026-10-06)
 
 The owner explicitly limited this change to the existing React bridge R1. Current demo uses TZ §22 A/B/C/D = 10/5/2/0; historical v4 10/20/5 expected outputs above remain a regression contract. See [R1 coverage](R1_TEST_COVERAGE.md). Client calculations use integer minor units. Browser E2E covers the full coupon workflow through controlled wallet/RPC boundaries; this does not advance the unfinished Anchor implementation or substitute for manual Devnet evidence.
+
+## Coupon Core delivery update (2026-10-06)
+
+The owner scoped this delivery to M1.1–M1.6 and its UI. The Anchor Coupon
+vertical slice now passes Local Validator acceptance: Rust 4/4, integration
+16/16 and protocol browser/audit 4/4; R1 golden regression 35/35 passes.
+The implemented layout uses programs/, protocol-tests/, protocol-ui-tests/
+and the existing FSD client. Snapshot fields share EntitlementPosition rather
+than a separate SnapshotPosition, as TZ §§9/18 permit. A scheduled-date
+barrier closes late-capture ownership changes; coupon action history and
+independent formula/hash auditing are read from chain state.
+See [Coupon Core](COUPON_PROTOCOL.md) for exact setup, coverage, lifecycle
+restrictions and evidence. Devnet deployment/human Phantom acceptance and
+Phase 2 Redemption/Voting remain open.

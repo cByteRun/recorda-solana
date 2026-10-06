@@ -35,3 +35,36 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  coupon-protocol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@1.90.0
+      - uses: Swatinem/rust-cache@v2
+      - run: npm ci
+      - name: Install pinned Solana SBF toolchain and validator
+        run: |
+          curl -sSfL https://release.anza.xyz/v2.3.0/install -o /tmp/solana-install.sh
+          sh /tmp/solana-install.sh --no-modify-path v2.3.0
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+      - run: npm run protocol:test:rust
+      - run: npm run protocol:build
+      - run: npm run protocol:idl:check
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run protocol:test:ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coupon-protocol-evidence
+          path: |
+            target/protocol-evidence/
+            playwright-report/protocol/
+            test-results/
+          retention-days: 7

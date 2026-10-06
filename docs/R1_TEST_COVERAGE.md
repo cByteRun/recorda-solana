@@ -1,5 +1,7 @@
 # R1 — React coupon bridge: requirements and verification
 
+Current Coupon protocol coverage is documented separately in [COUPON_PROTOCOL](COUPON_PROTOCOL.md). This matrix retains the R1 Browser/Memo scope; its protocol gaps are R1 limitations, not the current `/protocol` implementation.
+
 Source of truth: [TZ](TZ.md). Scope authorized for this change: current branch `feat/phase-1-react`, roadmap **R1**, without Anchor M1.1–M1.6. Requirements below are covered only at their stated client boundary. A passing mocked test does not satisfy an on-chain requirement.
 
 ## Delivered features

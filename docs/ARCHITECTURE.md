@@ -2,7 +2,7 @@
 
 ## Current scope
 
-React port of the v4 coupon Devnet prototype. Product axis:
+React Browser/Memo reference at `/` plus Anchor Coupon Core at `/protocol`. Product axis:
 **Record Date → Right → Controlled Execution → Verifiable Proof**.
 Requirements authority: [TZ](TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 
@@ -60,7 +60,7 @@ Requirements authority: [TZ](TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 
 Layers follow FSD direction: app → pages → widgets → features → entities → shared.
 This is FSD-style organization, with direct imports rather than enforced public slice APIs.
-No backend, database, Anchor program or IDL exists yet.
+No application backend/database is required. `programs/recorda/src/lib.rs` owns Coupon Core truth; generated IDL/types live in `src/shared/solana/idl/`. `protocol.ts` constructs instructions/reads PDAs; `protocol-audit.ts` independently verifies formula, totals and hashes. The protocol controller/page orchestrate explicit signing, chain recovery and read-only history. See [Coupon Core](COUPON_PROTOCOL.md).
 
 ## Data flow and trust boundary
 
@@ -77,13 +77,27 @@ Holder private keys are disposable Devnet identities stored locally, not operato
 keys. Storage is scoped to browser origin: localhost, 127.0.0.1 and each Vercel
 preview do not share state. Never use this storage model for production custody.
 
-## Target architecture
+## Coupon Core architecture
 
-Next: Anchor Instrument, HolderPosition, CorporateAction, SnapshotPosition,
-EntitlementPosition and ActionReceipt PDAs. Protocol validates authority,
-immutable snapshots, integer math, allowed transitions and once-only settlement.
-React will read accounts via generated IDL rather than trusting localStorage.
-See roadmap M1.1–M1.6, then Redemption and Voting in Phase 2.
+Implemented: Instrument, HolderPosition, CorporateAction, EntitlementPosition
+and ActionReceipt PDAs. Immutable snapshot fields are stored inside
+EntitlementPosition as permitted by TZ §§9/18; snapshot_index records commitment
+order. Scheduled record timestamps block ownership/registry changes even when
+begin_snapshot is late. Token-2022 bond accounts remain frozen except during
+atomic protocol-mediated transfers; Instrument PDA also controls close authority.
+Coupon calculation, approval, funding, resumable settlement and receipt execute
+on-chain. React reads the generated contract and verifies outcomes independently.
+One scheduled/pending snapshot per instrument; issuance is sealed after the first
+snapshot; approval changes require zero units. Issuer/operator share one authority.
+Plain two-decimal Token-2022 Mock USD is the test payment rail.
+
+The browser caches addresses and disposable holder keys, never finalized amounts
+or operator secrets. Payment history records destination, paid amount and slot;
+RPC signatures link to events. Current holder balances are separate from past
+snapshot rights and past paid amounts. Instrument history links each action URL.
+Validator golden tests read actual PDA/token state; the protocol browser suite
+uses a controlled signer with real validator RPC. Real Phantom/Devnet acceptance
+remains separate. Phase 2 Redemption/Voting is still pending.
 
 ## Transaction verification
 

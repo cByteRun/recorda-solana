@@ -10,14 +10,15 @@ Every feature must advance one of these stages or ensure its correctness. UC/FR/
 
 ## Current focus and progress
 
-Branch: **feat/phase-1-react**. Active phase: **Phase 1**, milestone **R1 — React coupon bridge**. Next protocol milestone: **M1.1**, followed by M1.2–M1.6.
+Branch: **feat/phase-1**. Active phase: **Phase 1**. Coupon Core **M1.1–M1.6 is implemented and verified on Local Validator** with initial protocol UI (M3.1). Devnet/real Phantom acceptance remains open. Phase 2 Redemption/Voting is outside this delivery.
 
 - [x] React/npm migration, UI/domain Playwright and runtime/CI fixes.
 - [x] Historical code verification at commit a09cd7a: build + 11/11 Playwright, [PR CI](https://github.com/cByteRun/recorda-solana/actions/runs/37360917971).
 - [x] README as product presentation; FEATURES and UC/FR/NFR in the roadmap.
 - [ ] React Devnet acceptance with manual Phantom signing and recorded transactions/deltas.
 - [ ] Latest-version preview: Vercel reported build-rate-limit.
-- [ ] Anchor Coupon Core M1.1–M1.6.
+- [x] Anchor Coupon Core M1.1–M1.6, Local Validator scope: Rust 4/4, protocol integration 16/16, protocol browser/audit 4/4 on 2026-10-06. See [Coupon Core coverage](COUPON_PROTOCOL.md).
+- [ ] Coupon Core deployment and retained manual Phantom/Devnet acceptance.
 - [ ] Full MVP: Coupon + Redemption + Voting, protocol security and proof.
 
 **Checkbox rule:** [x] means completion only within the stated scope and with evidence. An implemented bridge does not satisfy on-chain requirements. Documentation changes do not imply that a new code verification has passed.
@@ -33,7 +34,7 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 | Golden model + domain Playwright | Formula, snapshot/current separation, amounts and output comparison | Actual execution or protocol enforcement |
 | UI Playwright | Product axis, holder cards, gating and browser errors | Phantom signing and payment |
 | Manual React Devnet acceptance | RPC state, signatures and actual bridge payout deltas | Custom-program immutability and idempotency |
-| Anchor integration E2E (planned) | Actual PDA/token state, authority, transitions and repeated calls | UX clarity without interface verification |
+| Anchor integration E2E | Actual PDA/token state, authority, transitions and repeated calls | UX clarity without interface verification |
 
 **Datasets:** `golden/coupon-tz-section-22.json` implements TZ §22 A/B/C/D = 10/5/2/0, current = 6/9/2/0, coupons = 500/250/100/0 and total 850. R1 deployment and the offline UI use this dataset. `golden/coupon-happy-path.json` retains historical 10/20/5 regression expectations. Neither fixture is evidence of program enforcement.
 
@@ -101,7 +102,7 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 - [ ] Manual React Devnet acceptance replay with retained evidence.
 - [ ] Working preview of the current version after the Vercel limit is lifted.
 
-**Verification / exit:** Local build + 35/35 Playwright tests passed on 2026-10-06. See [R1 coverage and local verification](R1_TEST_COVERAGE.md). Automated browser tests use controlled RPC and a test wallet. Real Phantom/Devnet flow requires retained manual evidence; M1.1–M1.6 protocol guarantees remain open.
+**Verification / exit:** Local build + 35/35 Playwright tests passed on 2026-10-06. See [R1 coverage and local verification](R1_TEST_COVERAGE.md). Automated browser tests use controlled RPC and a test wallet. Real Phantom/Devnet flow requires retained manual evidence; protocol guarantees are verified separately by the Coupon Core validator suite below.
 
 ### M1.1 — instrument, eligibility and holder registry
 
@@ -112,11 +113,11 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 
 **FEATURES**
 
-- [ ] Anchor workspace, Instrument and HolderPosition PDAs.
-- [ ] Obligation parameters, mint/settlement mint, authority and outstanding/redeemed supply.
-- [ ] Registry: register/approve/revoke a holder and link the token account.
-- [ ] Transfer eligibility control that cannot bypass the registry (FR-08).
-- [ ] Token-2022 mint/account validation and client position reads.
+- [x] Anchor workspace, Instrument and HolderPosition PDAs.
+- [x] Obligation parameters, mint/settlement mint, authority and outstanding/redeemed supply.
+- [x] Registry: register/approve/revoke a holder and link the token account.
+- [x] Transfer eligibility control that cannot bypass the registry (FR-08).
+- [x] Token-2022 mint/account validation and client position reads. Registered-account close authority prevents zero-holder snapshot denial.
 
 **Verification / exit:** integration tests reject incorrect authority and unsuitable accounts; registry/parameters reload from the chain.
 
@@ -129,11 +130,12 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 
 **FEATURES**
 
-- [ ] CorporateAction PDA and valid lifecycle transitions.
-- [ ] SnapshotPosition for each eligible holder with balance-source validation.
-- [ ] create action → snapshot holders → finalize snapshot.
-- [ ] Slot/time/hash and protection against finalized-snapshot mutation.
-- [ ] Real post-record transfer without changing the snapshot.
+- [x] CorporateAction PDA and valid lifecycle transitions.
+- [x] Immutable snapshot fields within EntitlementPosition for each eligible holder with balance-source validation (TZ §§9/18).
+- [x] create action → snapshot holders → finalize snapshot.
+- [x] Slot/time/hash and protection against finalized-snapshot mutation.
+- [x] Scheduled record-date barrier prevents late-snapshot ownership changes; authorized pre-snapshot cancellation releases the barrier.
+- [x] Real post-record transfer without changing the snapshot.
 
 **Verification / exit:** TC-03,16,17; golden snapshot 10/20/5 with current 6/24/5. Invalid balances, mutation and transitions are rejected on-chain.
 
@@ -146,10 +148,10 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 
 **FEATURES**
 
-- [ ] EntitlementPosition PDA and integer/fixed-point coupon calculation.
-- [ ] Calculation from Instrument + SnapshotPosition; frontend amounts are not authoritative.
-- [ ] Aggregate obligation and parameter/overflow validation.
-- [ ] Data contracts for principal, final coupon and snapshot voting power.
+- [x] EntitlementPosition PDA and integer/fixed-point coupon calculation.
+- [x] Calculation from Instrument + immutable EntitlementPosition snapshot; frontend amounts are not authoritative.
+- [x] Aggregate obligation and parameter/overflow validation.
+- [x] Data contracts for principal, final coupon and snapshot voting power.
 
 **Verification / exit:** TC-01,02,05; 500/1000/250, total 1750, zero = 0; an incorrect client amount does not change the protocol result.
 
@@ -162,11 +164,11 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 
 **FEATURES**
 
-- [ ] Distribution preview and approve_action with authority validation.
-- [ ] Controlled settlement vault and Token-2022 transfer_checked CPI.
-- [ ] Per-holder settled state and protection against a second settlement.
-- [ ] Safe partial-batch continuation without double payment.
-- [ ] Funding checks and total settled versus obligation verification.
+- [x] Distribution preview and approve_action with authority validation.
+- [x] Controlled settlement vault and Token-2022 transfer_checked CPI.
+- [x] Per-holder settled state and protection against a second settlement.
+- [x] Safe partial-batch continuation without double payment.
+- [x] Funding checks and total settled versus obligation verification; failed CPI/overflow roll back tokens and protocol state.
 
 **Verification / exit:** TC-04,15,17–19; actual KUSD deltas = 500/1000/250. Repeated/unauthorized calls do not transfer funds.
 
@@ -179,10 +181,10 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 
 **FEATURES**
 
-- [ ] ActionReceipt PDA and finalization only after the obligation is executed.
-- [ ] Events/transaction references linking snapshot, entitlement, approval and outcome.
-- [ ] Holder history from action/entitlement state, separate from current wallet balance.
-- [ ] Read-only formula explanation and outcome verification.
+- [x] ActionReceipt PDA and finalization only after the obligation is executed.
+- [x] Events/transaction references linking snapshot, entitlement, approval and outcome.
+- [x] Holder history from action/entitlement state, separate from current wallet balance.
+- [x] Read-only formula explanation and independent outcome verification, including snapshot and receipt hashes and actual per-holder paid amounts/destinations.
 
 **Verification / exit:** A: record-date 10, current 6, entitlement/payment 500 and final receipt. An unexecuted action cannot be finalized.
 
@@ -194,13 +196,13 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 
 **FEATURES**
 
-- [ ] Golden fixture → initialize → snapshot → transfer → entitlement → approve → settle → receipt.
-- [ ] Oracle compares actual PDA/token-account state with independent expected output.
-- [ ] Negative tests: unauthorized, mutation, double settlement, wrong accounts, invalid transitions.
-- [ ] Replay specification §22 with A/B/C/D and a zero-balance holder, separately from regression golden.
-- [ ] Playwright reads/displays protocol results; signing remains a human action.
+- [x] Golden fixture → initialize → snapshot → transfer → entitlement → approve → settle → receipt.
+- [x] Oracle compares actual PDA/token-account state with independent expected output.
+- [x] Negative tests: unauthorized, mutation, double settlement, wrong accounts, invalid transitions.
+- [x] Replay specification §22 with A/B/C/D and a zero-balance holder, separately from regression golden.
+- [x] Playwright reads/displays real-validator protocol results using a controlled test signer; human Phantom acceptance remains manual.
 
-**Verification / exit:** TC-01–05,15–19 pass; rights/execution match expected; Memo is not the source of domain truth.
+**Verification / exit:** Local Validator on 2026-10-06: Rust 4/4, integration 16/16, browser/audit 4/4; TC-01–05,15–19 covered. TZ §22 pays 500/250/100/0 (850 total); historical regression pays 500/1000/250 (1750 total). Current units change while snapshot rights remain fixed. Browser tests reject a partial-batch signature, reload/resume, clear localStorage and independently verify final receipt; corrupted receipt/forged amounts fail audit. IDL compiler check, build and R1 golden 35/35 pass. See [setup, implementation restrictions and coverage](COUPON_PROTOCOL.md). Generated evidence includes binary/source/IDL hashes and actual holder outputs. CI job is configured but its remote execution, Devnet deployment and human signing are not yet verified.
 
 ## Phase 2 — MVP: three corporate actions on one engine
 
@@ -256,6 +258,8 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 
 ### M3.1 — client reads protocol truth
 
+Completed features below are verified for Coupon Core; Redemption/Voting client integration remains open with Phase 2.
+
 **Outcome:** opening the client restores history and rights independently of local state.
 **Axis:** presentation of the full chain. **UC:** operator journeys for all UCs.
 **FR:** 02,05,09,14,21–23,38–41. **NFR:** 09–12.
@@ -263,9 +267,9 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 **FEATURES**
 
 - [x] React/Vite shell and Phantom adapter (implemented early in R1).
-- [ ] Generated Anchor IDL/types and PDA reads.
-- [ ] UI finalized state from the chain; localStorage only for optional resume/cache.
-- [ ] Refresh/restart restores lifecycle and holder rights.
+- [x] Generated Anchor IDL/types and PDA reads for Coupon Core.
+- [x] Coupon UI finalized state from the chain; localStorage only for optional address resume/cache and disposable demo holder keys.
+- [x] Coupon refresh/restart restores lifecycle and holder rights, including read-only action URLs.
 
 **Verification / exit:** UI data matches PDAs after reload; the client does not determine the final amount.
 
