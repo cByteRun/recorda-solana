@@ -110,3 +110,17 @@ test("changed Phantom account is rejected before simulation or signing", async (
   await expect(phantomSignAndSend({ provider: h.provider, operator: operator.publicKey,
     instructions: [instruction], partialSigners: [holder], rpc: h.rpc })).resolves.toBe("submitted-signature");
 });
+
+test('R1 NFR-03/08: broadcast signature is retained before ambiguous confirmation', async () => {
+  const h = harness();
+  let persisted: string | null = null;
+  h.rpc.confirmTransaction = (async () => {
+    expect(persisted).toBe('submitted-signature');
+    throw new Error('Confirmation unavailable');
+  }) as Connection['confirmTransaction'];
+  await expect(phantomSignAndSend({ provider: h.provider, operator: operator.publicKey,
+    instructions: [memo], rpc: h.rpc, onSubmitted: signature => { persisted = signature; }
+  })).rejects.toThrow('was submitted');
+  expect(persisted).toBe('submitted-signature');
+  expect(h.calls.send).toBe(1);
+});

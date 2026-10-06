@@ -16,8 +16,8 @@ export function GoldenOracle({ report }: { report: Controller["goldenReport"] })
             </div>
             <h2 className="mt-2 text-2xl font-semibold">Known input → logic → expected output</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-600">
-              Это автоматизируемый E2E слой без Phantom popup. Он проверяет бизнес-инвариант,
-              который real Devnet flow обязан воспроизводить после перехода на Anchor.
+              SIMULATED · Offline calculation for TZ §22, in settlement minor units.
+              PASS verifies the calculation contract. Payment and on-chain proof require the signed Devnet flow.
             </p>
           </div>
 

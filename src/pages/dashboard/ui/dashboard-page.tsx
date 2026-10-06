@@ -72,7 +72,7 @@ export function DashboardPage() {
             <div>
               <div className="flex items-center gap-2 font-semibold text-blue-950">
                 <WalletCards className="h-5 w-5" />
-                Phantom = Operator / Treasury. A/B/C = disposable Devnet investors.
+                Phantom = Operator / Treasury. A/B/C/D = disposable Devnet investors.
               </div>
               <p className="mt-2 max-w-5xl text-sm leading-6 text-blue-950/70">
                 React сохраняет ту же бизнес-модель v4: bond ownership живёт в Token-2022 accounts,
@@ -120,12 +120,16 @@ export function DashboardPage() {
               Пока это React port текущей v4 trust boundary: real Token-2022 state + Browser/Memo bridge.
               Следующий roadmap milestone заменяет middle layer на Anchor PDA state.
             </p>
+            <p className="mt-2 text-sm text-zinc-600" data-testid="implementation-boundary">
+              IMPLEMENTED: Token-2022 client transactions and signed Memo references.
+              Client-owned snapshot, entitlement and status; protocol enforcement remains pending.
+            </p>
 
             <div className="mt-5 space-y-4" data-testid="pipeline">
               <PipelineStep
                 index={1}
                 title="Record Date → real balances → immutable snapshot attestation"
-                description="RPC читает A/B/C Token-2022 balances и Operator подписывает snapshot transaction."
+                description="RPC читает A/B/C/D Token-2022 balances и Operator подписывает snapshot transaction."
                 done={!!sig.snapshot}
                 disabled={!recorda.deployment?.mint || !recorda.operator || !!sig.snapshot || !!recorda.busy}
                 actionLabel="Create snapshot"
@@ -143,7 +147,7 @@ export function DashboardPage() {
               <PipelineStep
                 index={3}
                 title="Entitlement = function(snapshot), not current balance"
-                description="10/20/5 snapshot produces $500/$1000/$250. This calculation moves into Anchor in Phase 1."
+                description="10/5/2/0 snapshot produces $500/$250/$100/$0. This calculation moves into Anchor in Phase 1."
                 done={!!sig.entitlement}
                 disabled={!sig.transfer || !recorda.operator || !!sig.entitlement || !!recorda.busy}
                 actionLabel="Calculate entitlement"
@@ -161,9 +165,9 @@ export function DashboardPage() {
               <PipelineStep
                 index={5}
                 title="Real Token-2022 KUSD-DEV settlement"
-                description="500/1000/250 KUSD-DEV moves to holder token accounts. Native SOL remains gas only."
+                description="500/250/100/0 KUSD-DEV moves to holder token accounts. Native SOL remains gas only."
                 done={!!sig.settlement}
-                disabled={!sig.approval || !recorda.operator || !!sig.settlement || !!recorda.busy}
+                disabled={!sig.approval || !recorda.operator || !!sig.settlement || !!action?.pendingSettlementSignature || !!recorda.busy}
                 actionLabel="Settle KUSD"
                 onAction={recorda.settle}
               />
@@ -187,8 +191,8 @@ export function DashboardPage() {
                   Current ownership can change. Finalized record-date rights cannot.
                 </p>
                 <div className="mt-4 rounded-2xl bg-violet-50 p-4 text-sm leading-6 text-violet-900">
-                  Expected killer case: snapshot <b>10/20/5</b>, current after transfer <b>6/24/5</b>,
-                  entitlement still <b>500/1000/250 KUSD</b>.
+                  Expected killer case: snapshot <b>10/5/2/0</b>, current after transfer <b>6/9/2/0</b>,
+                  entitlement still <b>500/250/100/0 KUSD</b>.
                 </div>
               </CardContent>
             </Card>
@@ -347,4 +351,3 @@ function ValueCard({ icon, title, text }: { icon: React.ReactNode; title: string
     </Card>
   );
 }
-

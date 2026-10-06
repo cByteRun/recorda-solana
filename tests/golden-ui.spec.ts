@@ -31,11 +31,12 @@ test.describe("Recorda React golden UI", () => {
 
     const actual = await page.getByTestId("golden-actual").textContent();
     expect(actual).toContain('"A": 6');
-    expect(actual).toContain('"B": 24');
-    expect(actual).toContain('"A": 500');
-    expect(actual).toContain('"B": 1000');
-    expect(actual).toContain('"C": 250');
-    expect(actual).toContain('"finalStatus": "FINALIZED"');
+    expect(actual).toContain('"B": 9');
+    expect(actual).toContain('"A": 50000');
+    expect(actual).toContain('"B": 25000');
+    expect(actual).toContain('"C": 10000');
+    expect(actual).toContain('"D": 0');
+    await expect(page.getByTestId("golden-oracle")).toContainText("SIMULATED");
   });
 
   test("wallet-dependent actions are gated before Phantom is connected", async ({ page }) => {
@@ -50,10 +51,11 @@ test.describe("Recorda React golden UI", () => {
     await expect(pipeline.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();
   });
 
-  test("renders three holder identities as the lifecycle subjects", async ({ page }) => {
+  test("renders four holder identities as the lifecycle subjects", async ({ page }) => {
     await expect(page.getByTestId("holder-A")).toContainText("Investor A");
     await expect(page.getByTestId("holder-B")).toContainText("Investor B");
     await expect(page.getByTestId("holder-C")).toContainText("Investor C");
+    await expect(page.getByTestId("holder-D")).toContainText("Investor D");
   });
 });
 
@@ -76,4 +78,25 @@ test("missing Phantom reports an error without unlocking actions", async ({ page
   await expect(page.getByTestId("app-error")).toBeVisible();
   await expect(page.getByTestId("deploy-button")).toBeDisabled();
   await expect(page.getByTestId("busy-state")).toHaveCount(0);
+});
+
+
+test("R1 NFR-03/08: pending settlement remains blocked after reload and wallet connection", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("kase_real_action_v2", JSON.stringify({
+      actionId: "TEST-PENDING", status: "APPROVED",
+      pendingSettlementSignature: "submitted-signature",
+      signatures: { approval: "approval" }
+    }));
+    const publicKey = { toBase58: () => "11111111111111111111111111111111" };
+    Object.assign(window, { phantom: { solana: { isPhantom: true, publicKey, connect: async () => ({ publicKey }) } } });
+  });
+  await page.goto("/");
+  await page.getByTestId("connect-wallet").click();
+  await expect(page.getByTestId("busy-state")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();
+  await page.reload();
+  await page.getByTestId("connect-wallet").click();
+  await expect(page.getByTestId("busy-state")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();
 });

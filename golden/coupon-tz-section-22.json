@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "coupon-tz-section-22",
+  "source": "docs/TZ.md §§8,12,22,23",
+  "scope": "Independent expected values for the offline/client contract; not on-chain execution evidence",
+  "input": {
+    "terms": { "faceValueMinor": 100000, "annualCouponBps": 1000, "paymentsPerYear": 2 },
+    "snapshot": { "A": 10, "B": 5, "C": 2, "D": 0 },
+    "postRecordTransfer": { "from": "A", "to": "B", "units": 4 }
+  },
+  "expected": {
+    "supply": 17,
+    "currentAfterTransfer": { "A": 6, "B": 9, "C": 2, "D": 0 },
+    "amountsMinor": { "A": 50000, "B": 25000, "C": 10000, "D": 0 },
+    "totalMinor": 85000
+  }
+}

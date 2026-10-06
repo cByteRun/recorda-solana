@@ -1,4 +1,4 @@
-export type HolderId = "A" | "B" | "C";
+export type HolderId = "A" | "B" | "C" | "D";
 
 export interface HolderView {
   id: HolderId;
@@ -13,4 +13,4 @@ export interface HolderView {
   nativeSol: number | null;
 }
 
-export const HOLDER_IDS: HolderId[] = ["A", "B", "C"];
+export const HOLDER_IDS: HolderId[] = ["A", "B", "C", "D"];

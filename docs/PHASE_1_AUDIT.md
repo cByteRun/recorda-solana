@@ -1,4 +1,8 @@
-# Phase 1 PR audit — 2026-10-05
+# Phase 1 PR audit — historical review 2026-10-05
+
+## Current R1 follow-up (2026-10-06)
+
+The owner scoped this follow-up to the current React bridge R1. See [R1_TEST_COVERAGE](R1_TEST_COVERAGE.md) for the current requirement matrix and verification. TZ §22 now drives the four-holder client demo; the historical expected fixture is preserved. Client monetary products/totals now use integer minor units, unavailable balances are unknown, and pending settlement signatures persist before confirmation. The following review records the earlier baseline and must not be read as the current test count or implementation. Manual Devnet evidence and Anchor milestones remain open.
 
 ## Scope and verdict
 
@@ -54,7 +58,7 @@ full hackathon MVP and Anchor protocol are not complete.
 4. Display refresh can map unavailable balances to zero; snapshot acquisition now
    rereads validated accounts directly and aborts on RPC failure. Protocol-owned
    atomic record-date enforcement is still required.
-5. Instrument math uses JS numbers. Fixed-point protocol math remains required.
+5. R1 follow-up replaced financial products/totals with integer minor-unit calculations. Program-owned fixed-point validation remains required.
 6. Offline oracle emits simulated settlement and FINALIZED. It validates the
    deterministic scenario only; it does not run real wallet/RPC lifecycle.
 

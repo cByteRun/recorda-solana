@@ -1,5 +1,5 @@
 import { Keypair } from "@solana/web3.js";
-import type { HolderId } from "@/entities/holder/model/types";
+import { HOLDER_IDS, type HolderId } from "@/entities/holder/model/types";
 
 const KEYS = {
   deployment: "kase_real_deployment_v2",
@@ -28,19 +28,14 @@ export function saveJson(key: string, value: unknown) {
 
 export function loadOrCreateHolderKeypairs() {
   const stored = loadJson<StoredHolder[]>(KEYS.holders);
-  if (stored?.length === 3) {
-    return stored.map((holder) => ({
-      id: holder.id,
-      name: holder.name,
-      keypair: Keypair.fromSecretKey(Uint8Array.from(holder.secretKey))
-    }));
-  }
-
-  const holders = (["A", "B", "C"] as HolderId[]).map((id) => ({
-    id,
-    name: `Investor ${id}`,
-    keypair: Keypair.generate()
-  }));
+  const holders = HOLDER_IDS.map((id) => {
+    const existing = stored?.find((holder) => holder.id === id);
+    return {
+      id,
+      name: `Investor ${id}`,
+      keypair: existing ? Keypair.fromSecretKey(Uint8Array.from(existing.secretKey)) : Keypair.generate()
+    };
+  });
 
   saveJson(
     KEYS.holders,

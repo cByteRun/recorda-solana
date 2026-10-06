@@ -2,7 +2,7 @@
 
 **Status:** next implementation phase after the proven Devnet v4 coupon prototype.  
 **Source of truth:** [`TZ.md`](TZ.md).  
-**Roadmap:** [`../ROADMAP.md`](ROADMAP.md).
+**Roadmap:** [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
@@ -538,3 +538,7 @@ At the owner's request, React migration was brought forward before Anchor.
 React/Vite, Tailwind and FSD-style folders. This changes delivery order, not
 TZ requirements. Current focus: CI/Playwright and React Devnet acceptance;
 next protocol milestone remains M1.1–M1.6. See ROADMAP and PHASE_1_AUDIT.
+
+## R1 test coverage update (2026-10-06)
+
+The owner explicitly limited this change to the existing React bridge R1. Current demo uses TZ §22 A/B/C/D = 10/5/2/0; historical v4 10/20/5 expected outputs above remain a regression contract. See [R1 coverage](R1_TEST_COVERAGE.md). Client calculations use integer minor units. Browser E2E covers the full coupon workflow through controlled wallet/RPC boundaries; this does not advance the unfinished Anchor implementation or substitute for manual Devnet evidence.

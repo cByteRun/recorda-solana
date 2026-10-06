@@ -13,7 +13,7 @@ Every feature must advance one of these stages or ensure its correctness. UC/FR/
 Branch: **feat/phase-1-react**. Active phase: **Phase 1**, milestone **R1 — React coupon bridge**. Next protocol milestone: **M1.1**, followed by M1.2–M1.6.
 
 - [x] React/npm migration, UI/domain Playwright and runtime/CI fixes.
-- [x] Last code verification at commit a09cd7a: build + 11/11 Playwright, [PR CI](https://github.com/cByteRun/recorda-solana/actions/runs/37360917971).
+- [x] Historical code verification at commit a09cd7a: build + 11/11 Playwright, [PR CI](https://github.com/cByteRun/recorda-solana/actions/runs/37360917971).
 - [x] README as product presentation; FEATURES and UC/FR/NFR in the roadmap.
 - [ ] React Devnet acceptance with manual Phantom signing and recorded transactions/deltas.
 - [ ] Latest-version preview: Vercel reported build-rate-limit.
@@ -35,7 +35,7 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 | Manual React Devnet acceptance | RPC state, signatures and actual bridge payout deltas | Custom-program immutability and idempotency |
 | Anchor integration E2E (planned) | Actual PDA/token state, authority, transitions and repeated calls | UX clarity without interface verification |
 
-**Dataset gap:** golden contains A/B/C = 10/20/5; specification §22 defines A/B/C/D = 10/5/2/0. Both reproduce the central invariant, but the full MVP must also verify the specification dataset with its zero-balance holder. Golden remains a separate regression fixture; expected values must not be changed to obtain PASS.
+**Datasets:** `golden/coupon-tz-section-22.json` implements TZ §22 A/B/C/D = 10/5/2/0, current = 6/9/2/0, coupons = 500/250/100/0 and total 850. R1 deployment and the offline UI use this dataset. `golden/coupon-happy-path.json` retains historical 10/20/5 regression expectations. Neither fixture is evidence of program enforcement.
 
 ## Phase 0 — business-flow evidence in the reference prototype
 
@@ -77,15 +77,19 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 **Outcome:** the same domain flow is available in a maintainable client and automatically verified within supported boundaries.
 **Axis:** presents Record Date → Right → Controlled Execution → Verifiable Proof.
 **UC:** UC-CP-01; entitlement explanation and outcome verification for specification §6 roles.
-**FR:** client scope of 09,14–16,23–25,27,40–41.
-**NFR:** 09,10,12; NFR-11 requires the future protocol core.
+**FR:** client scope of 09,12,14–16,20,22–27,40–41; protocol enforcement remains pending.
+**NFR:** client coverage of 01–04,08–10,12; NFR-05/06/07/11 require real-chain evidence and the future protocol core.
 
 **FEATURES**
 
 - [x] React + TypeScript + Vite/npm, Tailwind v4, local shadcn-style UI.
 - [x] FSD-style structure and ported Phantom/Token-2022 orchestration.
 - [x] Holder cards, coupon pipeline, formula, statuses and transaction links.
-- [x] Input-derived offline oracle and complete expected-output comparison.
+- [x] Input-derived TZ §22 offline oracle, zero-balance D and full expected-output comparison; historical golden preserved.
+- [x] Checked integer minor-unit coupon products/totals, rounding and overflow rejection in the client (FR-20 / NFR-02 client scope).
+- [x] Full browser coupon lifecycle with controlled Phantom/RPC, decoded transfers, expected payouts, receipts and reload.
+- [x] Negative client flows: snapshot RPC failure/wrong owner, rejected approval, insufficient funding, unavailable balances and corrupted cached amounts.
+- [x] Persist broadcast settlement signature before confirmation; block duplicate submission across reload.
 - [x] Playwright: snapshot/current invariant, coupon/total, zero, corrupted output, UI/gating/runtime errors.
 - [x] npm lockfile, npm ci, CI build/tests and reports.
 - [x] Signed-Memo compute budget, pre-sign RPC simulation, account checks and transaction-adapter regression tests.
@@ -97,7 +101,7 @@ Every milestone needs features, an expected business outcome, actual-versus-expe
 - [ ] Manual React Devnet acceptance replay with retained evidence.
 - [ ] Working preview of the current version after the Vercel limit is lifted.
 
-**Verification / exit:** 11/11 automated tests confirmed for a09cd7a; the real React flow is verified separately through manual acceptance. Offline settlement/FINALIZED are simulated.
+**Verification / exit:** Local build + 35/35 Playwright tests passed on 2026-10-06. See [R1 coverage and local verification](R1_TEST_COVERAGE.md). Automated browser tests use controlled RPC and a test wallet. Real Phantom/Devnet flow requires retained manual evidence; M1.1–M1.6 protocol guarantees remain open.
 
 ### M1.1 — instrument, eligibility and holder registry
 

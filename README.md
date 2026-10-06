@@ -75,17 +75,17 @@ These are target product capabilities. Implemented scope and limitations appear 
 
 Investor A held **10 bonds on the record date**. A then transferred 4 bonds to B: A currently holds **6**, but the coupon entitlement remains based on the recorded **10**.
 
-| Golden coupon metric | A | B | C | Total |
-| --- | ---: | ---: | ---: | ---: |
-| Record-date position | 10 | 20 | 5 | 35 |
-| Current ownership after A → B: 4 | 6 | 24 | 5 | 35 |
-| Snapshot-based coupon, KUSD-DEV | 500 | 1000 | 250 | 1750 |
+| TZ §22 coupon metric | A | B | C | D | Total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Record-date position | 10 | 5 | 2 | 0 | 17 |
+| Current ownership after A → B: 4 | 6 | 9 | 2 | 0 | 17 |
+| Snapshot-based coupon, KUSD-DEV | 500 | 250 | 100 | 0 | 850 |
 
 A's formula: **10 × 1000 × 10% ÷ 2 = 500**. The operator reviews the distribution and approves execution in Phantom; the outcome must then be verifiable through transactions and a receipt.
 
 > **If the demo does not make this idea obvious in 30–60 seconds, simplify the UI or scope.**
 
-The [golden dataset](golden/coupon-happy-path.json) fixes known inputs and expected outputs. Its numerical scenario does not replace the specification's other acceptance cases.
+The [TZ §22 golden dataset](golden/coupon-tz-section-22.json) fixes the required four-holder demo, including zero-balance D. The [historical golden](golden/coupon-happy-path.json) preserves 10/20/5 → 6/24/5 and 1750 as a separate regression. Coupon calculations use checked BigInt products in settlement minor units; USD numbers are display values only.
 
 ## Implementation and evidence boundaries
 
@@ -93,11 +93,11 @@ The [golden dataset](golden/coupon-happy-path.json) fixes known inputs and expec
 | --- | --- | --- |
 | Client | React + TypeScript + Vite, Tailwind v4, local shadcn-style components, FSD-style structure | Complete Operator / Investor / Auditor journeys |
 | Coupon bridge | Phantom signing, Token-2022 operations and RPC, browser snapshot/calculation, Memo attestations | Repeat manual React Devnet acceptance with signatures and payout deltas |
-| Automated verification | Playwright: golden model, UI, wallet gating, runtime errors | Real protocol E2E and negative on-chain checks |
-| Protocol core | Target architecture documented | Anchor PDAs, immutable snapshot, integer math, authority and idempotency |
+| Automated verification | Playwright: two golden contracts, full client lifecycle with controlled RPC/Phantom, failure and resume checks | Real protocol E2E and negative on-chain checks |
+| Protocol core | Target architecture documented | Anchor PDAs, immutable snapshot, program-owned integer math, authority and idempotency |
 | Other corporate actions | Requirements and plan | Redemption and Voting |
 
-**Offline oracle PASS verifies the scenario model.** Settlement and FINALIZED are simulated in this oracle. Actual outcomes are verified by reading Solana state and transactions.
+**Offline oracle PASS verifies the scenario model.** The offline oracle calculates expected amounts without executing payment. Actual outcomes are verified by reading Solana state and transactions.
 
 The Browser/Memo bridge still stores domain state in the browser; Memo records submitted data but does not enforce entitlement correctness or prevent double payment. The target source of finalized state is the Recorda Anchor program.
 
@@ -112,7 +112,7 @@ npm ci
 npm run dev
 ```
 
-Open the URL printed in the terminal, usually http://localhost:4444. The interface and offline golden are available without a wallet. Real operations require Phantom, Solana Devnet, SOL for gas and manual transaction approval. A/B/C are disposable Devnet identities.
+Open the URL printed in the terminal, usually http://localhost:4444. The interface and offline golden are available without a wallet. Start the TZ §22 demo in a fresh browser origin/profile; old 35-unit deployments cannot be resumed into the 17-unit scenario. Existing A/B/C holder keys are preserved and D is added, but old three-holder actions are not converted into four-holder settlement. Real operations require Phantom, Solana Devnet, SOL for gas and manual transaction approval. A/B/C/D are disposable Devnet identities.
 
 To view the built version:
 
@@ -125,9 +125,13 @@ npm run preview
 
 ```bash
 npm run build
-npx playwright install chromium
+npx playwright install --with-deps chromium
 npm run test:e2e:golden
 ```
+
+On Linux, `--with-deps` installs the system libraries required by Chromium as well as the browser. This may require a sudo password; installing only the browser can leave UI tests failing at launch with missing libraries such as `libnspr4.so`.
+
+See the [R1 requirement coverage matrix](docs/R1_TEST_COVERAGE.md) for UC/FR/NFR/TC mappings and manual boundaries.
 
 Verification chain: **Specification and its axis → milestone/features → golden input/expected → implementation → Playwright and protocol tests → actual output/proof**.
 
@@ -141,7 +145,7 @@ Playwright automatically checks the model and browser interface without signing 
 4. [ARCHITECTURE](docs/ARCHITECTURE.md) — stack, file structure and responsibility boundaries.
 5. [Implementation plan](docs/plan.md) — technical implementation sequence.
 6. [Operations](docs/OPERATIONS.md) — CI/deployment configuration and troubleshooting.
-7. [Golden dataset](golden/coupon-happy-path.json), [audit](docs/PHASE_1_AUDIT.md) and [reference prototype](prototype/kase-real-devnet-v4-kusd.html) — verification and evidence.
+7. [TZ golden dataset](golden/coupon-tz-section-22.json), [historical regression](golden/coupon-happy-path.json), [audit](docs/PHASE_1_AUDIT.md) and [reference prototype](prototype/kase-real-devnet-v4-kusd.html) — verification and evidence.
 
 Specification success metric: **100% correctly and reproducibly processed holder entitlements with verifiable on-chain outcomes**. MVP targets: 0 mismatches, 0 repeated executions, 0 unauthorized executions, and 3/3 scenarios with proof.
 

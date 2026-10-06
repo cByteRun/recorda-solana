@@ -41,6 +41,7 @@ export async function phantomSignAndSend({
   partialSigners = [],
   label = "transaction",
   maxBlockhashRetries = 2,
+  onSubmitted,
   rpc = connection
 }: {
   provider: PhantomProvider;
@@ -49,6 +50,7 @@ export async function phantomSignAndSend({
   partialSigners?: Keypair[];
   label?: string;
   maxBlockhashRetries?: number;
+  onSubmitted?: (signature: string) => void;
   rpc?: Connection;
 }) {
   if (!provider.publicKey?.equals(operator)) {
@@ -109,6 +111,7 @@ export async function phantomSignAndSend({
         maxRetries: 0,
         minContextSlot: latest.context.slot
       });
+      onSubmitted?.(broadcastSignature);
       const confirmation = await rpc.confirmTransaction(
         {
           signature: broadcastSignature,

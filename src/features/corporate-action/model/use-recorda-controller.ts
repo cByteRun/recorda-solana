@@ -20,19 +20,20 @@ import {
   unpackAccount
 } from "@solana/spl-token";
 import { INSTRUMENT, SETTLEMENT } from "@/entities/instrument/model/instrument";
-import type { HolderId, HolderView } from "@/entities/holder/model/types";
+import { HOLDER_IDS, type HolderId, type HolderView } from "@/entities/holder/model/types";
 import type { CorporateActionState } from "@/features/corporate-action/model/types";
-import { GOLDEN_INPUT, GOLDEN_EXPECTED, goldenPass, runGoldenBlackBox } from "@/features/corporate-action/model/golden";
+import { SPECIFICATION_GOLDEN, specificationGoldenPass, runSpecificationGolden } from "@/features/corporate-action/model/golden";
 import { connection, MEMO_PROGRAM_ID } from "@/shared/solana/config";
 import { getPhantom, type PhantomProvider } from "@/shared/solana/phantom";
 import { loadJson, loadOrCreateHolderKeypairs, saveJson, storageKeys } from "@/shared/solana/persistence";
 import { phantomSignAndSend } from "@/shared/solana/transactions";
+import { couponMinor, couponDistribution } from "./coupon";
 
 type RuntimeHolder = ReturnType<typeof loadOrCreateHolderKeypairs>[number] & {
   bondAta?: PublicKey;
   settlementAta?: PublicKey;
-  currentBondUnits: number;
-  settlementKusd: number;
+  currentBondUnits: number | null;
+  settlementKusd: number | null;
   nativeSol: number;
 };
 
@@ -99,14 +100,15 @@ function snapshotMap(action: CorporateActionState | null) {
 }
 
 export function useRecordaController() {
-  const runtimeHolders = useRef<RuntimeHolder[]>(
+  const [initialHolders] = useState<RuntimeHolder[]>(() =>
     loadOrCreateHolderKeypairs().map((holder) => ({
       ...holder,
-      currentBondUnits: 0,
-      settlementKusd: 0,
+      currentBondUnits: null,
+      settlementKusd: null,
       nativeSol: 0
     }))
   );
+  const runtimeHolders = useRef(initialHolders);
   const providerRef = useRef<PhantomProvider | null>(null);
   const operatorRef = useRef<PublicKey | null>(null);
 
@@ -162,7 +164,7 @@ export function useRecordaController() {
         const account = await getAccount(connection, holder.bondAta, "confirmed", TOKEN_2022_PROGRAM_ID);
         holder.currentBondUnits = Number(account.amount);
       } catch {
-        holder.currentBondUnits = 0;
+        holder.currentBondUnits = null;
       }
 
       holder.nativeSol = await connection.getBalance(holder.keypair.publicKey, "confirmed") / 1_000_000_000;
@@ -184,7 +186,7 @@ export function useRecordaController() {
           );
           holder.settlementKusd = Number(settlement.amount) / SETTLEMENT_BASE;
         } catch {
-          holder.settlementKusd = 0;
+          holder.settlementKusd = null;
         }
       }
     }
@@ -232,7 +234,8 @@ export function useRecordaController() {
   const send = useCallback(async (
     instructions: TransactionInstruction[],
     partialSigners: Keypair[] = [],
-    label = "transaction"
+    label = "transaction",
+    onSubmitted?: (signature: string) => void
   ) => {
     const provider = providerRef.current;
     const operator = operatorRef.current;
@@ -243,7 +246,8 @@ export function useRecordaController() {
       operator,
       instructions,
       partialSigners,
-      label
+      label,
+      onSubmitted
     });
   }, []);
 
@@ -342,9 +346,10 @@ export function useRecordaController() {
 
       await refresh();
 
-      const targets: Record<HolderId, number> = { A: 10, B: 20, C: 5 };
+      const targets: Record<HolderId, number> = { A: 10, B: 5, C: 2, D: 0 };
       const mintInstructions: TransactionInstruction[] = [];
       for (const holder of runtimeHolders.current) {
+        if (holder.currentBondUnits === null) throw new Error(`Cannot read balance for holder ${holder.id}; allocation aborted`);
         const delta = targets[holder.id] - holder.currentBondUnits;
         if (delta < 0) throw new Error(`Holder ${holder.id} balance exceeds deployment target`);
         if (delta > 0 && holder.bondAta) {
@@ -475,16 +480,21 @@ export function useRecordaController() {
     try {
       const action = loadJson<CorporateActionState>(storageKeys.action);
       if (!action?.snapshot) throw new Error("Snapshot first");
-      const entries = {} as Record<HolderId, { units: number; usd: number; formula: string }>;
-      let totalUsd = 0;
+      const entries = {} as Record<HolderId, { units: number; amountMinor: number; usd: number; formula: string }>;
+      const distribution = couponDistribution(Object.fromEntries(action.snapshot.holders.map(holder => [holder.id, holder.units])), {
+        faceValueMinor: INSTRUMENT.faceValueMinor, annualCouponBps: INSTRUMENT.annualCouponBps,
+        paymentsPerYear: INSTRUMENT.couponFrequency
+      });
+      const totalUsd = distribution.totalMinor / SETTLEMENT_BASE;
       for (const holder of action.snapshot.holders) {
-        const usd = holder.units * INSTRUMENT.faceValueUsd * INSTRUMENT.annualCouponRate / INSTRUMENT.couponFrequency;
+        const amountMinor = distribution.amounts[holder.id];
+        const usd = amountMinor / SETTLEMENT_BASE;
         entries[holder.id] = {
           units: holder.units,
+          amountMinor,
           usd,
           formula: `${holder.units} × 1000 × 0.1 ÷ 2`
         };
-        totalUsd += usd;
       }
 
       const signature = await send(
@@ -495,13 +505,14 @@ export function useRecordaController() {
           snapshotSig: action.signatures.snapshot,
           snapshotHash: action.snapshot.hash,
           entitlements: entries,
-          totalUsd
+          totalUsd,
+          totalMinor: distribution.totalMinor
         }, operatorRef.current!)],
         [],
         "entitlement"
       );
 
-      action.entitlements = Object.assign(entries, { totalUsd });
+      action.entitlements = Object.assign(entries, { totalUsd, totalMinor: distribution.totalMinor });
       action.status = "CALCULATED";
       action.signatures.entitlement = signature;
       saveJson(storageKeys.action, action);
@@ -651,25 +662,47 @@ export function useRecordaController() {
       const action = loadJson<CorporateActionState>(storageKeys.action);
       if (!action?.signatures.approval || !action.entitlements) throw new Error("Approve first");
       if (action.signatures.settlement) throw new Error("Action already settled");
+      if (action.pendingSettlementSignature) throw new Error(`Settlement ${action.pendingSettlementSignature} already submitted; reconcile its Devnet status before retrying`);
+      for (const id of HOLDER_IDS) {
+        const snapshot = action.snapshot?.holders.find(holder => holder.id === id);
+        const entitlement = action.entitlements[id];
+        if (!snapshot || !entitlement || entitlement.units !== snapshot.units) {
+          throw new Error(`Invalid snapshot/entitlement for holder ${id}; use a fresh TZ §22 action`);
+        }
+        const amountMinor = couponMinor(snapshot.units, {
+          faceValueMinor: INSTRUMENT.faceValueMinor, annualCouponBps: INSTRUMENT.annualCouponBps,
+          paymentsPerYear: INSTRUMENT.couponFrequency
+        });
+        if (entitlement.usd !== amountMinor / SETTLEMENT_BASE ||
+          (entitlement.amountMinor !== undefined && entitlement.amountMinor !== amountMinor)) {
+          throw new Error(`Entitlement mismatch for holder ${id}; payment aborted`);
+        }
+      }
       const deployment = await ensureSettlementRail();
       const settlementMint = new PublicKey(deployment.settlementMint!);
       const treasuryAta = new PublicKey(deployment.settlementTreasuryAta!);
 
       await refresh();
+      if (runtimeHolders.current.some(holder => holder.settlementKusd === null)) {
+        throw new Error("Cannot read settlement balances; payment aborted");
+      }
       const pre = Object.fromEntries(
         runtimeHolders.current.map((holder) => [holder.id, holder.settlementKusd])
       ) as Record<HolderId, number>;
 
       const instructions: TransactionInstruction[] = [];
       for (const holder of runtimeHolders.current) {
-        const amount = action.entitlements[holder.id].usd;
         instructions.push(
           createTransferCheckedInstruction(
             treasuryAta,
             settlementMint,
             holder.settlementAta!,
             operatorRef.current!,
-            Math.round(amount * SETTLEMENT_BASE),
+            couponMinor(action.entitlements[holder.id].units, {
+              faceValueMinor: INSTRUMENT.faceValueMinor,
+              annualCouponBps: INSTRUMENT.annualCouponBps,
+              paymentsPerYear: INSTRUMENT.couponFrequency
+            }),
             SETTLEMENT.decimals,
             [],
             TOKEN_2022_PROGRAM_ID
@@ -681,10 +714,16 @@ export function useRecordaController() {
         type: "KASE_COUPON_SETTLEMENT",
         actionId: action.actionId,
         asset: SETTLEMENT.symbol,
-        payouts: { A: 500, B: 1000, C: 250 }
+        payouts: Object.fromEntries(runtimeHolders.current.map((holder) => [holder.id, action.entitlements![holder.id].usd]))
       }, operatorRef.current!));
 
-      const signature = await send(instructions, [], "KUSD settlement");
+      const signature = await send(instructions, [], "KUSD settlement", (submittedSignature) => {
+        action.pendingSettlementSignature = submittedSignature;
+        action.preSettlementKusd = pre;
+        saveJson(storageKeys.action, action);
+        setState(current => ({ ...current, action: { ...action } }));
+      });
+      delete action.pendingSettlementSignature;
       action.status = "SETTLED";
       action.signatures.settlement = signature;
       action.preSettlementKusd = pre;
@@ -745,12 +784,12 @@ export function useRecordaController() {
   }, [refresh]);
 
   const goldenReport = useMemo(() => {
-    const actual = runGoldenBlackBox();
+    const actual = runSpecificationGolden();
     return {
-      input: GOLDEN_INPUT,
-      expected: GOLDEN_EXPECTED,
+      input: SPECIFICATION_GOLDEN.input,
+      expected: SPECIFICATION_GOLDEN.expected,
       actual,
-      pass: goldenPass(actual)
+      pass: specificationGoldenPass(actual)
     };
   }, []);
 
@@ -769,4 +808,3 @@ export function useRecordaController() {
     goldenReport
   };
 }
-

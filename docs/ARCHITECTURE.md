@@ -31,10 +31,11 @@ Requirements authority: [TZ](TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 | `index.html`, `src/main.tsx` | Browser entry and React mount |
 | `src/app/App.tsx`, `src/app/styles/globals.css` | Application composition and styles |
 | `src/pages/dashboard/ui/dashboard-page.tsx` | Operator dashboard and lifecycle controls |
-| `src/widgets/holder-grid/` | A/B/C ownership, snapshot and entitlement cards |
+| `src/widgets/holder-grid/` | A/B/C/D ownership, snapshot and entitlement cards |
 | `src/widgets/pipeline/` | Ordered workflow step component |
 | `src/widgets/golden-oracle/` | Expected/actual deterministic model comparison |
 | `src/features/corporate-action/model/use-recorda-controller.ts` | Coupon orchestration, signing, RPC refresh and resume state |
+| `src/features/corporate-action/model/coupon.ts` | Checked BigInt coupon products, per-holder minor-unit rounding and aggregate overflow validation |
 | `src/features/corporate-action/model/golden.ts` | Input-derived offline model and full output comparison |
 | `src/features/corporate-action/model/types.ts` | Client action state types |
 | `src/entities/holder/`, `src/entities/instrument/` | Holder types and demo instrument parameters |
@@ -43,7 +44,11 @@ Requirements authority: [TZ](TZ.md). Delivery: [ROADMAP](ROADMAP.md).
 | `src/shared/solana/transactions.ts` | Simulate/sign/send/confirm adapter |
 | `src/shared/solana/persistence.ts` | v4-compatible localStorage keys and disposable identities |
 | `src/shared/ui/`, `src/shared/lib/` | Button/Card and shared helpers |
-| `golden/coupon-happy-path.json` | Known input and independent expected output |
+| `golden/coupon-happy-path.json` | Historical three-holder regression; existing expected output retained |
+| `golden/coupon-tz-section-22.json` | Required TZ four-holder scenario, supply 17, coupon total 850 USD |
+| `tests/bridge-lifecycle.spec.ts`, `tests/helpers/bridge.ts` | Browser → controller → decoded transaction → controlled RPC token-account results, with a test wallet |
+| `tests/coupon-precision.spec.ts` | TZ dataset, minor-unit precision and invalid/overflow inputs |
+| `docs/R1_TEST_COVERAGE.md` | Requirement-to-test coverage and remaining protocol/manual boundaries |
 | `tests/golden-domain.spec.ts`, `tests/golden-ui.spec.ts` | Domain and browser regression checks |
 | `docs/MANUAL_DEVNET_ACCEPTANCE.md` | Human-signed real-chain acceptance |
 | `docs/TZ.md`, `docs/PRODUCT.md`, `docs/plan.md` | Requirements, product interpretation and implementation plan |
@@ -66,7 +71,7 @@ and client workflow references are persisted → holder cards refresh from RPC.
 Token balances and transaction signatures are real-chain data. Snapshot metadata,
 entitlements and lifecycle status are browser-owned and attested using Memo.
 Memo proves submitted bytes, not the correctness or immutability of domain rules.
-Offline oracle settlement/status are simulated; its PASS is not a Devnet receipt.
+Offline oracle calculates the TZ §22 distribution; its SIMULATED/PASS label is not a Devnet receipt. Tests intercept RPC and use a test wallet; their token movements are harness state, not validator evidence.
 
 Holder private keys are disposable Devnet identities stored locally, not operator
 keys. Storage is scoped to browser origin: localhost, 127.0.0.1 and each Vercel
@@ -83,3 +88,13 @@ See roadmap M1.1–M1.6, then Redemption and Voting in Phase 2.
 ## Transaction verification
 
 The shared TypeScript transaction adapter adds a compute budget for Memo attestations, simulates against Devnet before requesting Phantom signing, checks the connected account and avoids automatic retry after a known broadcast signature. Snapshot acquisition reads validated holder accounts directly and fails on RPC errors. `tests/transactions.spec.ts` covers these boundaries with mocked RPC and wallet responses; actual Phantom/Devnet execution remains manual acceptance.
+
+## R1 calculation and recovery contract
+
+New deployments target A/B/C/D = 10/5/2/0. Existing holder keys are retained and D is added. Start a fresh origin/profile for the new 17-unit demo; a historical 35-unit deployment is not overwritten or redistributed. The historical golden expected output remains unchanged.
+
+Financial products and totals use BigInt, validated integer inputs and checked conversion to safe integer minor units. The client rounds down once per holder in minor units; USD formatting divides the result only for display. Stored entitlements include amountMinor and totalMinor. Settlement validates each amount against its snapshot and sends integer Token-2022 amounts rather than rounding USD floats.
+
+Unavailable token balances render as unknown (—). Deployment cannot treat unavailable balances as zero and mint again; settlement cannot use unknown pre-payment balances. Snapshot reads fail closed and validate token-account owner and mint.
+
+The transaction adapter invokes onSubmitted immediately after broadcast and before confirmation. Settlement saves pendingSettlementSignature at that point. Failure/ambiguous confirmation leaves payment blocked across reload; only successful confirmation promotes it to the confirmed settlement signature. This is a browser safeguard, not protocol idempotency or automatic reconciliation.
