@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-06 — Simplify roadmap
+
+- [x] Use current focus → phases → milestones → feature checklists; preserve completion states.
+- [x] Place the verification/gaps matrix at the start of ROADMAP; retain test-artifact details in ARCHITECTURE and update links.
+
 ## 2026-10-06 — Resolve npm dependency vulnerabilities
 
 - [x] Override jayson to 5.0.0 and toml to 5.0.0; remove vulnerable uuid/stream-json chains without downgrading Solana/Anchor.
@@ -59,7 +64,7 @@
 - [x] Negative tests: RPC failure, wrong account owner, rejected approval, insufficient funds, corrupted entitlement and failed confirmation.
 - [x] Display IMPLEMENTED/client-owned and SIMULATED boundaries.
 - [x] Update README, ROADMAP, architecture, audit and manual Devnet acceptance.
-- [x] Add UC/FR/NFR/TC coverage matrix: [ROADMAP verification](ROADMAP.md#verification-and-gaps).
+- [x] Add UC/FR/NFR/TC coverage matrix: [Roadmap verification](ROADMAP.md#verification-and-gaps).
 - [x] Verify build and 35/35 Playwright tests with controlled wallet/RPC.
 - [x] Fix Linux Playwright setup: install Chromium with system dependencies.
 - [ ] Retain real Phantom/Devnet signatures and payout deltas from manual acceptance.

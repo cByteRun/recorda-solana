@@ -28,7 +28,7 @@ Required scenarios and acceptance are defined once in the annex:
 - [Bond redemption](REQUIREMENTS.md#13-required-scenario-b--bond-redemption).
 - [Bondholder voting](REQUIREMENTS.md#14-required-scenario-c--bondholder-voting).
 
-Implementation/trust boundaries belong in [ARCHITECTURE](ARCHITECTURE.md); verified features, unfinished work and test evidence belong in [ROADMAP](ROADMAP.md#verification-and-gaps). A successful model demonstration and a verified on-chain outcome are distinct evidence.
+Implementation/trust boundaries belong in [ARCHITECTURE](ARCHITECTURE.md); [verification and gaps](ROADMAP.md#verification-and-gaps), feature delivery and unfinished work belong in ROADMAP. A successful model demonstration and a verified on-chain outcome are distinct evidence.
 
 ## Product decisions
 

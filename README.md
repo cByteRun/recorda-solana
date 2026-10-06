@@ -52,7 +52,7 @@ Playwright system dependency installation may require sudo on Linux. After chang
 
 `protocol:test:ui` starts a fresh validator, runs actual PDA/token-account integration checks and browser E2E, then stops it. Keep RPC **18899**, faucet **19900** and Vite **4445** free. It prints the retained `/tmp` ledger path and generates `target/protocol-evidence/` plus Playwright reports/traces. R1 tests run Vite on **4444** with controlled wallet/RPC.
 
-Local audit on **2026-10-06**: production/SBF build and IDL check passed; Rust **4/4**, client **35/35**, validator **16/16**, protocol browser/audit **4/4**. See [verification and gaps](docs/ROADMAP.md#verification-and-gaps) for requirement mapping. Local checks do not establish remote CI or human Devnet acceptance.
+Local audit on **2026-10-06**: production/SBF build and IDL check passed; Rust **4/4**, client **36/36**, validator **16/16**, protocol browser/audit **4/4**. See [verification and gaps](docs/ROADMAP.md#verification-and-gaps) for requirement mapping. Local checks do not establish remote CI or human Devnet acceptance.
 
 ## Configuration and runtime boundaries
 
@@ -110,9 +110,9 @@ RPC 429: requests are serialized with bounded Retry-After backoff; use a browser
 | --- | --- |
 | [TZ](docs/TZ.md) | Source of truth: scope, rules and acceptance |
 | [REQUIREMENTS](docs/REQUIREMENTS.md) | Normative annex: roles, UC, FR/NFR, TC and full MVP DoD |
-| [ROADMAP](docs/ROADMAP.md) | Delivery, next steps and requirement → code → tests → evidence audit |
+| [ROADMAP](docs/ROADMAP.md) | Verification/gaps, current focus, phases and milestone feature checklists |
 | [CHANGELOG](docs/CHANGELOG.md) | Compact change history |
-| [ARCHITECTURE](docs/ARCHITECTURE.md) | Runtime, accounts, trust boundaries and deviations |
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | Runtime, accounts, trust boundaries and test artifacts |
 | [PRODUCT](docs/PRODUCT.md) | Problem, users, value and demo narrative |
 
 The [historical regression](golden/coupon-happy-path.json) remains separate from the required demo. TZ takes precedence; roadmap checkmarks do not amend requirements.

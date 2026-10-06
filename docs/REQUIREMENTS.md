@@ -1,6 +1,6 @@
 # Requirements — normative TZ annex
 
-This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained. Delivery status and evidence belong in [ROADMAP](ROADMAP.md#verification-and-gaps), not in the requirements.
+This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained. Delivery status belongs in [ROADMAP](ROADMAP.md); evidence is maintained in [ROADMAP](ROADMAP.md#verification-and-gaps).
 
 ## 6. Users and roles
 
