@@ -128,7 +128,7 @@ export async function bridge(page: Page, options: { snapshotFailure?: boolean; r
     }
     await route.fulfill({ json: { jsonrpc: '2.0', id: req.id, ...(error ? { error } : { result }) } });
   });
-  await page.goto('/');
+  await page.goto('/reference');
   await page.getByTestId('connect-wallet').click();
   await expect(page.getByTestId('busy-state')).toHaveCount(0, { timeout: 15000 });
   await expect(page.getByTestId('current-A')).toHaveText(options.unavailableBond ? '—' : '10');

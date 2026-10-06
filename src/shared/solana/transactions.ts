@@ -42,6 +42,7 @@ export async function phantomSignAndSend({
   label = "transaction",
   maxBlockhashRetries = 2,
   onSubmitted,
+  onProgress,
   minContextSlot = 0,
   rpc = connection
 }: {
@@ -52,6 +53,7 @@ export async function phantomSignAndSend({
   label?: string;
   maxBlockhashRetries?: number;
   onSubmitted?: (signature: string) => void;
+  onProgress?: (stage: "simulating" | "wallet" | "submitted" | "confirmed") => void;
   minContextSlot?: number;
   rpc?: Connection;
 }) {
@@ -81,6 +83,7 @@ export async function phantomSignAndSend({
     try {
       // Diagnose program/funding errors before Phantom hides simulation failures
       // behind "Unexpected error". Simulation does not sign or submit anything.
+      onProgress?.("simulating");
       const simulation = await rpc.simulateTransaction(walletTransaction, {
         sigVerify: false,
         commitment: "confirmed",
@@ -93,6 +96,7 @@ export async function phantomSignAndSend({
 
       let signed: Transaction | VersionedTransaction;
       try {
+        onProgress?.("wallet");
         signed = await provider.signTransaction(walletTransaction);
       } catch (error) {
         if (/unexpected error/i.test(errorMessage(error))) {
@@ -115,6 +119,7 @@ export async function phantomSignAndSend({
         minContextSlot: requiredContextSlot
       });
       onSubmitted?.(broadcastSignature);
+      onProgress?.("submitted");
       const confirmation = await rpc.confirmTransaction(
         {
           signature: broadcastSignature,
@@ -126,6 +131,7 @@ export async function phantomSignAndSend({
       if (confirmation.value.err) {
         throw new Error(`Transaction confirmed with error: ${JSON.stringify(confirmation.value.err)}`);
       }
+      onProgress?.("confirmed");
       return broadcastSignature;
     } catch (error) {
       lastError = error;

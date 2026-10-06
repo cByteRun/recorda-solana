@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:4444. The home page shows the coupon flow and golden example without a wallet; `/protocol` operates the deployed Anchor program.
+Open http://localhost:4444. `/` and `/protocol` show the implemented Anchor Coupon journey. Choose Operator to manage the lifecycle, Investor for your own rights (or an explicit read-only demo), and Auditor for wallet-free verification. Open an existing Action PDA or create a demo coupon. `/reference` retains the Browser/Memo client calculation and simulated golden example.
 
 ## Quick validation — see the business rule
 
@@ -223,7 +223,7 @@ VITE_SOLANA_RPC_URL=http://127.0.0.1:8899 npm run dev
 
 Use a wallet compatible with local RPC, fund its public address on the local validator and open `/protocol`. Create the instrument → schedule record date → begin/capture/finalize snapshot after record time → A→B:4 → calculate → approve → fund → settle → finalize. Reopen `/protocol?action=YOUR_ACTION_PDA` without a wallet/cache and verify the receipt, fixed rights, formula and totals. For manual Devnet use the configured Devnet RPC and deployed program instead.
 
-Retain program/mint/action/receipt addresses, snapshot metadata/hash, stage signatures and payment before/after balances. The `/` Browser/Memo reference keeps lifecycle truth in the browser; its Memo receipt is different from an Anchor receipt. [Runtime boundaries](docs/ARCHITECTURE.md#runtime-and-trust).
+Retain program/mint/action/receipt addresses, snapshot metadata/hash, stage signatures and payment before/after balances. The `/reference` Browser/Memo reference keeps lifecycle truth in the browser; its Memo receipt is different from an Anchor receipt. [Runtime boundaries](docs/ARCHITECTURE.md#runtime-and-trust).
 
 ## Troubleshooting
 

@@ -148,7 +148,7 @@ export function DashboardPage() {
               <PipelineStep
                 index={3}
                 title="Entitlement = function(snapshot), not current balance"
-                description="10/5/2/0 snapshot produces $500/$250/$100/$0. This calculation moves into Anchor in Phase 1."
+                description="10/5/2/0 snapshot produces $500/$250/$100/$0. This reference calculates in the browser; /protocol calculates in Anchor."
                 done={!!sig.entitlement}
                 disabled={!sig.transfer || !recorda.operator || !!sig.entitlement || !!recorda.busy}
                 actionLabel="Calculate entitlement"
@@ -175,7 +175,7 @@ export function DashboardPage() {
               <PipelineStep
                 index={6}
                 title="ActionReceipt → final proof"
-                description="Final signed receipt links the corporate-action stages. Phase 1 replaces Memo receipt with ActionReceipt PDA."
+                description="Final signed receipt links the corporate-action stages. /protocol uses the implemented ActionReceipt PDA."
                 done={!!sig.receipt}
                 disabled={!sig.settlement || !recorda.operator || !!sig.receipt || !!recorda.busy}
                 actionLabel="Finalize receipt"
@@ -213,7 +213,7 @@ export function DashboardPage() {
               <CardContent>
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-zinc-400">
                   <ShieldCheck className="h-4 w-4" />
-                  Next trust boundary
+                  Protocol trust boundary
                 </div>
                 <p className="mt-3 text-sm leading-6 text-zinc-600">
                   Browser/Memo → CorporateAction PDA + SnapshotPosition PDA + EntitlementPosition PDA + ActionReceipt PDA.
@@ -263,7 +263,7 @@ function Header({
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         <div>
           <div className="text-sm font-semibold">Recorda · KASE Corporate Actions Engine</div>
-          <div className="text-xs text-zinc-500">React Phase 1 · Solana Devnet · Token-2022</div>
+          <div className="text-xs text-zinc-500">Browser/Memo reference · Solana Devnet · Token-2022</div>
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 sm:inline">

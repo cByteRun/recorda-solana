@@ -11,7 +11,7 @@ const test = base.extend<{ runtimeErrors: string[] }>({
 
 test.describe("Recorda React golden UI", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/reference");
   });
 
   test("communicates the product axis and trust boundary", async ({ page }) => {
@@ -68,12 +68,12 @@ test("restored approved action still requires wallet connection", async ({ page 
       signatures: { snapshot: "snapshot", transfer: "transfer", entitlement: "entitlement", approval: "approval" }
     }));
   });
-  await page.goto("/");
+  await page.goto("/reference");
   await expect(page.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();
 });
 
 test("missing Phantom reports an error without unlocking actions", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/reference");
   await page.getByTestId("connect-wallet").click();
   await expect(page.getByTestId("app-error")).toBeVisible();
   await expect(page.getByTestId("deploy-button")).toBeDisabled();
@@ -91,7 +91,7 @@ test("R1 NFR-03/08: pending settlement remains blocked after reload and wallet c
     const publicKey = { toBase58: () => "11111111111111111111111111111111" };
     Object.assign(window, { phantom: { solana: { isPhantom: true, publicKey, connect: async () => ({ publicKey }) } } });
   });
-  await page.goto("/");
+  await page.goto("/reference");
   await page.getByTestId("connect-wallet").click();
   await expect(page.getByTestId("busy-state")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();

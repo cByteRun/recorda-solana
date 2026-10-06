@@ -1,7 +1,7 @@
 const states = ['scheduled', 'snapshotPending', 'snapshotted', 'awaitingApproval', 'approved', 'funded', 'executing', 'settled', 'finalized'];
 export async function protocolStage(page, name, target, { timeout = 300_000, interval = 250 } = {}) {
   const deadline = Date.now() + timeout;
-  const button = page.getByRole('button', { name, exact: true });
+  const button = page.getByRole('button', { name, exact: true, includeHidden: true });
   let clicked = false;
   let state = null;
   while (Date.now() < deadline) {
@@ -14,6 +14,10 @@ export async function protocolStage(page, name, target, { timeout = 300_000, int
       if (target && states.indexOf(state) >= states.indexOf(target) && states.includes(state)) return { clicked, state };
       if (!target && clicked) return { clicked, state };
       if (!clicked && await button.isEnabled().catch(() => false)) {
+        const disclosure = button.locator('xpath=ancestor::details[1]');
+        if (await disclosure.count() && !await disclosure.getAttribute('open').then(value => value !== null)) {
+          await disclosure.locator('summary').first().click();
+        }
         await button.click({ timeout: Math.max(1, deadline - Date.now()) });
         clicked = true;
       }

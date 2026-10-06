@@ -40,6 +40,8 @@ export function useProtocolController() {
   const [action, setAction] = useState(new URLSearchParams(location.search).get("action") || references.action || "");
   const [report, setReport] = useState<ProtocolReport | null>(null);
   const [audit, setAudit] = useState<ProtocolAudit | null>(null);
+  const [progress, setProgress] = useState("");
+  const [signature, setSignature] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [recordDate, setRecordDateValue] = useState(new Date(Date.now() + 60_000).toISOString().slice(0, 19) + "Z");
   const recordDateEdited = useRef(false);
@@ -59,32 +61,37 @@ export function useProtocolController() {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ ...readReference(), ...next, rpc: connection.rpcEndpoint, program: protocol.program.programId.toBase58() }));
   }
   async function refresh(address = action) {
+    setProgress("Reading and independently verifying chain state…");
     setAudit(null);
     setReport(null); // Failed reads must never leave a previous action's entitlement visible.
     if (!address) return;
     const loaded = await protocol.read(new PublicKey(address));
     const checked = await auditProtocol(new PublicKey(address), loaded);
-    setAudit(checked); setReport(loaded); setInstrument(loaded.action.instrument.toBase58());
+    setAction(address); setAudit(checked); setReport(loaded); setInstrument(loaded.action.instrument.toBase58());
     save({ instrument: loaded.action.instrument.toBase58(), action: address });
     const url = new URL(location.href); url.searchParams.set("action", address); history.replaceState(null, "", url);
   }
-  async function run(work: () => Promise<void>) {
+  async function run(work: () => Promise<void>, recover = true) {
     if (lock.current) return;
-    lock.current = true; setBusy(true); setError("");
+    lock.current = true; setBusy(true); setError(""); setSignature(""); setProgress("Preparing operation…");
     try { await work(); } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       // A confirmed or ambiguous partial batch is recovered from PDAs, never a cached status.
       const saved = readReference().action;
-      if (saved) { try { await refresh(saved); } catch { setReport(null); } }
+      if (recover && saved) { try { await refresh(saved); } catch { setReport(null); } }
       setError(message);
     }
-    finally { lock.current = false; setBusy(false); }
+    finally { lock.current = false; setBusy(false); setProgress(""); }
   }
   async function send(instructions: TransactionInstruction[], signers: Keypair[] = [], minContextSlot = 0) {
     if (!operator) throw new Error("Connect the authorized Operator wallet");
-    return phantomSignAndSend({ provider: getPhantom(), operator, instructions, partialSigners: signers, minContextSlot, rpc: connection, label: "Recorda protocol" });
+    setSignature("");
+    return phantomSignAndSend({ provider: getPhantom(), operator, instructions, partialSigners: signers, minContextSlot, rpc: connection, label: "Recorda protocol",
+      onSubmitted: setSignature,
+      onProgress: stage => setProgress({ simulating: "Checking transaction before signing…", wallet: "Waiting for your signature in Phantom…", submitted: "Transaction submitted. Waiting for confirmation…", confirmed: "Transaction confirmed. Continuing operation…" }[stage]) });
   }
   async function connect() {
+    setProgress("Waiting for Phantom connection…");
     const wallet = await getPhantom().connect(); setOperator(wallet.publicKey);
     if (!recordDateEdited.current) {
       const clock = await readChainClock(connection);
@@ -172,7 +179,7 @@ export function useProtocolController() {
     await send([await protocol.transfer(report.action.instrument, a.publicKey, b.publicKey, 4n)], [a]);
     await refresh();
   }
-  useEffect(() => { if (action) void run(() => refresh(action)); /* explicit subsequent refresh */ }, []);
+  useEffect(() => { if (action) void run(() => refresh(action), false); /* explicit subsequent refresh */ }, []);
 
   useEffect(() => {
     setChainClock(null); setClockError("");
@@ -192,7 +199,27 @@ export function useProtocolController() {
     return () => { active = false; clearTimeout(timer); };
   }, [action, state]);
 
-  return { protocol, operator, instrument, setInstrument, action, setAction, report, setReport,
+  useEffect(() => {
+    let provider;
+    try { provider = getPhantom(); } catch { return; }
+    const changed = (publicKey?: PublicKey | null) => setOperator(publicKey ?? null);
+    const disconnected = () => setOperator(null);
+    provider.on?.("accountChanged", changed);
+    provider.on?.("disconnect", disconnected);
+    return () => {
+      provider.removeListener?.("accountChanged", changed);
+      provider.removeListener?.("disconnect", disconnected);
+    };
+  }, [operator]);
+
+  const demoAddresses = useMemo(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(HOLDER_KEY) || "[]") as number[][];
+      return stored.length === 4 ? stored.map(secret => Keypair.fromSecretKey(Uint8Array.from(secret)).publicKey.toBase58()) : [];
+    } catch { return []; }
+  }, [report]);
+
+  return { progress, signature, authorized, demoAddresses, protocol, operator, instrument, setInstrument, action, setAction, report, setReport,
     busy, error, audit, recordDate, setRecordDate, holderWallet, setHolderWallet, holderUnits, setHolderUnits,
     setupId, setSetupId, state, pending, run, send, connect, setup, createAction, refresh,
     snapshot, snapshotReady, chainClock, clockError, calculate, fund, settle, transferDemo };

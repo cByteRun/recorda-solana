@@ -6,13 +6,13 @@ Phase 1 Devnet reproduction for **UC-CP-01 / NFR-10** is described in [README](.
 
 ## 6. Users and roles
 
-### Protocol role views — planned acceptance
+### Protocol role views — acceptance
 
 `/protocol` must allow Operator / Investor / Auditor view selection without changing the current Action PDA. Operator includes Paying Agent for MVP and sees lifecycle controls, all holders, total obligation and vault. Investor sees the connected holder's current units, record-date units, entitlement, destination, payment status and proof. Auditor can open the action without a wallet and sees all rights, totals, hashes, receipt and transaction links with no mutation controls.
 
-For judge demos, Investor may explicitly select A/B/C/D in **read-only demo mode**; this selection is not wallet authentication and cannot sign as the selected holder. Role selection never grants authority: wallet identity and on-chain authorization govern mutations. Disconnected or unknown investors see a connect/no-position state, never another holder presented as their own.
+When the browser retains matching demo identities, Investor may explicitly select A/B/C/D in **read-only demo mode**; this selection is not wallet authentication and cannot sign as the selected holder. Role selection never grants authority: wallet identity and on-chain authorization govern mutations. Disconnected or unknown investors see a connect/no-position state, never another holder presented as their own.
 
-Role golden/E2E acceptance uses the same action and `golden/coupon-tz-section-22.json`: A current/snapshot/payout = 6/10/500, B = 9/5/250, C = 2/2/100, D = 0/0/0; Operator/Auditor total = 850. Tests must cover switching without losing the action, field/control visibility, unauthorized wallets and wallet-free audit. These role views are planned, not implemented acceptance; Redemption/Voting expectations follow their own fixtures when delivered.
+Role golden/E2E acceptance uses the same action and `golden/coupon-tz-section-22.json`: A current/snapshot/payout = 6/10/500, B = 9/5/250, C = 2/2/100, D = 0/0/0; Operator/Auditor total = 850. Tests must cover switching without losing the action, field/control visibility, unauthorized wallets and wallet-free audit. Coupon role views and this golden acceptance are implemented and locally verified in ROADMAP M1.7; Redemption/Voting expectations follow their own fixtures when delivered.
 
 ### R1. Market / Corporate Actions Operator
 A representative of KASE, depository infrastructure or an authorized operator.

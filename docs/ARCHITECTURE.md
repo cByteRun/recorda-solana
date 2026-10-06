@@ -10,9 +10,9 @@ React page → controller → generated Anchor client → signed transaction
 → RPC reads → independent audit → holder rights / receipt / history
 ```
 
-There is no application backend/database. Coupon Core at `/protocol` stores finalized truth in Solana accounts. Phantom holds the operator key and signs explicitly. LocalStorage caches addresses and disposable demo-holder keys, scoped by RPC/program; losing it does not erase protocol rights. Holder keys are a test custody model.
+There is no application backend/database. Coupon Core at `/` and `/protocol` stores finalized truth in Solana accounts. Phantom holds the operator key and signs explicitly. LocalStorage caches addresses and disposable demo-holder keys, scoped by RPC/program; losing it does not erase protocol rights. Holder keys are a test custody model.
 
-The `/` Browser/Memo reference uses real Token-2022 instructions but browser-owned snapshot/entitlement/lifecycle state. Memo attests bytes; it does not enforce rights, immutability or once-only payment. Its offline oracle and mocked tests are simulation evidence.
+The `/reference` Browser/Memo reference uses real Token-2022 instructions but browser-owned snapshot/entitlement/lifecycle state. Memo attests bytes; it does not enforce rights, immutability or once-only payment. Its offline oracle and mocked tests are simulation evidence.
 
 ## Stack and code map
 
@@ -24,7 +24,7 @@ React 19/TypeScript/Vite, Tailwind v4, local shadcn-style primitives, Lucide; An
 | `src/shared/solana/idl/` | Compiler-generated IDL and TypeScript contract |
 | `src/shared/solana/protocol.ts` | PDAs, instructions, validated chain reads and history |
 | `src/shared/solana/protocol-audit.ts` | Independent formula, snapshot and receipt reconciliation |
-| `src/pages/protocol/`, protocol controller in `src/features/corporate-action/` | Operator lifecycle, holder rights, restore and read-only proof |
+| `src/pages/protocol/`, protocol controller in `src/features/corporate-action/` | Coupon Operator/Investor/Auditor presentation, authority gating, holder rights, restore and read-only proof |
 | `src/features/corporate-action/model/` | R1 controller, checked client coupon math and offline golden model |
 | `src/shared/solana/transactions.ts`, `rpc-fetch.ts`, `persistence.ts` | Simulation/sign/send/confirm, bounded RPC retry and local resume references |
 | `golden/`, `tests/`, `protocol-tests/`, `protocol-ui-tests/` | Independent fixtures, client checks and real-validator integration/browser checks |
@@ -76,6 +76,8 @@ TZ §19 requires **Next.js + TypeScript**; implementation is **React + Vite**. K
 Local-validator tests execute actual Anchor/Token-2022 state transitions with a controlled signer; client tests mock wallet/RPC. Neither proves Phantom extension compatibility, Devnet deployment, remote CI success or a complete security review. See [verification and gaps](ROADMAP.md#verification-and-gaps) and [README acceptance](../README.md#manual-acceptance).
 
 ## Test evidence
+
+Coupon UX/role follow-up (2026-10-06): build and IDL check pass; Rust 4/4, golden/client/runner 45/45, validator 16/16, protocol browser/audit/usability 6/6 and Devnet setup 6/6. The browser lifecycle checks role switching on one action, connected/unknown investors, unauthorized approval, exact golden rights, wallet-free reopening, partial-payment recovery and corrupted proof. Usability checks cover form gating, keyboard focus and no page-wide overflow at 320/390 px. Mobile screenshots are retained as `target/protocol-evidence/coupon-mobile.png` and `coupon-entry-mobile.png`; counts below describe earlier runs.
 
 Local verification on **2026-10-06**: build/SBF/IDL pass; Rust 4/4; client golden 36/36; validator 16/16; protocol browser/audit 4/4. Dependency follow-up also verified clean npm ci and npm audit with 0 vulnerabilities. Agent-browser checked both pages without runtime errors or Vite overlays. Rust count includes generated `test_id`; integration count includes its parent test, so counts are not requirement counts.
 

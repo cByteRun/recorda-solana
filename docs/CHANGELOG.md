@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-06 — Deliver Phase 1 Coupon UX/UI and roles
+
+- [x] Make `/` and `/protocol` the real Coupon entry; preserve the Browser/Memo example at `/reference` and update stale copy.
+- [x] Add Operator/Investor/Auditor presentation with action preservation, wallet authority gating, own-holder/no-position states and explicit read-only demo identities.
+- [x] Add lifecycle progress/next step, monetary summary, UTC record date, transaction feedback/recovery, input validation and shared shadcn-style React/Tailwind v4 input/badge/address controls.
+- [x] Make proof readable with aligned amounts, copy/Explorer links, technical disclosures, keyboard focus and mobile overflow checks. Distinguish zero entitlement processed from a nonzero payment; completed actions do not prompt wallet connection to continue.
+- [x] Isolate Vite test caches/RPC configuration; teach the runner to reveal optional controls and wait for chain stages/Clock.
+- [x] Verification: build/IDL pass; golden 45/45, Rust 4/4, validator 16/16, protocol browser/audit/usability 6/6, Devnet setup 6/6. Mark M1.7 local acceptance complete; retain separate prior human Devnet evidence.
+
 ## 2026-10-06 — Plan Phase 1 Coupon UX/UI
 
 - Add unchecked M1.7 from a source-based UI audit: primary protocol entry, lifecycle guidance, business summaries, transaction recovery feedback, Coupon role views, shared visual components and accessible/responsive rights/proof presentation.

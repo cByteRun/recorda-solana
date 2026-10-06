@@ -3,6 +3,8 @@ import type { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.
 export interface PhantomProvider {
   isPhantom?: boolean;
   publicKey?: PublicKey;
+  on?(event: "accountChanged" | "disconnect", listener: (publicKey?: PublicKey | null) => void): void;
+  removeListener?(event: "accountChanged" | "disconnect", listener: (publicKey?: PublicKey | null) => void): void;
   connect(): Promise<{ publicKey: PublicKey }>;
   signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction>;
 }

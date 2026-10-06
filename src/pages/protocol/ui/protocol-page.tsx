@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useProtocolController } from "@/features/corporate-action/model/use-protocol-controller";
 import { connection } from "@/shared/solana/config";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
+import { Badge } from "@/shared/ui/badge";
+import { AddressLink } from "@/shared/ui/address-link";
+
 function minor(value: { toString(): string }) {
   const raw = BigInt(value.toString()); return `${raw / 100n}.${(raw % 100n).toString().padStart(2, "0")}`;
 }
@@ -11,89 +16,105 @@ function explorer(path: string) {
   const cluster = rpc.includes("devnet") ? "cluster=devnet" : `cluster=custom&customUrl=${encodeURIComponent(rpc)}`;
   return `https://explorer.solana.com/${path}?${cluster}`;
 }
+function validAddress(value: string) { try { return new PublicKey(value).toBase58() === value; } catch { return false; } }
+function validDate(value: string) { return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value) && Number.isFinite(Date.parse(value)); }
+function validUnits(value: string) { return /^\d+$/.test(value) && BigInt(value) <= 18446744073709551615n; }
+const stages = ["scheduled", "snapshotPending", "snapshotted", "awaitingApproval", "approved", "funded", "executing", "settled", "finalized"];
+const stageNames: Record<string, string> = { scheduled: "Record date scheduled", snapshotPending: "Snapshot in progress", snapshotted: "Snapshot finalized", awaitingApproval: "Ready for approval", approved: "Approved · fund payments", funded: "Ready to pay", executing: "Payments in progress", settled: "Payments complete", finalized: "Receipt finalized", cancelled: "Coupon cancelled" };
+type Role = "Operator" | "Investor" | "Auditor";
 
 export function ProtocolPage() {
   const { protocol, operator, instrument, setInstrument, action, setAction, report, setReport,
     busy, error, audit, recordDate, setRecordDate, holderWallet, setHolderWallet, holderUnits, setHolderUnits,
     setupId, setSetupId, state, pending, run, send, connect, setup, createAction, refresh,
-    snapshot, snapshotReady, chainClock, clockError, calculate, fund, settle, transferDemo } = useProtocolController();
-  return <main data-testid="protocol-root" data-busy={busy} className="mx-auto max-w-7xl px-4 py-8">
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div><a href="/" className="text-sm text-blue-700">React bridge reference</a><h1 className="mt-2 text-3xl font-semibold">Coupon Core · Record Date → Right → Execution → Proof</h1></div>
-      <Button disabled={busy} onClick={() => void run(connect)}>{operator ? operator.toBase58().slice(0, 12) : "Connect Phantom"}</Button>
-    </div>
-    <p className="mt-4 text-sm" data-testid="protocol-boundary">IMPLEMENTED: Anchor PDA state and Token-2022 settlement. Mock USD is a test payment asset. Local Validator / Devnet only.</p>
-    <p className="mt-2 break-all text-xs text-zinc-500">Program: {protocol.program.programId.toBase58()} · RPC: {connection.rpcEndpoint}</p>
-    {error && <div role="alert" className="mt-4 rounded-xl bg-rose-50 p-4 text-rose-800">{error}</div>}
-    <section className="mt-6 grid gap-4 lg:grid-cols-2">
-      <Card><CardContent><h2 className="text-lg font-semibold">1. Instrument + eligible holders</h2>
-        <p className="mt-2 text-sm text-zinc-600">Demo: 1 bond = 1 unit; face value 1000 Mock USD; coupon 10% / 2. A/B/C/D = 10/5/2/0. Disposable holder keys stay in this browser.</p>
-        <label className="mt-3 block text-sm">Demo instrument ID<input className="mt-1 w-full rounded border p-2" value={setupId} onChange={e => setSetupId(e.target.value)} /></label>
-        <Button className="mt-3" disabled={busy || !operator} onClick={() => void run(setup)}>Create / resume demo instrument</Button>
-        <label className="mt-3 block text-sm">Instrument PDA<input className="mt-1 w-full rounded border p-2" value={instrument} onChange={e => setInstrument(e.target.value)} /></label>
-      </CardContent></Card>
-      <Card><CardContent><h2 className="text-lg font-semibold">2. Schedule coupon / open existing action</h2>
-        <label className="mt-3 block text-sm">Record timestamp (ISO UTC)<input className="mt-1 w-full rounded border p-2" value={recordDate} onChange={e => setRecordDate(e.target.value)} /></label>
-        <Button className="mt-3" disabled={busy || !operator || !instrument} onClick={() => void run(createAction)}>Schedule coupon</Button>
-        <label className="mt-3 block text-sm">Action PDA<input data-testid="protocol-action-input" disabled={busy} className="mt-1 w-full rounded border p-2" value={action} onChange={e => { setAction(e.target.value); setReport(null); }} /></label>
-        <Button className="mt-3" disabled={busy || !action} onClick={() => void run(() => refresh())}>Read chain / refresh</Button>
-        <p className="mt-3 text-sm text-zinc-500">Auditor: open an action without connecting a wallet. The URL restores rights and receipts from chain state.</p>
-      </CardContent></Card>
-    </section>
+    snapshot, snapshotReady, chainClock, clockError, calculate, fund, settle, transferDemo,
+    authorized, demoAddresses, progress, signature } = useProtocolController();
+  const [role, setRole] = useState<Role>("Operator");
+  const [demoHolder, setDemoHolder] = useState("");
+  const investorAddress = demoHolder || operator?.toBase58();
+  const positions = report?.positions.filter(p => role !== "Investor" || p.account.holder.toBase58() === investorAddress) || [];
+  const demoPositions = demoAddresses.map((address, index) => ({ address, name: "ABCD"[index] })).filter(h => report?.positions.some(p => p.account.holder.toBase58() === h.address));
+  const blocked = busy ? "Finish the current operation first." : !operator ? "Connect the authorized Operator wallet to continue." : !authorized ? "This wallet is not the instrument authority. Reading remains available." : !audit ? "Wait for independent verification." : audit.issues.length ? "Resolve audit mismatches before any operation." : state === "scheduled" && !snapshotReady ? "Wait until the record date is reached on Solana." : "";
+  const lifecycle = [
+    { states: ["scheduled", "snapshotPending"], label: "Begin / resume snapshot → finalize", work: snapshot },
+    { states: ["snapshotted"], label: "Calculate protocol rights", work: calculate },
+    { states: ["awaitingApproval"], label: "Approve in Phantom", work: async () => { await send([await protocol.manage(new PublicKey(action), operator!, "approveAction")]); await refresh(); } },
+    { states: ["approved"], label: "Fund vault with mock USD", work: fund },
+    { states: ["funded", "executing"], label: "Settle / resume unpaid holders", work: settle },
+    { states: ["settled"], label: "Finalize on-chain receipt", work: async () => { await send([await protocol.finalize(new PublicKey(action), operator!)]); await refresh(); } }
+  ];
+  const next = lifecycle.find(step => step.states.includes(state));
+  const investorRight = report?.rights.find(r => r.account.holder.toBase58() === investorAddress)?.account;
+  const calculated = !!report && report.action.calculatedHolders === report.action.expectedHolders && !["scheduled", "snapshotPending"].includes(state);
+  const remaining = report ? BigInt(report.action.totalObligationMinor.toString()) - BigInt(report.action.settledTotalMinor.toString()) : 0n;
+
+  return <main data-testid="protocol-root" data-busy={busy} className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+    <header className="flex flex-wrap items-start justify-between gap-4">
+      <div><div className="flex flex-wrap gap-2"><Badge>Recorda · Coupon</Badge><Badge>{connection.rpcEndpoint.includes("devnet") ? "DEVNET" : /localhost|127\.0\.0\.1/.test(connection.rpcEndpoint) ? "LOCAL VALIDATOR" : "CUSTOM RPC · verify environment"}</Badge></div>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Coupon servicing</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">Record date → Investor rights → Approved payments → Verifiable proof.</p>
+      </div>
+      <div className="space-y-2"><Button disabled={busy} onClick={() => void run(connect)}>{operator ? "Reconnect Phantom" : "Connect Phantom"}</Button>{operator && <p className="max-w-56 break-all text-xs text-zinc-600" title={operator.toBase58()}>Wallet: {operator.toBase58().slice(0, 6)}…{operator.toBase58().slice(-6)}</p>}</div>
+    </header>
+    <p className="text-sm text-zinc-600" data-testid="protocol-boundary">IMPLEMENTED: Anchor PDA state and Token-2022 settlement. Mock USD is a test payment asset. Local Validator / Devnet only.</p>
+    <nav aria-label="View role" className="flex flex-wrap gap-2">{(["Operator", "Investor", "Auditor"] as const).map(value => <Button key={value} variant={role === value ? "primary" : "outline"} aria-pressed={role === value} onClick={() => { setRole(value); setDemoHolder(""); }}>{value}</Button>)}</nav>
+    <p className="text-sm text-zinc-600">{role === "Operator" ? "Manage the coupon and funding. Only the instrument authority can sign operations." : role === "Investor" ? "See your holdings, record-date rights and payment outcome. This view is read-only." : "Verify rights, payments and receipt independently. No wallet is required."}</p>
+    {busy && <div role="status" aria-live="polite" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">{progress}</div>}
+    {signature && <div className="rounded-xl border border-zinc-200 bg-white p-3"><AddressLink value={signature} href={explorer(`tx/${signature}`)} label="Latest submitted transaction" /><p className="mt-1 text-xs text-zinc-600">Check confirmation and chain state before retrying an uncertain operation.</p></div>}
+    {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><h2 className="font-semibold">Operation needs attention</h2><p className="mt-2">{/reject|denied|cancel/i.test(error) ? "Wallet signature was declined. Earlier confirmed steps remain on chain." : "The operation could not complete. Reconcile the current action before continuing."}</p><p className="mt-2">Read chain / refresh to recover confirmed progress; check any submitted transaction before retrying. Resume unpaid holders only.</p><details className="mt-3"><summary className="cursor-pointer font-medium">Error details</summary><pre className="mt-2 whitespace-pre-wrap break-all text-xs">{error}</pre></details></div>}
+
+    <Card><CardContent><h2 className="text-lg font-semibold">Open or resume a coupon</h2><p className="mt-1 text-sm text-zinc-600">Paste the Action PDA, or open a shared action link. Reading does not require a wallet.</p>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end"><label className="min-w-0 flex-1 text-sm font-medium">Action PDA<Input data-testid="protocol-action-input" disabled={busy} value={action} aria-invalid={!!action && !validAddress(action)} onChange={e => { setAction(e.target.value.trim()); setReport(null); }} className="mt-2 font-mono" placeholder="Coupon action address" />{action && !validAddress(action) && <span className="mt-1 block text-xs text-rose-700">Enter a valid Solana public address.</span>}</label><Button variant="outline" disabled={busy || !validAddress(action)} onClick={() => void run(() => refresh(), false)}>Read chain / refresh</Button></div>
+    </CardContent></Card>
+
+    {role === "Operator" && <details open={!report} className="rounded-3xl border border-zinc-200 bg-white p-5"><summary className="cursor-pointer text-lg font-semibold">Create a demo coupon</summary>
+      <p className="mt-3 text-sm leading-6 text-zinc-600">1 bond = 1 unit · face value 1000 Mock USD · coupon 10% / 2. A/B/C/D start with 10/5/2/0 units. Disposable demo holder keys stay in this browser. Each operation can require several Phantom signatures.</p>
+      <div className="mt-4 grid gap-5 lg:grid-cols-2"><div className="space-y-3"><label className="block text-sm font-medium">Demo instrument ID<Input disabled={busy} className="mt-2" value={setupId} inputMode="numeric" aria-invalid={!validUnits(setupId)} onChange={e => setSetupId(e.target.value)} /></label>{!validUnits(setupId) && <p className="text-xs text-rose-700">Use a nonnegative integer within the u64 range.</p>}<Button disabled={busy || !operator || !validUnits(setupId)} onClick={() => void run(setup)}>Create / resume demo instrument</Button>
+        <label className="block text-sm font-medium">Instrument PDA<Input disabled={busy} className="mt-2 font-mono" value={instrument} aria-invalid={!!instrument && !validAddress(instrument)} onChange={e => setInstrument(e.target.value.trim())} /></label></div>
+      <div className="space-y-3"><label className="block text-sm font-medium">Record timestamp (ISO UTC)<Input disabled={busy} className="mt-2" value={recordDate} aria-invalid={!validDate(recordDate)} onChange={e => setRecordDate(e.target.value)} /></label>{!validDate(recordDate) && <p className="text-xs text-rose-700">Enter a valid UTC timestamp, e.g. 2026-10-06T18:30:00Z.</p>}<p className="text-xs leading-5 text-zinc-600">Use an ISO timestamp ending in Z (UTC). Default is Solana time + 60 seconds after connecting. Snapshot readiness uses Solana Clock.</p><Button disabled={busy || !operator || !validAddress(instrument) || !validDate(recordDate)} onClick={() => void run(createAction)}>Schedule coupon</Button></div></div>
+      {!operator && <p className="mt-4 text-sm text-zinc-600">Connect Phantom to create or schedule. Existing actions can be read without connecting.</p>}
+    </details>}
+
+    {!report && !busy && <div className="rounded-xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-600">{action ? "Open a valid action to load verified rights and payments." : role === "Operator" ? "Create a demo instrument and schedule its coupon, or open an existing action above." : "Open an action above to see its rights and proof."}</div>}
     {report && <>
-      <section className="mt-6 rounded-2xl bg-zinc-950 p-5 text-white" data-testid="protocol-summary" data-state={state}>
-        <h2 className="text-xl font-semibold">{state.toUpperCase()} · {minor(report.action.totalObligationMinor)} Mock USD due</h2>
-        <p className="mt-2">Record date: {new Date(Number(report.action.recordTimestamp.toString()) * 1000).toISOString()} · Record slot: {report.action.recordSlot.toString()}</p>
-        <p className="mt-2">Captured at: {report.action.snapshotTimestamp.isZero() ? "Pending" : new Date(Number(report.action.snapshotTimestamp.toString()) * 1000).toISOString()} · Transfers stop at the scheduled record date until snapshot finalization.</p>
-        <p className="mt-2">Outstanding: {report.instrument.outstandingSupply.toString()} · Redeemed: {report.instrument.redeemedSupply.toString()} · Snapshot: {report.action.snapshotUnits.toString()} units</p>
-        <p className="mt-2">Processed: {report.action.processedHolders}/{report.action.expectedHolders} · Settled: {minor(report.action.settledTotalMinor)} · Vault: {minor(report.vaultBalance)}</p>
-        <p className="mt-2">Formula: snapshot units × {minor(report.instrument.faceValueMinor)} × {report.instrument.couponBps}/10000 ÷ {report.instrument.paymentsPerYear}. Floor once per holder in minor units.</p>
-        <p className="mt-2 break-all text-xs">Snapshot hash: {Buffer.from(report.action.snapshotHash).toString("hex")}</p>
+      <section data-testid="protocol-summary" data-state={state} className="rounded-3xl border border-zinc-200 bg-white p-5 sm:p-6">
+        <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs font-medium uppercase tracking-wide text-zinc-600">Coupon #{report.action.id.toString()}</p><h2 className="mt-1 text-xl font-semibold">{stageNames[state] || state}</h2></div><Badge>{state.toUpperCase()}</Badge></div>
+        <div className="mt-3 text-sm text-zinc-600">Instrument: <AddressLink value={report.action.instrument.toBase58()} href={explorer(`address/${report.action.instrument.toBase58()}`)} /></div>
+        {role !== "Investor" ? <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">{[["Total due", calculated ? minor(report.action.totalObligationMinor) : "Not calculated"], ["Paid", minor(report.action.settledTotalMinor)], ["Remaining", calculated ? minor(remaining) : "Not calculated"], ["Vault funding", minor(report.vaultBalance)]].map(([label, value]) => <div key={label} className="rounded-xl bg-zinc-50 p-4"><p className="text-xs text-zinc-600">{label}</p><p className="mt-2 break-words text-xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-xs text-zinc-600">Mock USD</p></div>)}</div> : <p className="mt-4 text-lg font-semibold">Your entitlement: {investorRight?.calculated ? `${minor(investorRight.amountMinor)} Mock USD` : "Not calculated / no holder selected"}</p>}
+        <p className="mt-4 text-sm text-zinc-700">Record date: {new Date(Number(report.action.recordTimestamp.toString()) * 1000).toISOString()} (UTC)</p>
+        <p className="mt-2 text-sm text-zinc-600">Current ownership may change. Finalized record-date rights remain unchanged. Transfers pause from the record date until snapshot finalization.</p>
+        {role !== "Investor" && <p className="mt-2 text-sm text-zinc-600">Processed: {report.action.processedHolders}/{report.action.expectedHolders} · Snapshot: {report.action.snapshotUnits.toString()} units</p>}
+        <details className="mt-4 text-sm"><summary className="cursor-pointer font-medium">How this coupon is calculated</summary><p className="mt-2 leading-6">Formula: snapshot units × {minor(report.instrument.faceValueMinor)} × {report.instrument.couponBps}/10000 ÷ {report.instrument.paymentsPerYear}. Floor once per holder in minor units.</p><p className="mt-2">Record slot: {report.action.recordSlot.toString()} · Captured at: {report.action.snapshotTimestamp.isZero() ? "Pending" : new Date(Number(report.action.snapshotTimestamp.toString()) * 1000).toISOString()}</p></details>
       </section>
-      {state === "scheduled" && <p className="mt-3 text-sm" data-testid="protocol-record-time">
-        {clockError ? `Cannot verify Solana record time: ${clockError}` : !chainClock ? "Checking record date against Solana time…" : snapshotReady ? "Record date reached on Solana. Snapshot is ready." : `Waiting for record date on Solana: ${new Date(Number(chainClock.timestamp) * 1000).toISOString()} · approximately ${BigInt(report.action.recordTimestamp.toString()) - chainClock.timestamp} seconds remaining.`}
-      </p>}
-      <section className="mt-5 flex flex-wrap gap-3" aria-label="Operator actions">
-        <Button disabled={pending || !snapshotReady} onClick={() => void run(snapshot)}>Begin / resume snapshot → finalize</Button>
-        <Button disabled={pending || state !== "scheduled"} onClick={() => void run(async () => { await send([await protocol.manage(new PublicKey(action), operator!, "cancelAction")]); await refresh(); })}>Cancel scheduled coupon</Button>
-        <Button disabled={pending || state !== "snapshotted"} onClick={() => void run(calculate)}>Calculate protocol rights</Button>
-        <Button disabled={pending || state !== "awaitingApproval"} onClick={() => void run(async () => { await send([await protocol.manage(new PublicKey(action), operator!, "approveAction")]); await refresh(); })}>Approve in Phantom</Button>
-        <Button disabled={pending || state !== "approved"} onClick={() => void run(fund)}>Fund vault with mock USD</Button>
-        <Button disabled={pending || !["funded", "executing"].includes(state)} onClick={() => void run(settle)}>Settle / resume unpaid holders</Button>
-        <Button disabled={pending || state !== "settled"} onClick={() => void run(async () => { await send([await protocol.finalize(new PublicKey(action), operator!)]); await refresh(); })}>Finalize on-chain receipt</Button>
+      <ol aria-label="Coupon progress" className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">{[{ label: "Record date", start: 0, end: 2 }, { label: "Rights", start: 2, end: 3 }, { label: "Execution", start: 3, end: 8 }, { label: "Proof", start: 8, end: 9 }].map(step => <li key={step.label} aria-current={state !== "finalized" && stages.indexOf(state) >= step.start && stages.indexOf(state) < step.end ? "step" : undefined} className="rounded-xl border border-zinc-200 bg-white p-3 aria-[current=step]:border-blue-600 aria-[current=step]:bg-blue-50"><span className="font-semibold">{step.label}</span><span className="ml-2 text-zinc-600">{state === "cancelled" ? "Cancelled" : state === "finalized" || stages.indexOf(state) >= step.end ? "Complete" : stages.indexOf(state) >= step.start ? "Current" : "Upcoming"}</span></li>)}</ol>
+      {state === "scheduled" && <p className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900" data-testid="protocol-record-time" role="status">{clockError ? `Cannot verify Solana record time: ${clockError}` : !chainClock ? "Checking record date against Solana time…" : snapshotReady ? "Record date reached on Solana. Snapshot is ready." : `Waiting for record date on Solana: ${new Date(Number(chainClock.timestamp) * 1000).toISOString()} · approximately ${BigInt(report.action.recordTimestamp.toString()) - chainClock.timestamp} seconds remaining.`}</p>}
+      {role === "Operator" && <Card><CardContent><section aria-label="Operator actions"><h2 className="text-lg font-semibold">{next ? "Next operator step" : state === "finalized" ? "Coupon complete" : "No further execution step"}</h2><p className="mt-2 text-sm text-zinc-600">{!next ? state === "finalized" ? "Payments and receipt are finalized. Open proof below to verify the outcome." : "This action has no further execution step. Its chain state remains available for verification." : blocked || "Review the rights and amounts, then sign the highlighted step in Phantom."}</p>
+        <div className="mt-4 flex flex-wrap gap-3">{lifecycle.map(step => <Button key={step.label} variant={step === next ? "primary" : "outline"} disabled={pending || step !== next || (step.work === snapshot && !snapshotReady)} onClick={() => void run(step.work)}>{step.label}</Button>)}</div>
+        {state === "scheduled" && <div className="mt-4 border-t border-zinc-200 pt-4"><Button variant="destructive" disabled={pending} onClick={() => void run(async () => { await send([await protocol.manage(new PublicKey(action), operator!, "cancelAction")]); await refresh(); })}>Cancel scheduled coupon</Button><p className="mt-2 text-xs text-zinc-600">Cancels this scheduled action. Review the action before signing.</p></div>}
+      </section></CardContent></Card>}
+
+      {role === "Investor" && <Card><CardContent><h2 className="text-lg font-semibold">Your holder position</h2><p className="mt-2 text-sm text-zinc-600">{demoHolder ? "READ-ONLY DEMO · selected holder is not your authenticated wallet." : operator ? "Showing only the connected wallet's registered position." : "Connect your holder wallet to see your own position, or select an explicit read-only demo below."}</p><div className="mt-3 flex flex-wrap gap-2"><Button variant={!demoHolder ? "primary" : "outline"} size="sm" onClick={() => setDemoHolder("")}>My wallet</Button>{demoPositions.map(h => <Button key={h.address} variant={demoHolder === h.address ? "primary" : "outline"} size="sm" onClick={() => setDemoHolder(h.address)}>Demo {h.name} · read-only</Button>)}</div>{!positions.length && <p className="mt-4 text-sm text-zinc-600">No registered position for this wallet. No other holder is shown as yours.</p>}{!demoPositions.length && <p className="mt-3 text-xs text-zinc-600">A/B/C/D labels are available only when this browser has matching demo identities.</p>}</CardContent></Card>}
+      <Card><CardContent><h2 className="text-lg font-semibold">{role === "Investor" ? "Your rights / read-only verification" : "Holder rights / read-only verification"}</h2><p className="mt-2 text-sm text-zinc-600">Compare current holdings with fixed record-date units. Entitlement is paid in Mock USD.</p>
+        <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200" tabIndex={0} aria-label="Scrollable holder rights"><table className="w-full min-w-[680px] text-left text-sm" data-testid="protocol-rights"><caption className="sr-only">Current ownership, snapshot rights and payment outcomes</caption><thead className="bg-zinc-50"><tr>{["Holder", "Eligibility", "Current units", "Record-date units", "Entitlement", "Outcome / destination"].map(h => <th key={h} scope="col" className="p-3">{h}</th>)}</tr></thead><tbody>{positions.map(({ publicKey, account: p }) => {
+          const e = report.rights.find(r => r.account.holder.equals(p.holder))?.account;
+          const demoIndex = demoAddresses.indexOf(p.holder.toBase58());
+          return <tr key={publicKey.toBase58()} className="border-t border-zinc-200"><th scope="row" className="p-3 font-normal">{demoIndex >= 0 && <p className="mb-1 font-medium">Demo {"ABCD"[demoIndex]}</p>}<AddressLink value={p.holder.toBase58()} href={explorer(`address/${p.holder.toBase58()}`)} /></th><td className="p-3">{p.approved ? "Approved" : "Not approved"}</td><td className="p-3 text-right tabular-nums">{report.balances.find(b => b.holder === p.holder.toBase58())?.units ?? "Unknown"}</td><td className="p-3 text-right tabular-nums">{e?.snapshotUnits.toString() ?? "Not captured"}</td><td className="p-3 text-right tabular-nums">{e?.calculated ? `${minor(e.amountMinor)} Mock USD` : "Not calculated"}</td><td className="p-3">{e?.settled ? <><Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">{e.amountMinor.isZero() ? "Zero entitlement · processed" : `PAID ${minor(e.settledAmountMinor)}`}</Badge><p className="mt-1 text-xs text-zinc-600">Slot {e.settledSlot.toString()}</p><AddressLink value={e.destination.toBase58()} href={explorer(`address/${e.destination.toBase58()}`)} label="Payment token account" /></> : e?.calculated ? e.amountMinor.isZero() ? "Zero entitlement · not processed" : "UNPAID" : "Awaiting calculation"}</td></tr>;
+        })}</tbody></table></div>
+      </CardContent></Card>
+
+      {role === "Operator" && <details className="rounded-3xl border border-zinc-200 bg-white p-5"><summary className="cursor-pointer text-lg font-semibold">Registry controls and optional demo transfer</summary><p className="mt-3 text-sm leading-6 text-zinc-600">Approval changes require zero balance and are blocked from the record timestamp through snapshot finalization. Registration ends at the first snapshot. The demo transfer is optional; it demonstrates unchanged snapshot rights.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm font-medium">Holder wallet<Input disabled={busy} placeholder="Holder public key" className="mt-2" value={holderWallet} aria-invalid={!!holderWallet && !validAddress(holderWallet)} onChange={e => setHolderWallet(e.target.value.trim())} /></label><label className="text-sm font-medium">Units to issue<Input disabled={busy} className="mt-2" value={holderUnits} inputMode="numeric" aria-invalid={!validUnits(holderUnits)} onChange={e => setHolderUnits(e.target.value)} /></label></div>
+        {holderWallet && !validAddress(holderWallet) && <p className="mt-2 text-xs text-rose-700">Enter a valid holder public address.</p>}{!validUnits(holderUnits) && <p className="mt-2 text-xs text-rose-700">Units must be a nonnegative u64 integer.</p>}
+        <div className="mt-4 flex flex-wrap gap-3"><Button variant="outline" disabled={pending || report.instrument.sealed || !validAddress(holderWallet) || !validUnits(holderUnits)} onClick={() => void run(async () => { await send([await protocol.registerHolder(operator!, report.action.instrument, new PublicKey(holderWallet), BigInt(holderUnits))]); await refresh(); })}>Register + issue</Button>{[true, false].map(approved => <Button variant="outline" key={String(approved)} disabled={pending || report.instrument.snapshotPending || !validAddress(holderWallet)} onClick={() => void run(async () => { await send([await protocol.setApproved(operator!, report.action.instrument, new PublicKey(holderWallet), approved)]); await refresh(); })}>{approved ? "Approve holder" : "Revoke holder"}</Button>)}</div><p className="mt-3 text-xs text-zinc-600">{report.instrument.sealed ? "Registry issuance is sealed after the first snapshot." : "Enter a holder address and valid units to register."} Authority, zero-balance and record-date rules are enforced by the program.</p>
+        <div className="mt-4 border-t border-zinc-200 pt-4"><Button variant="outline" disabled={pending || ["scheduled", "snapshotPending"].includes(state) || demoPositions.length !== 4} onClick={() => void run(transferDemo)}>Demo: A transfers 4 → B</Button><p className="mt-2 text-xs text-zinc-600">Requires this browser's matching demo holders and a finalized snapshot; each click transfers 4 units. Read current balances first.</p></div>
+      </details>}
+
+      <section className="rounded-3xl border border-zinc-200 bg-white p-5" data-testid="protocol-audit"><h2 className="text-lg font-semibold">Audit / proof</h2>{audit ? <><p className="mt-3 text-sm">Calculated sum: {minor(audit.calculatedTotal)} · Paid sum: {minor(audit.settledTotal)}</p><p className="mt-2 text-sm">Mismatches: {audit.issues.length === 0 ? "0" : `${audit.issues.length} · RECONCILIATION REQUIRED`}</p><p className="mt-2 text-sm">Snapshot hash: {audit.snapshotHashVerified ? "VERIFIED" : "Pending"} · Receipt hash: {audit.receiptHashVerified ? "VERIFIED" : "Pending"}</p>{audit.issues.length > 0 && <ul className="mt-3 space-y-1 text-sm text-rose-800" role="alert">{audit.issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul>}</> : <p className="mt-3 text-sm">Verification pending</p>}
+        {report.receipt ? <div className="mt-3"><Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">FINALIZED</Badge> <AddressLink value={protocol.pdas.receipt(new PublicKey(action)).toBase58()} href={explorer(`address/${protocol.pdas.receipt(new PublicKey(action))}`)} label="ActionReceipt PDA" /></div> : <p className="mt-3 text-sm text-zinc-600">Receipt pending; action has not been finalized.</p>}
+        <details className="mt-4 text-sm"><summary className="cursor-pointer font-medium">Hashes and transaction evidence</summary><p className="mt-3 break-all font-mono text-xs">Snapshot hash: {Buffer.from(report.action.snapshotHash).toString("hex")}</p>{report.receipt && <p className="mt-2 break-all font-mono text-xs">Summary hash: {Buffer.from(report.receipt.summaryHash).toString("hex")}</p>}<ul className="mt-3 space-y-2">{report.signatures.filter(s => !s.err).map(s => <li key={s.signature}><AddressLink value={s.signature} href={explorer(`tx/${s.signature}`)} label={`Transaction · slot ${s.slot}`} /></li>)}</ul></details>
       </section>
-      <section className="mt-6 overflow-x-auto"><h2 className="text-xl font-semibold">Holder rights / read-only verification</h2>
-        <table className="mt-3 w-full text-left text-sm" data-testid="protocol-rights"><thead><tr>{["Holder", "Approved", "Current units", "Record-date units", "Entitlement", "Outcome / destination"].map(h => <th key={h} className="p-3">{h}</th>)}</tr></thead>
-          <tbody>{report.positions.map(({ publicKey, account: p }) => {
-            const e = report.rights.find(r => r.account.holder.equals(p.holder))?.account;
-            return <tr key={publicKey.toBase58()} className="border-t"><td className="p-3"><a href={explorer(`address/${p.holder.toBase58()}`)}>{p.holder.toBase58().slice(0, 12)}</a></td><td className="p-3">{String(p.approved)}</td><td className="p-3">{report.balances.find(b => b.holder === p.holder.toBase58())?.units ?? "Unknown"}</td><td className="p-3">{e?.snapshotUnits.toString() ?? "Pending"}</td><td className="p-3">{e?.calculated ? `${minor(e.amountMinor)} Mock USD` : "Pending"}</td><td className="p-3">{e?.settled ? <><span>PAID {minor(e.settledAmountMinor)} · slot {e.settledSlot.toString()}</span><br /><a className="text-blue-700 underline" href={explorer(`address/${e.destination.toBase58()}`)}>Payment token account</a></> : "UNPAID"}</td></tr>;
-          })}</tbody>
-        </table>
-      </section>
-      <section className="mt-6"><h2 className="text-xl font-semibold">Registry controls</h2>
-        <p className="mt-2 text-sm text-zinc-600">Approval changes require a zero balance and are blocked from the record timestamp through snapshot finalization. Registration and issuance finish before the first snapshot.</p>
-        <div className="mt-3 flex flex-wrap gap-3"><input aria-label="Holder wallet" placeholder="Holder public key" className="min-w-64 rounded border p-2" value={holderWallet} onChange={e => setHolderWallet(e.target.value)} /><input aria-label="Units to issue" className="w-24 rounded border p-2" value={holderUnits} onChange={e => setHolderUnits(e.target.value)} />
-          <Button disabled={pending || report.instrument.sealed} onClick={() => void run(async () => { await send([await protocol.registerHolder(operator!, report.action.instrument, new PublicKey(holderWallet), BigInt(holderUnits))]); await refresh(); })}>Register + issue</Button>
-          {[true, false].map(approved => <Button key={String(approved)} disabled={pending || report.instrument.snapshotPending} onClick={() => void run(async () => { await send([await protocol.setApproved(operator!, report.action.instrument, new PublicKey(holderWallet), approved)]); await refresh(); })}>{approved ? "Approve holder" : "Revoke holder"}</Button>)}
-          <Button disabled={pending || ["scheduled", "snapshotPending"].includes(state)} onClick={() => void run(transferDemo)}>Demo: A transfers 4 → B</Button>
-        </div>
-      </section>
-      <section className="mt-6 rounded-2xl border p-5" data-testid="protocol-audit"><h2 className="text-xl font-semibold">Audit / proof</h2>
-        {audit ? <>
-          <p className="mt-3">Calculated sum: {minor(audit.calculatedTotal)} · Paid sum: {minor(audit.settledTotal)}</p>
-          <p className="mt-2">Mismatches: {audit.issues.length === 0 ? "0" : `${audit.issues.length} · RECONCILIATION REQUIRED`}</p>
-          <p className="mt-2">Snapshot hash: {audit.snapshotHashVerified ? "VERIFIED" : "Pending"} · Receipt hash: {audit.receiptHashVerified ? "VERIFIED" : "Pending"}</p>
-          {audit.issues.length > 0 && <ul className="mt-2 text-rose-700" role="alert">{audit.issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul>}
-        </> : <p>Verification pending</p>}
-        {report.receipt ? <p className="mt-2 break-all">FINALIZED · <a className="text-blue-700 underline" href={explorer(`address/${protocol.pdas.receipt(new PublicKey(action))}`)}>ActionReceipt PDA</a> · Summary hash: {Buffer.from(report.receipt.summaryHash).toString("hex")}</p> : <p className="mt-2">Receipt pending; action has not been finalized.</p>}
-        <ul className="mt-3 space-y-2">{report.signatures.filter(s => !s.err).map(s => <li key={s.signature}><a className="break-all text-sm text-blue-700 underline" href={explorer(`tx/${s.signature}`)} target="_blank" rel="noreferrer">Slot {s.slot} · {s.signature}</a></li>)}</ul>
-      </section>
-      <section className="mt-6" data-testid="protocol-history"><h2 className="text-xl font-semibold">Instrument coupon history</h2>
-        <p className="mt-2 text-sm text-zinc-600">Historical rights and payments belong to each action; current ownership is shown separately.</p>
-        <ul className="mt-3 space-y-2">{[...report.history].sort((a, b) => a.account.recordTimestamp.cmp(b.account.recordTimestamp)).map(({ publicKey, account: past }) => <li key={publicKey.toBase58()}>
-          <a className="text-blue-700 underline" href={`/protocol?action=${publicKey.toBase58()}`}>Coupon #{past.id.toString()} · {Object.keys(past.status)[0].toUpperCase()} · {minor(past.totalObligationMinor)} Mock USD</a>
-        </li>)}</ul>
-      </section>
+      <section className="rounded-3xl border border-zinc-200 bg-white p-5" data-testid="protocol-history"><h2 className="text-lg font-semibold">Instrument coupon history</h2><p className="mt-2 text-sm text-zinc-600">Each coupon keeps its own historical rights and payment proof.</p><ul className="mt-3 space-y-3">{[...report.history].sort((a, b) => a.account.recordTimestamp.cmp(b.account.recordTimestamp)).map(({ publicKey, account: past }) => <li key={publicKey.toBase58()}><a className="text-sm text-blue-700 underline underline-offset-4" href={`/protocol?action=${publicKey.toBase58()}`}>Coupon #{past.id.toString()} · {Object.keys(past.status)[0].toUpperCase()} · {minor(past.totalObligationMinor)} Mock USD</a></li>)}</ul></section>
     </>}
+    <footer className="border-t border-zinc-200 pt-5 text-sm text-zinc-600"><details><summary className="cursor-pointer font-medium">Environment and technical references</summary><p className="mt-3 break-all text-xs">Program: {protocol.program.programId.toBase58()} · RPC: {connection.rpcEndpoint}</p><a href="/reference" className="mt-3 inline-block text-blue-700 underline">Browser/Memo reference · client calculation example</a><p className="mt-2 text-xs">Coupon is implemented. Redemption and Voting remain planned.</p></details></footer>
   </main>;
 }

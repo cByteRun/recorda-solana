@@ -22,6 +22,7 @@ export default defineConfig({
     ? undefined
     : {
         command: "npm run dev -- --host 127.0.0.1",
+        env: { VITE_SOLANA_RPC_URL: "https://api.devnet.solana.com", RECORDA_VITE_CACHE_DIR: "node_modules/.vite-golden" },
         url: "http://127.0.0.1:4444",
         reuseExistingServer: !process.env.CI
       }

@@ -39,3 +39,14 @@ test('Devnet runner reports application rejection immediately instead of a disab
   </main>`);
   await expect(protocolStage(page, 'Snapshot', 'snapshotted', { timeout: 1000 })).rejects.toThrow('Wallet rejected signature');
 });
+
+
+test('Devnet runner opens an enabled operation inside a collapsed disclosure', async ({ page }) => {
+  await page.setContent(`<main data-testid="protocol-root" data-busy="false">
+    <section data-testid="protocol-summary" data-state="snapshotted"></section>
+    <details><summary>Optional demo</summary><button onclick="document.body.dataset.transferred='yes'">Transfer</button></details>
+  </main>`);
+  await protocolStage(page, 'Transfer', undefined, { timeout: 2000, interval: 20 });
+  await expect(page.locator('details')).toHaveAttribute('open', '');
+  await expect(page.locator('body')).toHaveAttribute('data-transferred', 'yes');
+});

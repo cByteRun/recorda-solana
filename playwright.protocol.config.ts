@@ -4,5 +4,5 @@ export default defineConfig({
   reporter: [['list'], ['html', { outputFolder: 'playwright-report/protocol', open: 'never' }]],
   use: { baseURL: 'http://127.0.0.1:4445', trace: 'retain-on-failure', screenshot: 'only-on-failure', ...devices['Desktop Chrome'] },
   webServer: { command: 'npm run dev -- --host 127.0.0.1 --port 4445', url: 'http://127.0.0.1:4445', reuseExistingServer: !process.env.CI,
-    env: { VITE_SOLANA_RPC_URL: process.env.RECORDA_TEST_RPC || 'http://127.0.0.1:8899' } }
+    env: { RECORDA_VITE_CACHE_DIR: 'node_modules/.vite-protocol', VITE_SOLANA_RPC_URL: process.env.RECORDA_TEST_RPC || 'http://127.0.0.1:8899' } }
 });
