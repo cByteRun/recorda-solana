@@ -12,6 +12,7 @@ const hash = (...parts: Uint8Array[]) => createHash('sha256').update(Buffer.conc
 
 function goldenReport() {
   const address = Keypair.generate().publicKey;
+  const authority = Keypair.generate().publicKey;
   const rights = Object.entries(fixture.input.snapshot as Record<string, number>).map(([name, units], index) => ({
     publicKey: Keypair.generate().publicKey,
     account: { action: address, holder: Keypair.generate().publicKey, snapshotUnits: bn(units), snapshotIndex: index + 1,
@@ -22,13 +23,13 @@ function goldenReport() {
   let snapshotHash = hash(address.toBuffer(), le(99), le(1000));
   for (const { account: right } of rights) snapshotHash = hash(snapshotHash, right.holder.toBuffer(), le(BigInt(right.snapshotUnits.toString())));
   const report = {
-    action: { status: { finalized: {} }, recordSlot: bn(99), recordTimestamp: bn(1000), snapshotTimestamp: bn(1001),
+    action: { authority, status: { finalized: {} }, recordSlot: bn(99), recordTimestamp: bn(1000), snapshotTimestamp: bn(1001), updatedSlot: bn(110), updatedAt: bn(1002),
       snapshotHash: [...snapshotHash], snapshotHolders: 4, snapshotUnits: bn(17), expectedHolders: 4, expectedSupply: bn(17),
       calculatedHolders: 4, processedHolders: 4, totalObligationMinor: bn(85000), settledTotalMinor: bn(85000) },
-    instrument: { faceValueMinor: bn(100000), couponBps: 1000, paymentsPerYear: 2, outstandingSupply: bn(17) },
+    instrument: { authority, faceValueMinor: bn(100000), couponBps: 1000, paymentsPerYear: 2, outstandingSupply: bn(17) },
     rights, mintSupply: 17n,
     receipt: { action: address, finalStatus: { finalized: {} }, settledTotalMinor: bn(85000), processedHolders: 4,
-      finalizedSlot: bn(110), summaryHash: [...hash(address.toBuffer(), snapshotHash, le(85000), le(4, 4), le(110))] }
+      finalizedSlot: bn(110), finalizedAt: bn(1002), summaryHash: [...hash(address.toBuffer(), snapshotHash, le(85000), le(4, 4), le(110))] }
   } as unknown as ProtocolReport;
   return { address, report };
 }
@@ -67,4 +68,41 @@ test('M1.5: reordered snapshots, wrong payouts and corrupted receipts are reject
   expect(audit.issues).toContain('Receipt hash mismatch');
   expect(audit.snapshotHashVerified).toBe(false);
   expect(audit.receiptHashVerified).toBe(false);
+});
+
+test('NFR-05/06: a finalized report cannot skip capture or forge finalization references', async () => {
+  const cases: Array<[string, (report: ProtocolReport) => void]> = [
+    ['Missing snapshot record slot', report => { report.action.recordSlot = bn(0); }],
+    ['Snapshot predates record date', report => { report.action.snapshotTimestamp = bn(999); }],
+    ['Receipt finalization reference mismatch', report => { report.receipt!.finalizedAt = bn(1003); }],
+    ['Receipt finalization reference mismatch', report => { report.action.updatedSlot = bn(111); }],
+    ['Payment outside action slot range', report => { report.rights[0].account.settledSlot = bn(111); }],
+    ['Action authority mismatch', report => { report.action.authority = Keypair.generate().publicKey; }],
+    ['Invalid instrument financial parameters', report => { report.instrument.couponBps = 10001; }]
+  ];
+  for (const [issue, mutate] of cases) {
+    const { address, report } = goldenReport();
+    mutate(report);
+    expect((await auditProtocol(address, report)).issues).toContain(issue);
+  }
+});
+
+test('NFR-05: internally reconciled counts still require lifecycle completion', async () => {
+  const { address, report } = goldenReport();
+  const first = report.rights[0].account;
+  first.calculated = false; first.settled = false;
+  report.action.calculatedHolders = 3; report.action.processedHolders = 3;
+  report.action.totalObligationMinor = bn(35000); report.action.settledTotalMinor = bn(35000);
+  const issues = (await auditProtocol(address, report)).issues;
+  expect(issues).not.toContain('Calculated aggregate mismatch');
+  expect(issues).not.toContain('Settlement aggregate mismatch');
+  expect(issues).toContain('Incomplete calculated action');
+  expect(issues).toContain('Incomplete settled action');
+});
+
+test('NFR-05: amounts and hashes cannot disguise payment before execution', async () => {
+  const { address, report } = goldenReport();
+  report.action.status = { funded: {} };
+  report.receipt = null;
+  expect((await auditProtocol(address, report)).issues).toContain('Settlement before execution');
 });

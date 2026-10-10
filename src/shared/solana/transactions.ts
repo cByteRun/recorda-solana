@@ -96,6 +96,10 @@ export async function phantomSignAndSend({
 
       let signed: Transaction | VersionedTransaction;
       try {
+        // Simulation/RPC waits can outlive a wallet account change.
+        if (!provider.publicKey?.equals(operator)) {
+          throw new Error("Phantom account changed or disconnected. Reconnect the operator wallet before signing.");
+        }
         onProgress?.("wallet");
         signed = await provider.signTransaction(walletTransaction);
       } catch (error) {

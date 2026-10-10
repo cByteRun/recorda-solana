@@ -21,7 +21,17 @@ export async function auditProtocol(actionAddress: PublicKey, report: ProtocolRe
   const issues: string[] = [];
   const check = (condition: boolean, message: string) => { if (!condition) issues.push(message); };
   const status = Object.keys(action.status)[0];
+  const stages = ["scheduled", "snapshotPending", "snapshotted", "calculated", "awaitingApproval", "approved", "funded", "executing", "settled", "finalized", "cancelled"];
+  check(Object.keys(action.status).length === 1 && stages.includes(status), "Unknown action status");
   const completeSnapshot = !["scheduled", "snapshotPending", "cancelled"].includes(status);
+  const completeCalculation = ["calculated", "awaitingApproval", "approved", "funded", "executing", "settled", "finalized"].includes(status);
+  const completeSettlement = ["settled", "finalized"].includes(status);
+  check(action.authority.equals(instrument.authority), "Action authority mismatch");
+  check(integer(instrument.faceValueMinor) > 0n && instrument.couponBps <= 10_000 && instrument.paymentsPerYear > 0, "Invalid instrument financial parameters");
+  if (status === "snapshotPending" || completeSnapshot) {
+    check(integer(action.recordSlot) > 0n, "Missing snapshot record slot");
+    check(integer(action.snapshotTimestamp) >= integer(action.recordTimestamp), "Snapshot predates record date");
+  }
   let calculatedTotal = 0n, settledTotal = 0n, snapshotTotal = 0n;
   let calculatedCount = 0, settledCount = 0;
   const holders = new Set<string>();
@@ -52,6 +62,12 @@ export async function auditProtocol(actionAddress: PublicKey, report: ProtocolRe
   check(settledCount === action.processedHolders && settledTotal === integer(action.settledTotalMinor), "Settlement aggregate mismatch");
   check(report.mintSupply === integer(instrument.outstandingSupply), "Outstanding supply mismatch");
   if (completeSnapshot) check(rights.length === action.expectedHolders && snapshotTotal === integer(action.expectedSupply), "Incomplete finalized snapshot");
+  if (completeCalculation) check(calculatedCount === action.expectedHolders, "Incomplete calculated action");
+  if (completeSettlement) check(settledCount === action.expectedHolders && settledTotal === calculatedTotal, "Incomplete settled action");
+  if (["scheduled", "cancelled"].includes(status)) check(rights.length === 0 && integer(action.recordSlot) === 0n, "Unexpected snapshot before capture");
+  if (["scheduled", "snapshotPending", "cancelled"].includes(status)) check(calculatedCount === 0, "Calculation before snapshot finalization");
+  if (!["executing", "settled", "finalized"].includes(status)) check(settledCount === 0, "Settlement before execution");
+  if (status === "executing") check(settledCount > 0 && settledCount < action.expectedHolders, "Invalid partial settlement progress");
   let snapshotHashVerified = false;
   if (integer(action.recordSlot) > 0n) {
     let commitment = await hash(actionAddress.toBytes(), bytes(integer(action.recordSlot)), bytes(integer(action.recordTimestamp)));
@@ -62,12 +78,14 @@ export async function auditProtocol(actionAddress: PublicKey, report: ProtocolRe
     }
     snapshotHashVerified = matches(commitment, action.snapshotHash);
     check(snapshotHashVerified, "Snapshot hash mismatch");
-    check(integer(action.snapshotTimestamp) >= integer(action.recordTimestamp), "Snapshot predates record date");
   }
   let receiptHashVerified = false;
   if (receipt) {
     check(status === "finalized" && "finalized" in receipt.finalStatus && receipt.action.equals(actionAddress), "Receipt identity/status mismatch");
     check(receipt.processedHolders === action.expectedHolders && settledCount === action.expectedHolders && settledTotal === calculatedTotal && integer(receipt.settledTotalMinor) === settledTotal, "Receipt totals mismatch");
+    check(integer(receipt.finalizedSlot) === integer(action.updatedSlot) && integer(receipt.finalizedAt) === integer(action.updatedAt)
+      && integer(receipt.finalizedSlot) >= integer(action.recordSlot) && integer(receipt.finalizedAt) >= integer(action.snapshotTimestamp), "Receipt finalization reference mismatch");
+    check(rights.every(({ account: right }) => integer(right.settledSlot) >= integer(action.recordSlot) && integer(right.settledSlot) <= integer(receipt.finalizedSlot)), "Payment outside action slot range");
     const commitment = await hash(actionAddress.toBytes(), Uint8Array.from(action.snapshotHash), bytes(integer(receipt.settledTotalMinor)), bytes(BigInt(receipt.processedHolders), 4), bytes(integer(receipt.finalizedSlot)));
     receiptHashVerified = matches(commitment, receipt.summaryHash);
     check(receiptHashVerified, "Receipt hash mismatch");

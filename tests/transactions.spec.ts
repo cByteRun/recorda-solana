@@ -138,3 +138,14 @@ test('R1 NFR-03/08: broadcast signature is retained before ambiguous confirmatio
   expect(persisted).toBe('submitted-signature');
   expect(h.calls.send).toBe(1);
 });
+
+test('wallet account changed during simulation is rejected before a signing prompt', async () => {
+  const h = harness();
+  h.rpc.simulateTransaction = (async () => {
+    h.calls.simulate += 1;
+    h.provider.publicKey = Keypair.generate().publicKey;
+    return { context: { slot: 10 }, value: { err: null, logs: [] } };
+  }) as Connection['simulateTransaction'];
+  await expect(h.send()).rejects.toThrow('Phantom account changed');
+  expect(h.calls).toEqual({ simulate: 1, sign: 0, send: 0 });
+});
