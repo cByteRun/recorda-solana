@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-10 — Requirements traceability and adversarial Coupon audit
+
+- [x] Audit TZ/REQUIREMENTS → implemented roadmap milestones → Rust/React/Solana evidence. Map all 121 UC/FR/NFR/TC IDs: 48 implemented, 12 partial, 35 planned and 26 Post-MVP; classifications are not completed full-TZ acceptance.
+- [x] Add [20-class attack matrix and findings](SECURITY-AUDIT.md), machine-readable `audit-coverage.json`, static `audit:requirements`, complete `test:audit` and explicitly scoped `test:audit:client` scripts; CI checks traceability and retains its artifact.
+- [x] Reject wallet-returned message/payer/blockhash changes, missing/replaced holder signatures and account changes across simulation/signing/final RPC wait. Copy original instructions and wire bytes so provider mutation cannot poison a retry or broadcast.
+- [x] Persist the locally derived signature before sending to RPC; prohibit automatic resend after an uncertain broadcast and preserve the reference pending-payment guard across reload when the send response is lost.
+- [x] Extend public audit with approval identity, financial/integer ranges, receipt status and unpaid-reference consistency; reconcile current registry counts, balances, frozen custody and close authority during protocol reads.
+- [x] Reject reference snapshot holder substitutions, duplicate IDs and coherently altered cached units/entitlements with the original commitment. Retain the explicit limitation that client-owned/rehashed reference state is not authenticated protocol rights.
+- [x] Enforce the current Coupon transition table without changing layouts, seeds, instruction signatures or receipt encoding. Rust checks all 144 stage pairs, exact record boundary and deterministic integer math/rounding/overflow.
+- [x] Add authorization coverage across registry/snapshot/calculation/approval/funding/settlement/finalization, a real second-action account-substitution suite, terminal/replay tests and actually executed failed burn/overdraw/payment-CPI rollback checks.
+- [x] Extend real browser acceptance with signature rejection and reload/resume during capture, calculation and payment; DOM/direct-client authorization bypass and signed-message substitution must fail before unsafe submission. Verify unchanged TZ golden payouts and public receipt recovery.
+- [x] Separate Playwright artifact/report directories and exclude proof/report/docs writes from Vite's dev watcher to preserve connected wallet journeys. Record source/test/config/IDL/binary hashes and invalidate an audit if its code inputs change while running.
+- [x] Final complete `npm run test:audit` passed: React/client/wallet 84/84, Rust 8/8, validator 17/17, protocol browser/audit/usability 27/27, setup 6/6; production build, fresh SBF and compiler-generated IDL parity pass. Total 142 tests includes generated Rust `test_id` and the integration parent, not 142 requirements. `target/security-audit/run.json` records all eight successful commands and unchanged inputs; runtime failures retain real transaction signatures in `coupon.json`.
+- [ ] Redemption/Voting and full normative DoD remain unfinished; typed actions, period deduplication, versioned migration and complete archival audit are not delivered by these tests.
+- [ ] Fresh human Phantom/Devnet replay of this revision and remote CI execution were not performed; 2026-10-06 human evidence remains historical.
+
 
 ## 2026-10-06 — Reference-driven requirements and delivery plan
 

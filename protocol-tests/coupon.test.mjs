@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import anchor from '@coral-xyz/anchor';
 import { Connection, Keypair, PublicKey, Transaction, SystemProgram, ComputeBudgetProgram, sendAndConfirmTransaction } from '@solana/web3.js';
-import { TOKEN_2022_PROGRAM_ID, createMint, createAccount, mintTo, getAccount, getMint, createTransferCheckedInstruction, createThawAccountInstruction, createFreezeAccountInstruction, createCloseAccountInstruction, createTransferCheckedInstruction as transferFunding } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID, createMint, createAccount, mintTo, getAccount, getMint, createTransferCheckedInstruction, createThawAccountInstruction, createFreezeAccountInstruction, createCloseAccountInstruction, createBurnCheckedInstruction, createApproveInstruction, createTransferCheckedInstruction as transferFunding } from '@solana/spl-token';
 const { Program, BN } = anchor;
 const idl = JSON.parse(readFileSync('src/shared/solana/idl/recorda.json'));
 const rpc = new Connection(process.env.RECORDA_TEST_RPC || 'http://127.0.0.1:8899', 'confirmed');
@@ -35,7 +35,7 @@ const fixture = JSON.parse(readFileSync('golden/coupon-tz-section-22.json'));
 const historical = JSON.parse(readFileSync('golden/coupon-happy-path.json'));
 const evidence = { network: 'local-validator', program: idl.address, scenarios: [], negatives: [] };
 
-test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { timeout: 180_000 }, async t => {
+test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { timeout: 360_000 }, async t => {
   let failures = 0;
   const step = (name, work) => t.test(name, async context => {
     try { await work(context); } catch (error) { failures++; throw error; }
@@ -76,6 +76,31 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
     const settleIx = (h, destination = h.destination, authority = payer.publicKey) => ix('settleHolder', [], { authority, instrument, action, entitlement: h.entitlement, paymentMint, vault, destination, tokenProgram });
     const transferIx = (from, to, units = 4) => ix('transferBonds', [bn(units)], { holder: from.key.publicKey, instrument, mint, fromPosition: from.position, toPosition: to.position, fromAccount: from.bond, toAccount: to.bond, tokenProgram });
     const fundingAccounts = { authority: payer.publicKey, instrument, action, vault, tokenProgram };
+    const protectedAddresses = [instrument, mint, action, vault, receipt,
+      ...holders.flatMap(h => [h.position, h.bond, h.entitlement, h.destination])];
+    async function unchangedAttack(name, instruction, signers = [], pattern, execute = false) {
+      const capture = async () => (await rpc.getMultipleAccountsInfo(protectedAddresses, 'confirmed')).map(info => info && ({
+        owner: info.owner.toBase58(), data: info.data.toString('base64'), lamports: info.lamports
+      }));
+      const before = await capture();
+      if (execute) {
+        // Land an actual failed transaction; simulation alone cannot prove runtime rollback.
+        const tx = new Transaction().add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: ++nonce }), instruction);
+        tx.feePayer = payer.publicKey;
+        const latest = await rpc.getLatestBlockhash('confirmed'); tx.recentBlockhash = latest.blockhash;
+        tx.sign(payer, ...signers);
+        const signature = await rpc.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 0 });
+        const result = await rpc.confirmTransaction({ signature, ...latest }, 'confirmed');
+        assert.ok(result.value.err, `${name}: attack must fail on-chain`);
+        const landed = await rpc.getTransaction(signature, { commitment: 'confirmed', maxSupportedTransactionVersion: 0 });
+        assert.ok(landed?.meta?.err, `${name}: retain failed execution evidence`);
+        if (pattern) assert.match((landed.meta.logMessages || []).join('\n'), pattern);
+        evidence.failedTransactions ??= [];
+        evidence.failedTransactions.push({ attack: name, signature, error: result.value.err });
+      } else await rejected(instruction, payer, signers, pattern);
+      assert.deepEqual(await capture(), before, `${name}: protected accounts changed after rejection`);
+      evidence.negatives.push(name);
+    }
     await step(`${scenario.name}: Instrument → eligible positions`, async () => {
       await send(await ix('createInstrument', [bn(scenario.id), bn(fixture.input.terms.faceValueMinor), 1000, 2, bn((await chainTime()) + 86400), [...Buffer.from('MOCKUSD\0')]], { authority: payer.publicKey, instrument, mint, paymentMint, tokenProgram, systemProgram }), payer);
       for (const h of holders) await send(await ix('registerHolder', [bn(h.units)], { authority: payer.publicKey, instrument, mint, holder: h.key.publicKey, position: h.position, bondAccount: h.bond, tokenProgram, systemProgram }), payer);
@@ -95,6 +120,18 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
       await rejected(createCloseAccountInstruction(d.bond, payer.publicKey, d.key.publicKey, [], tokenProgram), payer, [d.key]);
       assert.ok(await rpc.getAccountInfo(d.bond));
       evidence.negatives.push('registered zero account closure', 'registry bypass', 'revoke nonzero', 'revoked recipient', 'external thaw');
+      await unchangedAttack('FR-08 direct burn of frozen bonds', createBurnCheckedInstruction(holders[0].bond, mint, holders[0].key.publicKey, 1n, 0, [], tokenProgram), [holders[0].key], /frozen/i, true);
+      await unchangedAttack('FR-08 delegate approval on frozen bonds', createApproveInstruction(holders[0].bond, stranger.publicKey, holders[0].key.publicKey, 1n, [], tokenProgram), [holders[0].key], /frozen/i);
+      await unchangedAttack('NFR-07 controlled transfer overdraw rolls back thaw', await transferIx(holders[0], holders[1], 11), [holders[0].key], /insufficient funds/i, true);
+      await unchangedAttack('FR-08 zero transfer', await transferIx(holders[0], holders[1], 0), [holders[0].key], /Parameters/);
+      await unchangedAttack('FR-08 self transfer', await transferIx(holders[0], holders[0], 1), [holders[0].key], /Parameters/);
+      const unsignedTransfer = await transferIx(holders[0], holders[1], 1);
+      unsignedTransfer.keys.find(meta => meta.pubkey.equals(holders[0].key.publicKey)).isSigner = false;
+      await unchangedAttack('NFR-04 transfer missing holder signer', unsignedTransfer, [], /AccountNotSigner/);
+      await unchangedAttack('NFR-04 registry approval wrong authority', await ix('setHolderApproved', [false], { authority: stranger.publicKey, instrument, position: d.position, bondAccount: d.bond }), [stranger], /ConstraintHasOne/);
+      const outsiderHolder = Keypair.generate().publicKey;
+      await unchangedAttack('NFR-04 registration wrong authority', await ix('registerHolder', [bn(1)], { authority: stranger.publicKey, instrument, mint, holder: outsiderHolder,
+        position: pda('holder', instrument.toBuffer(), outsiderHolder.toBuffer()), bondAccount: pda('bond-account', instrument.toBuffer(), outsiderHolder.toBuffer()), tokenProgram, systemProgram }), [stranger], /ConstraintHasOne/);
     });
     if (first) await step('M1.1/M1.2: wrong mint and unauthorized scheduling are rejected atomically', async () => {
       const wrongMint = await createMint(rpc, payer, payer.publicKey, null, 2, undefined, undefined, tokenProgram);
@@ -136,11 +173,25 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
     await step(`${scenario.name}: fixed record date → immutable snapshot`, async () => {
       await send(await ix('beginSnapshot', [], manage), payer);
       if (first) {
+        await unchangedAttack('TC-29 cancellation after capture began', await ix('cancelAction', [], manage), [], /State/);
+        await unchangedAttack('NFR-04 finalize snapshot wrong authority', await ix('finalizeSnapshot', [], { ...manage, authority: stranger.publicKey }), [stranger], /ConstraintHasOne/);
+        await unchangedAttack('NFR-04 capture wrong authority', await snapshotIx(holders[0]).then(instruction => {
+          instruction.keys.find(meta => meta.pubkey.equals(payer.publicKey)).pubkey = stranger.publicKey; return instruction;
+        }), [stranger], /ConstraintHasOne/);
         await rejected(await transferIx(holders[0], holders[1]), payer, [holders[0].key], /Locked/);
         await rejected(await ix('finalizeSnapshot', [], manage), payer, [], /Supply/);
         await rejected(await ix('snapshotHolder', [], { authority: payer.publicKey, instrument, action, position: holders[0].position, bondAccount: holders[1].bond, entitlement: holders[0].entitlement, tokenProgram, systemProgram }), payer, [], /Account/);
       }
-      for (const h of holders) await send(await snapshotIx(h), payer);
+      for (const h of holders) {
+        await send(await snapshotIx(h), payer);
+        if (first && h === holders[0]) {
+          await unchangedAttack('TC-29 repeated capture cannot rewrite right', await snapshotIx(h));
+          // Resume using a new decoder after one captured holder; remaining capture uses chain existence.
+          const restored = new Program(idl, { connection: rpc });
+          assert.equal((await restored.account.corporateAction.fetch(action)).snapshotHolders, 1);
+          assert.equal((await restored.account.entitlementPosition.fetch(h.entitlement)).snapshotUnits.toString(), '10');
+        }
+      }
       await send(await ix('finalizeSnapshot', [], manage), payer);
       const a = await program.account.corporateAction.fetch(action);
       assert.equal(a.snapshotUnits.toString(), String(scenario.expected.supply)); assert.ok(a.recordSlot.gtn(0));
@@ -160,7 +211,16 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
     });
     await step(`${scenario.name}: protocol rights → independent expected amounts`, async () => {
       if (first) await rejected(await ix('calculateEntitlement', [], { authority: stranger.publicKey, instrument, action, entitlement: holders[0].entitlement }), payer, [stranger], /ConstraintHasOne/);
-      for (const h of holders) await send(await calculateIx(h), payer);
+      for (const h of holders) {
+        await send(await calculateIx(h), payer);
+        if (first && h === holders[0]) {
+          await unchangedAttack('TC-29 approval before all rights calculated', await ix('approveAction', [], manage), [], /State/);
+          await unchangedAttack('NFR-03 repeated partial calculation', await calculateIx(h), [], /State/);
+          const restored = new Program(idl, { connection: rpc });
+          assert.equal((await restored.account.corporateAction.fetch(action)).calculatedHolders, 1);
+          assert.equal((await restored.account.entitlementPosition.fetch(holders[1].entitlement)).calculated, false);
+        }
+      }
       if (first) await rejected(await calculateIx(holders[0]), payer, [], /State/);
       for (const h of holders) {
         const right = await program.account.entitlementPosition.fetch(h.entitlement);
@@ -176,6 +236,10 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
         await rejected(await ix('approveAction', [], { ...manage, authority: stranger.publicKey }), payer, [stranger], /ConstraintHasOne/);
       }
       await send(await ix('approveAction', [], manage), payer);
+      if (first) {
+        await unchangedAttack('NFR-04 funding wrong authority', await ix('markFunded', [], { ...fundingAccounts, authority: stranger.publicKey }), [stranger], /ConstraintHasOne/);
+        await unchangedAttack('FR-24 repeated approval', await ix('approveAction', [], manage), [], /State/);
+      }
       const beforeFunding = await program.account.corporateAction.fetch(action);
       await rejected(await ix('markFunded', [], fundingAccounts), payer, [], /InsufficientFunds/);
       assert.deepEqual(await program.account.corporateAction.fetch(action), beforeFunding);
@@ -189,6 +253,7 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
         const beforeVault = (await getAccount(rpc, vault, 'confirmed', tokenProgram)).amount;
         await send(createFreezeAccountInstruction(holders[0].destination, paymentMint, payer.publicKey, [], tokenProgram), payer);
         await rejected(await settleIx(holders[0]), payer, [], /frozen/i);
+        await unchangedAttack('NFR-07 failed payment CPI runtime rollback', await settleIx(holders[0]), [], /frozen/i, true);
         assert.deepEqual(await program.account.corporateAction.fetch(action), beforeAction);
         assert.deepEqual(await program.account.entitlementPosition.fetch(holders[0].entitlement), beforeRight);
         assert.equal((await getAccount(rpc, vault, 'confirmed', tokenProgram)).amount, beforeVault);
@@ -198,6 +263,7 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
       }
       await send(await settleIx(holders[0]), payer);
       if (first) {
+        await unchangedAttack('NFR-04 finalization wrong authority', await ix('finalizeAction', [], { authority: stranger.publicKey, instrument, action, receipt, systemProgram }), [stranger], /ConstraintHasOne/);
         await rejected(await settleIx(holders[0]), payer, [], /AlreadySettled/);
         await rejected(await settleIx(holders[1], holders[0].destination), payer, [], /Account/);
         await rejected(await ix('finalizeAction', [], { authority: payer.publicKey, instrument, action, receipt, systemProgram }), payer, [], /State/);
@@ -224,7 +290,33 @@ test('Phase 1: real Token-2022 / Anchor Coupon Core and independent oracle', { t
       const summary = createHash('sha256').update(Buffer.concat([action.toBuffer(), Buffer.from(a.snapshotHash), u64(scenario.expected.totalMinor), Buffer.from(new Uint32Array([holders.length]).buffer), u64(r.finalizedSlot)])).digest();
       assert.deepEqual(Buffer.from(r.summaryHash), summary);
       if (first) await rejected(await settleIx(holders[0]), payer, [], /State/);
+      if (first) {
+        await unchangedAttack('FR-41 repeated finalization', await ix('finalizeAction', [], { authority: payer.publicKey, instrument, action, receipt, systemProgram }));
+        await unchangedAttack('TC-16 terminal snapshot restart', await ix('beginSnapshot', [], manage), [], /State/);
+        await unchangedAttack('TC-16 terminal cancellation', await ix('cancelAction', [], manage), [], /State/);
+      }
       evidence.scenarios.push({ name: scenario.name, expected: scenario.expected, actual: await Promise.all(holders.map(async h => { const right = await program.account.entitlementPosition.fetch(h.entitlement); return { holder: h.name, snapshotUnits: right.snapshotUnits.toString(), currentUnits: (await getAccount(rpc, h.bond, 'confirmed', tokenProgram)).amount.toString(), entitlementMinor: right.amountMinor.toString(), settledMinor: right.settledAmountMinor.toString(), destination: right.destination.toBase58() }; })), mint: mint.toBase58(), instrument: instrument.toBase58(), action: action.toBase58(), receipt: receipt.toBase58(), totalMinor: r.settledTotalMinor.toString(), processedHolders: r.processedHolders, finalSignature });
+    });
+    if (first) await step('TC-20 Coupon account isolation: real second action cannot reuse first rights/vault/receipt', async () => {
+      const other = pda('action', instrument.toBuffer(), u64(3)), otherVault = pda('vault', other.toBuffer());
+      const record = (await chainTime()) + 1;
+      await send(await ix('createCoupon', [bn(3), bn(record)], { authority: payer.publicKey, instrument, action: other, paymentMint, vault: otherVault, tokenProgram, systemProgram }), payer);
+      while ((await chainTime()) < record) await delay(200);
+      await send(await ix('beginSnapshot', [], { ...manage, action: other }), payer);
+      for (const h of holders) await send(await ix('snapshotHolder', [], { authority: payer.publicKey, instrument, action: other,
+        position: h.position, bondAccount: h.bond, entitlement: pda('entitlement', other.toBuffer(), h.key.publicKey.toBuffer()), tokenProgram, systemProgram }), payer);
+      await send(await ix('finalizeSnapshot', [], { ...manage, action: other }), payer);
+      protectedAddresses.push(other, otherVault, ...holders.map(h => pda('entitlement', other.toBuffer(), h.key.publicKey.toBuffer())));
+      await unchangedAttack('TC-20 cross-action calculation right', await ix('calculateEntitlement', [], { authority: payer.publicKey, instrument, action: other, entitlement: holders[0].entitlement }), [], /ConstraintSeeds/);
+      await unchangedAttack('TC-20 cross-action funding vault', await ix('markFunded', [], { ...fundingAccounts, action: other }), [], /ConstraintSeeds/);
+      await unchangedAttack('TC-20 cross-action settlement right', await ix('settleHolder', [], { authority: payer.publicKey, instrument, action: other, entitlement: holders[0].entitlement,
+        paymentMint, vault: otherVault, destination: holders[0].destination, tokenProgram }), [], /ConstraintSeeds/);
+      await unchangedAttack('TC-20 cross-action receipt PDA', await ix('finalizeAction', [], { authority: payer.publicKey, instrument, action: other, receipt, systemProgram }));
+      const newRight = await program.account.entitlementPosition.fetch(pda('entitlement', other.toBuffer(), holders[0].key.publicKey.toBuffer()));
+      assert.equal(newRight.snapshotUnits.toString(), '6');
+      assert.equal((await program.account.entitlementPosition.fetch(holders[0].entitlement)).snapshotUnits.toString(), '10');
+      await unchangedAttack('FR-08 registration after first snapshot is sealed', await ix('registerHolder', [bn(1)], { authority: payer.publicKey, instrument, mint, holder: stranger.publicKey,
+        position: pda('holder', instrument.toBuffer(), stranger.publicKey.toBuffer()), bondAccount: pda('bond-account', instrument.toBuffer(), stranger.publicKey.toBuffer()), tokenProgram, systemProgram }), [], /Locked/);
     });
   }
   await step('M1.1/M1.3: parameter validation, rounding and arithmetic rollback on-chain', async () => {

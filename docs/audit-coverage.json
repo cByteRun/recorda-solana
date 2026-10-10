@@ -1,0 +1,358 @@
+{
+  "source": [
+    "docs/TZ.md",
+    "docs/REQUIREMENTS.md"
+  ],
+  "scope": "Current Coupon implementation and Browser/Memo reference; status is delivery scope, not a claim that a suite was executed.",
+  "coverage": [
+    {
+      "ids": [
+        "UC-CP-01"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.6",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts"
+      ],
+      "note": "Coupon only: actual Token-2022 payouts and record-date rights; fresh local acceptance required for each code revision."
+    },
+    {
+      "ids": [
+        "UC-BR-01",
+        "UC-VOTE-01"
+      ],
+      "status": "planned",
+      "roadmap": "M2.1",
+      "tests": [],
+      "note": "Redemption/Voting instructions and end-to-end acceptance absent; preparatory fields are not these use cases."
+    },
+    {
+      "ids": [
+        "UC-PR-01",
+        "UC-MD-01",
+        "UC-EV-01"
+      ],
+      "status": "post-mvp",
+      "roadmap": "Post-MVP",
+      "tests": [],
+      "note": "Partial redemption, Merkle claims and external adapters explicitly outside current implementation."
+    },
+    {
+      "ids": [
+        "FR-01",
+        "FR-03..04",
+        "FR-06..08"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.1",
+      "tests": [
+        "protocol-tests/coupon.test.mjs"
+      ],
+      "note": "Instrument, issuance, registry and controlled frozen-account transfers."
+    },
+    {
+      "ids": [
+        "FR-02"
+      ],
+      "status": "partial",
+      "roadmap": "M1.1",
+      "tests": [
+        "protocol-tests/coupon.test.mjs"
+      ],
+      "note": "Financial terms and mint stored; separate issuer identity absent; MVP combines issuer/operator authority."
+    },
+    {
+      "ids": [
+        "FR-05"
+      ],
+      "status": "partial",
+      "roadmap": "M3.2",
+      "tests": [
+        "protocol-ui-tests/coupon.spec.ts"
+      ],
+      "note": "Outstanding supply exists; full redeemed supply/status journey awaits Redemption."
+    },
+    {
+      "ids": [
+        "FR-09"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.5",
+      "tests": [
+        "protocol-ui-tests/coupon.spec.ts",
+        "tests/protocol-client.spec.ts"
+      ],
+      "note": "Exact current registered balances are independent of snapshot rights."
+    },
+    {
+      "ids": [
+        "FR-10..15"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.2",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts"
+      ],
+      "note": "Clock barrier, complete snapshot, immutable ordered hash and post-record transfer."
+    },
+    {
+      "ids": [
+        "FR-16",
+        "FR-20..22"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.3",
+      "tests": [
+        "programs/recorda/src/lib.rs",
+        "protocol-tests/coupon.test.mjs",
+        "tests/coupon-precision.spec.ts"
+      ],
+      "note": "Checked integer coupon formula, per-holder rounding and aggregate totals."
+    },
+    {
+      "ids": [
+        "FR-17..19"
+      ],
+      "status": "partial",
+      "roadmap": "M2.1",
+      "tests": [
+        "protocol-tests/coupon.test.mjs"
+      ],
+      "note": "Principal/final-coupon/voting-power preparation exists; no actual redemption or voting execution."
+    },
+    {
+      "ids": [
+        "FR-23..27"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.4",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts"
+      ],
+      "note": "Explicit approval, fully funded vault, once-only atomic settlement and finalization."
+    },
+    {
+      "ids": [
+        "FR-28..32"
+      ],
+      "status": "planned",
+      "roadmap": "M2.1",
+      "tests": [],
+      "note": "Maturity, holder-signed burn/payment, persistent redemption lock and supply reconciliation absent."
+    },
+    {
+      "ids": [
+        "FR-33..37"
+      ],
+      "status": "planned",
+      "roadmap": "M2.2",
+      "tests": [],
+      "note": "Proposal, holder-signed unique votes, window, quorum and tally absent."
+    },
+    {
+      "ids": [
+        "FR-38..42"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.5",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts",
+        "tests/protocol-client.spec.ts"
+      ],
+      "note": "Coupon PDA/events, transaction links, final receipt and public audit; RPC provenance/history limits remain."
+    },
+    {
+      "ids": [
+        "FR-43",
+        "FR-45..48"
+      ],
+      "status": "planned",
+      "roadmap": "M2.0",
+      "tests": [],
+      "note": "No typed actions, versioned receipts, persistent redemption lock, period deduplication or vote receipts."
+    },
+    {
+      "ids": [
+        "FR-44"
+      ],
+      "status": "partial",
+      "roadmap": "M2.3",
+      "tests": [
+        "programs/recorda/src/lib.rs",
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts"
+      ],
+      "note": "Coupon transition table and Scheduled-only cancellation enforced; multi-kind engine absent."
+    },
+    {
+      "ids": [
+        "FR-49..58"
+      ],
+      "status": "post-mvp",
+      "roadmap": "Post-MVP",
+      "tests": [],
+      "note": "Indexer, Merkle distributor, role separation, metadata history, partial redemption and adapters absent."
+    },
+    {
+      "ids": [
+        "NFR-01..04",
+        "NFR-06..09",
+        "NFR-11"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.6",
+      "tests": [
+        "programs/recorda/src/lib.rs",
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts",
+        "tests/protocol-client.spec.ts",
+        "tests/transactions.spec.ts",
+        "tests/bridge-lifecycle.spec.ts"
+      ],
+      "note": "Verified for implemented Coupon scope; no promise about missing scenarios or exhaustive attacks."
+    },
+    {
+      "ids": [
+        "NFR-05"
+      ],
+      "status": "partial",
+      "roadmap": "M1.5",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts",
+        "tests/protocol-client.spec.ts"
+      ],
+      "note": "Coupon state/hash/signature evidence verified through trusted RPC; archive completeness, cryptographic RPC provenance and historical destination ownership not independently proven by UI."
+    },
+    {
+      "ids": [
+        "NFR-10"
+      ],
+      "status": "partial",
+      "roadmap": "M1.6",
+      "tests": [
+        "tests/devnet-runner.spec.ts",
+        "scripts/devnet.test.mjs"
+      ],
+      "note": "Prior human Devnet golden remains historical evidence; this audit executes local validator, not a new real Phantom/Devnet replay."
+    },
+    {
+      "ids": [
+        "NFR-12"
+      ],
+      "status": "partial",
+      "roadmap": "M4.1",
+      "tests": [
+        "scripts/audit-requirements.mjs"
+      ],
+      "note": "Tracked source checked for common embedded key patterns; operator key stays in wallet; disposable holder keys in browser are demo-only. No exhaustive secret-history audit."
+    },
+    {
+      "ids": [
+        "NFR-13"
+      ],
+      "status": "partial",
+      "roadmap": "M2.0",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "programs/recorda/src/lib.rs"
+      ],
+      "note": "Coupon cross-action substitution and transitions covered; no action-kind dispatch to verify yet."
+    },
+    {
+      "ids": [
+        "NFR-14"
+      ],
+      "status": "partial",
+      "roadmap": "M2.0",
+      "tests": [
+        "scripts/build-idl.mjs",
+        "protocol-tests/coupon.test.mjs"
+      ],
+      "note": "IDL parity and existing Coupon layout unchanged; new-layout migration/historical decoder acceptance remains open."
+    },
+    {
+      "ids": [
+        "NFR-15"
+      ],
+      "status": "planned",
+      "roadmap": "M2.0",
+      "tests": [],
+      "note": "Single scheduled/pending Coupon barrier exists; coupon period deduplication and redemption/vote conflicts absent."
+    },
+    {
+      "ids": [
+        "NFR-16..19"
+      ],
+      "status": "post-mvp",
+      "roadmap": "Post-MVP",
+      "tests": [],
+      "note": "Provenance, proof availability, measured scaling and incorporated-code inventory future scope."
+    },
+    {
+      "ids": [
+        "TC-01..05",
+        "TC-15..19"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.6",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "programs/recorda/src/lib.rs"
+      ],
+      "note": "Current Coupon acceptance; failed runtime CPI evidence, duplicates, unauthorized operations and partial resume."
+    },
+    {
+      "ids": [
+        "TC-06..14",
+        "TC-21..28"
+      ],
+      "status": "planned",
+      "roadmap": "M2.1",
+      "tests": [],
+      "note": "No redemption/voting acceptance or new versioned-layout compatibility proof; field assertions do not count."
+    },
+    {
+      "ids": [
+        "TC-20"
+      ],
+      "status": "partial",
+      "roadmap": "M2.3",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/audit.spec.ts",
+        "tests/protocol-client.spec.ts"
+      ],
+      "note": "Real second Coupon action cannot reuse rights/vault/receipt; wrong-kind dispatch remains unimplemented."
+    },
+    {
+      "ids": [
+        "TC-29"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.6",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts"
+      ],
+      "note": "Coupon capture/calculation/settlement resume after reload, complete snapshot and rejection of post-begin cancellation."
+    },
+    {
+      "ids": [
+        "TC-30..38"
+      ],
+      "status": "post-mvp",
+      "roadmap": "Post-MVP",
+      "tests": [],
+      "note": "Acceptance gates for explicitly unimplemented Post-MVP work."
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import type { Recorda } from '../src/shared/solana/idl/recorda';
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import { Connection, Keypair, VersionedTransaction, PublicKey, SystemProgram } from '@solana/web3.js';
 import { TOKEN_2022_PROGRAM_ID, getAccount, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -15,10 +15,15 @@ test('browser → real Anchor rights → explicit signed execution → receipt �
   await rpc.confirmTransaction({ signature: airdrop, ...await rpc.getLatestBlockhash() }, 'confirmed');
   const errors: string[] = [], signed: number[][] = [];
   let rejectSigningAt: number | undefined;
+  let tamperNextSignature = false;
   page.on('pageerror', e => errors.push(e.message));
   await page.exposeFunction('protocolTestSign', (bytes: number[]) => {
     if (rejectSigningAt === signed.length + 1) { rejectSigningAt = undefined; throw new Error("Test wallet rejected the next holder payment"); }
     const transaction = VersionedTransaction.deserialize(Uint8Array.from(bytes));
+    if (tamperNextSignature) {
+      tamperNextSignature = false;
+      transaction.message.compiledInstructions.at(-1)!.data[0] ^= 1;
+    }
     transaction.sign([operator]); signed.push(bytes);
     return [...transaction.serialize()];
   });
@@ -68,21 +73,72 @@ test('browser → real Anchor rights → explicit signed execution → receipt �
   await expect(page.getByTestId('protocol-record-time')).toContainText('Waiting for record date on Solana');
   await waitForRecordDate(rpc, clock.timestamp + 8n, { timeoutMs: 120_000 });
   await expect(snapshot).toBeEnabled({ timeout: 20_000 });
+  rejectSigningAt = signed.length + 3; // Begin and A capture succeed; reject B capture.
+  await snapshot.click();
+  await expect(page.getByRole('alert')).toContainText('Wallet signature was declined', { timeout: 45_000 });
+  await expect(page.getByTestId('protocol-root')).toHaveAttribute('data-busy', 'false');
+  await expect(page.getByTestId('protocol-summary')).toHaveAttribute('data-state', 'snapshotPending');
+  await page.reload();
+  await expect(snapshot).toBeDisabled();
+  await page.getByRole('button', { name: 'Connect Phantom' }).click();
   await protocolStage(page, 'Begin / resume snapshot → finalize', 'snapshotted', { timeout: 120_000 });
   await expect(page.getByTestId('protocol-summary')).toContainText('SNAPSHOTTED', { timeout: 45_000 });
   await protocolStage(page, 'Demo: A transfers 4 → B', undefined, { timeout: 60_000 });
   await expect(page.getByRole('button', { name: 'Calculate protocol rights' })).toBeEnabled();
+  rejectSigningAt = signed.length + 2; // One calculated holder must survive browser reload.
+  await page.getByRole('button', { name: 'Calculate protocol rights' }).click();
+  await expect(page.getByRole('alert')).toContainText('Wallet signature was declined', { timeout: 45_000 });
+  await expect(page.getByTestId('protocol-root')).toHaveAttribute('data-busy', 'false');
+  await page.reload();
+  await expect(page.getByTestId('protocol-summary')).toHaveAttribute('data-state', 'snapshotted');
+  await page.getByRole('button', { name: 'Connect Phantom' }).click();
   await protocolStage(page, 'Calculate protocol rights', 'awaitingApproval', { timeout: 120_000 });
   await expect(page.getByTestId('protocol-summary')).toContainText('AWAITINGAPPROVAL', { timeout: 45_000 });
   await expect(page.getByTestId('protocol-summary')).toContainText('850.00');
   await expect(page.getByTestId('protocol-rights')).toContainText('500.00');
   await expect(page.getByTestId('protocol-rights')).toContainText('250.00');
   await expect(page.getByTestId('protocol-rights')).toContainText('100.00');
-  await connectAs(Keypair.generate().publicKey.toBase58());
+  const unauthorized = Keypair.generate().publicKey;
+  const unauthorizedFunding = await rpc.requestAirdrop(unauthorized, 1_000_000_000);
+  await rpc.confirmTransaction({ signature: unauthorizedFunding, ...await rpc.getLatestBlockhash() }, 'confirmed');
+  await connectAs(unauthorized.toBase58());
   await expect(page.getByText('This wallet is not the instrument authority. Reading remains available.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Approve in Phantom', exact: true })).toBeDisabled();
+  const signaturesBeforeBypass = signed.length;
+  // A browser attacker can remove disabled. Authorization must still fail at simulation/program boundary.
+  const approval = page.getByRole('button', { name: 'Approve in Phantom', exact: true });
+  await approval.evaluate(button => { (button as HTMLButtonElement).disabled = false; });
+  await approval.click();
+  // React's disabled prop still blocks the handler. Also bypass the UI entirely via the real client.
+  const unauthorizedError = await page.evaluate(async () => {
+    const protocolPath = '/src/shared/solana/protocol.ts', configPath = '/src/shared/solana/config.ts', transactionPath = '/src/shared/solana/transactions.ts';
+    const { createProtocol, RECORDA_PROGRAM_ID } = await import(/* @vite-ignore */ protocolPath);
+    const { connection } = await import(/* @vite-ignore */ configPath);
+    const { phantomSignAndSend } = await import(/* @vite-ignore */ transactionPath);
+    const provider = window.phantom!.solana!, PublicKey = RECORDA_PROGRAM_ID.constructor;
+    const address = (document.querySelector('[data-testid="protocol-action-input"]') as HTMLInputElement).value;
+    try {
+      const instruction = await createProtocol(connection).manage(new PublicKey(address), provider.publicKey!, 'approveAction');
+      await phantomSignAndSend({ provider, operator: provider.publicKey!, instructions: [instruction], rpc: connection });
+      return 'unexpected success';
+    } catch (error) { return String(error); }
+  });
+  // Anchor 0.32.1 ConstraintHasOne = 2001; bounded log tails may omit the symbolic name.
+  expect(unauthorizedError).toContain('"Custom":2001');
+  await expect(page.getByTestId('protocol-root')).toHaveAttribute('data-busy', 'false');
+  await expect(page.getByTestId('protocol-summary')).toContainText('AWAITINGAPPROVAL');
+  expect(signed.length).toBe(signaturesBeforeBypass);
   await connectAs(operator.publicKey.toBase58());
   await expect(page.getByRole('button', { name: 'Approve in Phantom', exact: true })).toBeEnabled();
+  tamperNextSignature = true;
+  await approval.click();
+  await expect(page.getByRole('alert')).toContainText('Wallet changed the simulated transaction', { timeout: 30_000 });
+  await expect(page.getByTestId('protocol-root')).toHaveAttribute('data-busy', 'false');
+  await expect(page.getByTestId('protocol-summary')).toContainText('AWAITINGAPPROVAL');
+  // Follow the displayed recovery instruction before invoking the fail-fast stage runner.
+  await page.getByRole('button', { name: 'Read chain / refresh' }).click();
+  await expect(page.getByTestId('protocol-root')).toHaveAttribute('data-busy', 'false');
+  await expect(page.getByRole('alert')).toHaveCount(0);
   const beforeApproval = signed.length;
   await protocolStage(page, 'Approve in Phantom', 'approved', { timeout: 60_000 });
   await expect(page.getByTestId('protocol-summary')).toContainText('APPROVED');
@@ -106,6 +162,13 @@ test('browser → real Anchor rights → explicit signed execution → receipt �
   await expect(page.getByTestId('protocol-audit')).toContainText('Snapshot hash: VERIFIED · Receipt hash: VERIFIED');
   const action = await page.getByTestId('protocol-action-input').inputValue();
   const signedBeforeRoles = signed.length;
+  async function expectRights(row: Locator, current: string, snapshot: string, entitlement: string) {
+    const headers = await page.getByTestId('protocol-rights').locator('thead th').allTextContents();
+    for (const [label, expected] of [['Current units', current], ['Record-date units', snapshot], ['Entitlement', `${entitlement} Mock USD`]]) {
+      const index = headers.indexOf(label); expect(index).toBeGreaterThan(0);
+      await expect(row.locator('td').nth(index - 1)).toHaveText(expected);
+    }
+  }
   await page.getByRole('button', { name: 'Investor', exact: true }).click();
   await expect(page.getByText('No registered position for this wallet.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Settle / resume unpaid holders' })).toHaveCount(0);
@@ -114,9 +177,7 @@ test('browser → real Anchor rights → explicit signed execution → receipt �
     await expect(page.getByText(/READ-ONLY DEMO/)).toBeVisible();
     const row = page.getByTestId('protocol-rights').locator('tbody tr');
     await expect(row).toHaveCount(1);
-    await expect(row.locator('td').nth(1)).toHaveText(current);
-    await expect(row.locator('td').nth(2)).toHaveText(snapshot);
-    await expect(row.locator('td').nth(3)).toHaveText(`${due} Mock USD`);
+    await expectRights(row, current, snapshot, due);
     if (name === "D") await expect(row).toContainText("Zero entitlement · processed");
   }
   await page.getByRole('button', { name: 'Auditor', exact: true }).click();
@@ -179,9 +240,7 @@ test('browser → real Anchor rights → explicit signed execution → receipt �
   await connectAs(investorA);
   const ownRow = page.getByTestId('protocol-rights').locator('tbody tr');
   await expect(ownRow).toHaveCount(1);
-  await expect(ownRow.locator('td').nth(1)).toHaveText('6');
-  await expect(ownRow.locator('td').nth(2)).toHaveText('10');
-  await expect(ownRow.locator('td').nth(3)).toHaveText('500.00 Mock USD');
+  await expectRights(ownRow, '6', '10', '500.00');
   await expect(page.getByText(/READ-ONLY DEMO/)).toHaveCount(0);
   expect(signed.length).toBe(signedBeforeRoles);
   await page.getByRole('button', { name: 'Auditor', exact: true }).click();
@@ -198,5 +257,5 @@ test('browser → real Anchor rights → explicit signed execution → receipt �
   await expect(page.getByRole('alert')).toContainText('not owned by the Recorda program');
   await expect(page.getByTestId('protocol-summary')).toHaveCount(0);
   expect(errors).toEqual([]);
-  writeFileSync('target/protocol-evidence/coupon-ui.json', JSON.stringify({ network: 'local-validator', action, verifiedAt: new Date().toISOString(), checks: ['TZ golden payouts', 'partial signing rejection', 'reload and once-only resume', 'independent snapshot and receipt hash', 'read-only history', 'Coupon role amounts and action preservation', 'connected and unknown Investor wallets', 'unauthorized approval disabled', 'no extra role-switch signatures', 'mobile overflow', 'zero entitlement processed', 'corrupted receipt rejected', 'wrong program account owner rejected'], pageErrors: errors }, null, 2) + '\n');
+  writeFileSync('target/protocol-evidence/coupon-ui.json', JSON.stringify({ network: 'local-validator', action, verifiedAt: new Date().toISOString(), checks: ['partial snapshot and calculation reload/resume', 'DOM authorization bypass rejected before signing', 'wallet transaction substitution rejected before broadcast', 'TZ golden payouts', 'partial signing rejection', 'reload and once-only resume', 'independent snapshot and receipt hash', 'read-only history', 'Coupon role amounts and action preservation', 'connected and unknown Investor wallets', 'unauthorized approval disabled', 'no extra role-switch signatures', 'mobile overflow', 'zero entitlement processed', 'corrupted receipt rejected', 'wrong program account owner rejected'], pageErrors: errors }, null, 2) + '\n');
 });

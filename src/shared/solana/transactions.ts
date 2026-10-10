@@ -1,13 +1,15 @@
 import {
   ComputeBudgetProgram,
   Transaction,
+  TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
   type Connection,
   type Keypair,
-  type PublicKey,
-  type TransactionInstruction
+  type PublicKey
 } from "@solana/web3.js";
+import { Buffer } from "buffer";
+import { encode as base58Encode } from "@coral-xyz/anchor/dist/esm/utils/bytes/bs58.js";
 import { connection, MEMO_PROGRAM_ID } from "@/shared/solana/config";
 import type { PhantomProvider } from "@/shared/solana/phantom";
 
@@ -61,10 +63,20 @@ export async function phantomSignAndSend({
     throw new Error("Phantom account changed or disconnected. Reconnect the operator wallet before signing.");
   }
   let lastError: unknown = null;
+  const copyInstruction = (instruction: TransactionInstruction) => new TransactionInstruction({
+    programId: instruction.programId,
+    keys: instruction.keys.map(key => ({ ...key })),
+    data: Buffer.from(instruction.data)
+  });
+  // Provider objects can alias compiled instruction data. Keep original intent
+  // private so a safe pre-broadcast retry cannot inherit provider mutations.
+  const requestedInstructions = instructions.map(copyInstruction);
 
   for (let attempt = 0; attempt <= maxBlockhashRetries; attempt += 1) {
     let broadcastSignature: string | null = null;
-    const tx = transactionFromInstructions(instructions);
+    let broadcastAttempted = false;
+    let attemptedSignature: string | null = null;
+    const tx = transactionFromInstructions(requestedInstructions.map(copyInstruction));
     const latest = await rpc.getLatestBlockhashAndContext("confirmed");
     const requiredContextSlot = Math.max(minContextSlot, latest.context.slot);
     tx.feePayer = operator;
@@ -78,6 +90,9 @@ export async function phantomSignAndSend({
       instructions: tx.instructions
     }).compileToV0Message());
     if (partialSigners.length) walletTransaction.sign(partialSigners);
+    // Capture before calling the provider: it may mutate the same object.
+    const expectedMessage = Uint8Array.from(walletTransaction.message.serialize());
+    const expectedSignatures = walletTransaction.signatures.map(signature => Uint8Array.from(signature));
     walletTransaction.serialize(); // Fail locally on oversized/invalid wire data.
 
     try {
@@ -111,12 +126,34 @@ export async function phantomSignAndSend({
         }
         throw error;
       }
+      if (!provider.publicKey?.equals(operator)) {
+        throw new Error("Phantom account changed or disconnected before broadcast. Reconnect the operator wallet.");
+      }
+      const sameBytes = (left: Uint8Array, right: Uint8Array) => left.length === right.length && left.every((byte, index) => byte === right[index]);
+      if (!(signed instanceof VersionedTransaction) || !sameBytes(signed.message.serialize(), expectedMessage)) {
+        throw new Error("Wallet changed the simulated transaction. No transaction was submitted.");
+      }
+      if (signed.signatures.length !== expectedSignatures.length || signed.signatures.some(signature => !signature.some(byte => byte !== 0))) {
+        throw new Error("Wallet returned an unsigned transaction. No transaction was submitted.");
+      }
+      if (expectedSignatures.some((signature, index) => signature.some(byte => byte !== 0) && !sameBytes(signature, signed.signatures[index]))) {
+        throw new Error("Wallet changed a holder signature. No transaction was submitted.");
+      }
+      const signedBytes = Uint8Array.from(signed.serialize());
+      attemptedSignature = base58Encode(signed.signatures[0]);
       const height = await rpc.getBlockHeight("confirmed");
       if (height > latest.value.lastValidBlockHeight) {
         throw new Error("BLOCKHASH_EXPIRED_BEFORE_SEND");
       }
+      if (!provider.publicKey?.equals(operator)) {
+        throw new Error("Phantom account changed or disconnected before broadcast. Reconnect the operator wallet.");
+      }
 
-      broadcastSignature = await rpc.sendRawTransaction(signed.serialize(), {
+      // The signature exists locally before the RPC response. Persist it even
+      // when the transport loses that response after accepting the payment.
+      onSubmitted?.(attemptedSignature);
+      broadcastAttempted = true;
+      broadcastSignature = await rpc.sendRawTransaction(signedBytes, {
         skipPreflight: false,
         preflightCommitment: "confirmed",
         maxRetries: 0,
@@ -143,6 +180,9 @@ export async function phantomSignAndSend({
       // confirmation can be ambiguous even when the transfer actually landed.
       if (broadcastSignature) {
         throw new Error(`${label}: ${errorMessage(error)}. Transaction ${broadcastSignature} was submitted. Check its Devnet Explorer status and balances before retrying.`, { cause: error });
+      }
+      if (broadcastAttempted) {
+        throw new Error(`${label}: broadcast outcome is unknown for transaction ${attemptedSignature}. Check the action and balances before retrying. ${errorMessage(error)}`, { cause: error });
       }
       const blockhashError = /Blockhash not found|BlockhashNotFound|block height exceeded|BLOCKHASH_EXPIRED_BEFORE_SEND|TransactionExpiredBlockheightExceeded/i.test(errorMessage(error));
       if (!blockhashError || attempt >= maxBlockhashRetries) {

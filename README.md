@@ -162,6 +162,16 @@ npm run protocol:test:ui
 
 Keep validator RPC **18899**, faucet **19900** and protocol Vite **4445** free. `protocol:test:ui` starts/stops a fresh validator, runs real PDA/token-account and browser checks, prints the retained `/tmp` ledger path and writes `target/protocol-evidence/` plus Playwright reports/traces. Generated JSON/TypeScript IDL files must be committed together.
 
+### Requirements and adversarial audit
+
+```bash
+npm run audit:requirements  # Static mapping of every normative UC/FR/NFR/TC ID
+npm run test:audit:client   # Build and controlled React/RPC/wallet tests
+npm run test:audit          # Also Rust, fresh SBF/IDL and actual validator/browser tests
+```
+
+The full audit requires the tooling above and ports **4444**, **4445**, **18899**, **19900**. Results and hashes are saved in `target/security-audit/run.json`; a failed command stops the run and records failure. [Attack matrix and findings](docs/SECURITY-AUDIT.md) explain coverage, open requirements and the distinction between local controlled signing and real Phantom/Devnet proof. Golden/protocol traces and HTML reports use separate subdirectories.
+
 ### Deploy a new program or update the existing one
 
 For the currently deployed program, skip this section unless rebuilding/redeploying. A new checkout may not contain the ignored deployment keypair; restoring that keypair is necessary to control the same program ID, or generate a new one and synchronize the ID before deployment.

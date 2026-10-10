@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
-  testDir: './protocol-ui-tests', workers: 1, retries: 0, timeout: 180_000,
+  testDir: './protocol-ui-tests', outputDir: './test-results/protocol', workers: 1, retries: 0, timeout: 180_000,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report/protocol', open: 'never' }]],
   use: { baseURL: 'http://127.0.0.1:4445', trace: 'retain-on-failure', screenshot: 'only-on-failure', ...devices['Desktop Chrome'] },
   webServer: { command: 'npm run dev -- --host 127.0.0.1 --port 4445', url: 'http://127.0.0.1:4445', reuseExistingServer: !process.env.CI,

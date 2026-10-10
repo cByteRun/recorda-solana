@@ -5,7 +5,7 @@ import { Buffer } from 'buffer';
 
 // Controlled RPC/wallet boundary. Applies decoded client transfer instructions;
 // does not emulate a validator or prove protocol authorization.
-export async function bridge(page: Page, options: { snapshotFailure?: boolean; rejectApproval?: boolean; insufficientFunds?: boolean; wrongSnapshotOwner?: boolean; unavailableBond?: boolean; settlementConfirmationFailure?: boolean } = {}) {
+export async function bridge(page: Page, options: { snapshotFailure?: boolean; rejectApproval?: boolean; insufficientFunds?: boolean; wrongSnapshotOwner?: boolean; unavailableBond?: boolean; settlementConfirmationFailure?: boolean; settlementBroadcastResponseFailure?: boolean } = {}) {
   const operator = Keypair.generate();
   const mint = Keypair.generate().publicKey;
   const settlementMint = Keypair.generate().publicKey;
@@ -121,7 +121,9 @@ export async function bridge(page: Page, options: { snapshotFailure?: boolean; r
             from.amount -= amount; to.amount += amount;
           } else if (program.toBase58().startsWith('Memo')) memos.push(JSON.parse(Buffer.from(ix.data).toString()));
         }
-        result = '2'.repeat(88); break;
+        if (options.settlementBroadcastResponseFailure && submitted.length === 5) error = { code: -32000, message: 'Connection lost after accepting payment' };
+        else result = '2'.repeat(88);
+        break;
       }
       case 'getSignatureStatuses': result = { context, value: [{ slot: 100, confirmations: 1, err: options.settlementConfirmationFailure && submitted.length === 5 ? { InstructionError: [0, 'Custom'] } : null, confirmationStatus: 'confirmed' }] }; break;
       default: failures.push(req.method); error = { code: -32601, message: `Unexpected RPC ${req.method}` };

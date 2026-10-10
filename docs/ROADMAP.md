@@ -6,10 +6,13 @@
 
 ## Verification and gaps
 
-Audit: **2026-10-06**. [Test results and artifacts](ARCHITECTURE.md#test-evidence).
+Audit: **2026-10-10**. [Test results and artifacts](ARCHITECTURE.md#test-evidence). [Adversarial matrix and findings](SECURITY-AUDIT.md); [all 121 normative IDs](audit-coverage.json) are classified by delivery status with evidence sources and explicit gaps. `npm run test:audit` reproduces the local cross-layer audit; mapping a requirement does not mark it accepted.
+
+Final local audit passed: build/SBF/IDL; React/client/wallet 84/84; Rust 8/8; validator 17/17; protocol browser/audit/usability 27/27; setup 6/6. The complete runner records successful exit codes and stable source/test hashes in `target/security-audit/run.json`. This is current local Coupon evidence, not a fresh human Phantom/Devnet replay or acceptance of the missing MVP scenarios.
 
 | Requirement / feature | Implementation | Test evidence | Result / scope |
 | --- | --- | --- | --- |
+| Current Coupon attack/recovery audit; FR-07–16,20–27,38–42; NFR-01–09,11; Coupon portion of TC-20/29 | Program transitions/Clock, canonical registry reads, independent audit and immutable wallet payload | `test:audit`: Rust, controlled React/RPC/wallet, actual failed validator transactions and protocol browser | See SECURITY-AUDIT for run evidence; full MVP, typed actions, period deduplication and fresh human Devnet acceptance remain open |
 | UC-CP-01; FR-01–04,06–15,38–39 | `programs/recorda/src/lib.rs`: instrument/registry/transfer/snapshot | `protocol-tests/coupon.test.mjs` | Actual PDAs/token accounts; authority, eligibility, late record barrier, snapshot completeness/hash and mutation negatives |
 | FR-16,20–22; TC-01–03,05 | `coupon_minor`, `calculate_entitlement` | Rust tests + integration golden/rounding/overflow | A/B/C/D: snapshot 10/5/2/0 → current 6/9/2/0 → coupon 500/250/100/0; total 850 |
 | FR-23–27; TC-04,15,17–19 | approve/fund/settle/finalize instructions | Integration + `protocol-ui-tests/coupon.spec.ts` | Actual transfers, funded-vault checks, CPI rollback, duplicate protection and partial reload/resume |
@@ -88,6 +91,8 @@ Checked M1.0–M1.5 features are implemented and locally verified; the Coupon ha
 - [x] Required and historical golden fixtures.
 - [x] Actual validator PDA/token-account verification.
 - [x] Authorization, mutation, funding and duplicate-payment negatives.
+- [x] 2026-10-10: explicit attack matrix and normative-ID traceability; actual failed burn/transfer/payment transactions verify runtime rollback, and a second Coupon verifies right/vault/receipt account isolation.
+- [x] Wallet payload/partial-signature integrity and immutable wire data; preserve the local signature when a broadcast response is lost and block automatic resend after a broadcast attempt.
 - [x] Browser signature rejection, reload/resume and forged-proof rejection.
 - [x] Human Phantom golden runner code using existing Phase 1 controls, independent payment deltas and public evidence (live Coupon golden passed).
 - [x] Five-minute stage waits, busy/audit completion, error diagnostics and pre-payment resume by Action PDA; already completed snapshot/transfer is not repeated.

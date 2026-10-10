@@ -446,8 +446,11 @@ pub mod recorda {
 }
 
 fn require_before_record(i: &Instrument) -> Result<()> {
-    require!(i.pending_record_timestamp == 0 || Clock::get()?.unix_timestamp < i.pending_record_timestamp, Fault::Locked);
+    require!(before_record(i.pending_record_timestamp, Clock::get()?.unix_timestamp), Fault::Locked);
     Ok(())
+}
+fn before_record(record: i64, now: i64) -> bool {
+    record == 0 || now < record
 }
 
 pub fn coupon_minor(units: u64, face: u64, bps: u16, periods: u16) -> Result<u64> {
@@ -460,6 +463,7 @@ pub fn coupon_minor(units: u64, face: u64, bps: u16, periods: u16) -> Result<u64
     u64::try_from(amount).map_err(|_| error!(Fault::Overflow))
 }
 fn transition(a: &mut Account<CorporateAction>, status: Stage) -> Result<()> {
+    require!(valid_transition(a.status, status), Fault::State);
     let clock = Clock::get()?;
     let from = a.status;
     a.status = status;
@@ -473,6 +477,19 @@ fn transition(a: &mut Account<CorporateAction>, status: Stage) -> Result<()> {
         timestamp: clock.unix_timestamp
     });
     Ok(())
+}
+fn valid_transition(from: Stage, to: Stage) -> bool {
+    matches!((from, to),
+        (Stage::Draft, Stage::Scheduled)
+        | (Stage::Scheduled, Stage::SnapshotPending | Stage::Cancelled)
+        | (Stage::SnapshotPending, Stage::Snapshotted)
+        | (Stage::Snapshotted, Stage::Calculated)
+        | (Stage::Calculated, Stage::AwaitingApproval)
+        | (Stage::AwaitingApproval, Stage::Approved)
+        | (Stage::Approved, Stage::Funded)
+        | (Stage::Funded, Stage::Executing | Stage::Settled)
+        | (Stage::Executing, Stage::Settled)
+        | (Stage::Settled, Stage::Finalized))
 }
 
 #[derive(Accounts)]
@@ -821,5 +838,52 @@ mod tests {
         assert!(coupon_minor(u64::MAX, u64::MAX, 10_000, 1).is_err());
         assert!(coupon_minor(1, 100, 1000, 0).is_err());
         assert!(coupon_minor(1, 0, 1000, 2).is_err());
+    }
+    #[test]
+    fn record_barrier_exact_boundary_and_late_operator() {
+        assert!(before_record(100, 99));
+        assert!(!before_record(100, 100));
+        assert!(!before_record(100, 101));
+        assert!(!before_record(100, i64::MAX));
+        assert!(before_record(0, i64::MAX)); // Only cancellation/finalized snapshot releases it.
+    }
+    #[test]
+    fn lifecycle_all_pairs_reject_skip_replay_and_terminal_escape() {
+        let stages = [Stage::Draft, Stage::Scheduled, Stage::SnapshotPending, Stage::Snapshotted,
+            Stage::Calculated, Stage::AwaitingApproval, Stage::Approved, Stage::Funded,
+            Stage::Executing, Stage::Settled, Stage::Finalized, Stage::Cancelled];
+        // Independent acceptance table: normal flow, Scheduled cancellation,
+        // and single-holder settlement which skips the partial Executing stage.
+        let allowed = [(0, 1), (1, 2), (1, 11), (2, 3), (3, 4), (4, 5),
+            (5, 6), (6, 7), (7, 8), (7, 9), (8, 9), (9, 10)];
+        for (from_index, from) in stages.iter().enumerate() {
+            for (to_index, to) in stages.iter().enumerate() {
+                assert_eq!(valid_transition(*from, *to), allowed.contains(&(from_index, to_index)),
+                    "unexpected transition {from:?} -> {to:?}");
+            }
+        }
+    }
+    #[test]
+    fn coupon_boundaries_and_aggregate_rounding() {
+        assert_eq!(coupon_minor(0, u64::MAX, 10_000, 1).unwrap(), 0);
+        assert_eq!(coupon_minor(u64::MAX, 1, 10_000, 1).unwrap(), u64::MAX);
+        assert_eq!(coupon_minor(u64::MAX, 1, 0, 1).unwrap(), 0);
+        assert!(coupon_minor(1, 1, 10_001, 1).is_err());
+        // Round each holder, then sum: aggregating first would overpay one minor unit.
+        assert_eq!(coupon_minor(1, 1, 5000, 1).unwrap() * 2, 0);
+        assert_eq!(coupon_minor(2, 1, 5000, 1).unwrap(), 1);
+    }
+    #[test]
+    fn coupon_deterministic_grid_matches_independent_integer_formula() {
+        for units in [0u64, 1, 2, 17, 1000, u32::MAX as u64] {
+            for face in [1u64, 101, 100_000] {
+                for bps in [0u16, 1, 333, 1000, 10_000] {
+                    for periods in [1u16, 2, 3, u16::MAX] {
+                        let expected = (units as u128 * face as u128 * bps as u128 / 10_000 / periods as u128) as u64;
+                        assert_eq!(coupon_minor(units, face, bps, periods).unwrap(), expected);
+                    }
+                }
+            }
+        }
     }
 }

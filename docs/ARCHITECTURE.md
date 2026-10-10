@@ -67,7 +67,7 @@ Implemented successful stages follow TZ §11. PARTIALLY_SETTLED is represented b
 
 ## R1 recovery and RPC
 
-The shared adapter simulates before signing, validates connected account, preserves partial holder signatures and adds Memo compute budget. Snapshot reads fail on bad accounts/RPC errors. Unknown balances display `—`; allocation/settlement fail closed. Broadcast payment signature is saved before confirmation; uncertain confirmation blocks another submission across reload and requires manual reconciliation. It is not durable protocol idempotency. Partial R1 settlement-rail setup has no safe-resume guarantee.
+The shared adapter simulates before signing, validates connected account before signing/broadcast, compares the returned message with immutable simulated intent, preserves partial holder signatures and adds Memo compute budget. Instructions and wire bytes are copied to isolate provider mutations across awaits/retries. Snapshot reads fail on bad accounts/RPC errors. Unknown balances display `—`; allocation/settlement fail closed. The locally derived payment signature is saved before sending to RPC; uncertain broadcast/confirmation blocks another reference submission across reload and requires manual reconciliation. It is not durable protocol idempotency. Partial R1 settlement-rail setup has no safe-resume guarantee. Reference snapshot commitment/identity checks reject inconsistent caches but do not authenticate a wholly rewritten cache against historical Memo transactions.
 
 ## Requirements deviations and verification boundary
 
@@ -76,6 +76,8 @@ TZ §19 requires **Next.js + TypeScript**; implementation is **React + Vite**. K
 Local-validator tests execute actual Anchor/Token-2022 state transitions with a controlled signer; client tests mock wallet/RPC. Neither proves Phantom extension compatibility, Devnet deployment, remote CI success or a complete security review. See [verification and gaps](ROADMAP.md#verification-and-gaps) and [README acceptance](../README.md#manual-acceptance).
 
 ## Test evidence
+
+The 2026-10-10 [adversarial audit](SECURITY-AUDIT.md) adds all-ID traceability, wallet/RPC/cache attacks, an enforced Coupon transition table, actual failed-runtime rollback evidence and snapshot/calculation/payment browser reload recovery. [Machine-readable mapping](audit-coverage.json) keeps future requirements open. `test:audit` records exit codes and stable source/test/IDL/binary hashes; final results are in CHANGELOG. Earlier counts below are historical, not a claim about the current revision.
 
 Coupon UX/role follow-up (2026-10-06): build and IDL check pass; Rust 4/4, golden/client/runner 45/45, validator 16/16, protocol browser/audit/usability 6/6 and Devnet setup 6/6. The browser lifecycle checks role switching on one action, connected/unknown investors, unauthorized approval, exact golden rights, wallet-free reopening, partial-payment recovery and corrupted proof. Usability checks cover form gating, keyboard focus and no page-wide overflow at 320/390 px. Mobile screenshots are retained as `target/protocol-evidence/coupon-mobile.png` and `coupon-entry-mobile.png`; counts below describe earlier runs.
 

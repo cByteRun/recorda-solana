@@ -1,11 +1,11 @@
 import { BN, Program, type IdlAccounts } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram, type Connection, type TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, getAccount, getMint } from "@solana/spl-token";
-import idl from "@/shared/solana/idl/recorda.json";
+import idl from "@/shared/solana/idl/recorda.json" with { type: "json" };
 import type { Recorda } from "@/shared/solana/idl/recorda";
 
 export type ProtocolAccounts = IdlAccounts<Recorda>;
-export const RECORDA_PROGRAM_ID = new PublicKey(import.meta.env.VITE_RECORDA_PROGRAM_ID || idl.address);
+export const RECORDA_PROGRAM_ID = new PublicKey(import.meta.env?.VITE_RECORDA_PROGRAM_ID || idl.address);
 export const u64 = (value: bigint | number | string) => new BN(value.toString());
 export function protocolPdas(programId: PublicKey = RECORDA_PROGRAM_ID) {
   const pda = (...seeds: Uint8Array[]) => PublicKey.findProgramAddressSync(seeds, programId)[0];
@@ -120,13 +120,16 @@ export function createProtocol(rpc: Connection, programId = RECORDA_PROGRAM_ID) 
       for (const { publicKey, account } of history) {
         if (!account.instrument.equals(state.instrument) || !pdas.action(state.instrument, account.id.toString()).equals(publicKey)) throw new Error("History action address does not match canonical Recorda PDA seeds");
       }
+      if (positions.length !== terms.registeredCount || positions.filter(p => p.account.approved).length !== terms.approvedCount) throw new Error("Holder registry count mismatch");
       const balances = await Promise.all(positions.map(async ({ publicKey, account: position }) => {
         if (!position.instrument.equals(state.instrument) || !pdas.holder(state.instrument, position.holder).equals(publicKey)
           || !pdas.bondAccount(state.instrument, position.holder).equals(position.tokenAccount)) throw new Error("Holder address does not match canonical Recorda PDA seeds");
         const balance = await getAccount(rpc, position.tokenAccount, "confirmed", tokenProgram);
         if (!balance.mint.equals(terms.mint) || !balance.owner.equals(position.holder)) throw new Error("Holder token account mint/owner mismatch");
+        if (!balance.isFrozen || !balance.closeAuthority?.equals(state.instrument)) throw new Error("Holder token account freeze/close authority mismatch");
         return { holder: position.holder.toBase58(), units: balance.amount.toString() };
       }));
+      if (balances.reduce((sum, balance) => sum + BigInt(balance.units), 0n) !== mint.supply) throw new Error("Holder balances do not reconcile with mint supply");
       // BN stays exact through serialization; display monetary values using minor-unit strings.
       return { action: state, instrument: terms, rights, positions, receipt, mintSupply: mint.supply, vaultBalance: vault.amount, balances, signatures, history };
     }

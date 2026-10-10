@@ -149,3 +149,115 @@ test('wallet account changed during simulation is rejected before a signing prom
   await expect(h.send()).rejects.toThrow('Phantom account changed');
   expect(h.calls).toEqual({ simulate: 1, sign: 0, send: 0 });
 });
+
+for (const [attack, mutate, message] of [
+  ['instruction data', (tx: VersionedTransaction) => { tx.message.compiledInstructions.at(-1)!.data[0] ^= 1; }, 'changed the simulated transaction'],
+  ['blockhash', (tx: VersionedTransaction) => { tx.message.recentBlockhash = Keypair.generate().publicKey.toBase58(); }, 'changed the simulated transaction'],
+  ['payer', (tx: VersionedTransaction) => { tx.message.staticAccountKeys[0] = Keypair.generate().publicKey; }, 'changed the simulated transaction'],
+  ['missing signature', (tx: VersionedTransaction) => { tx.signatures[0].fill(0); }, 'unsigned transaction']
+] as const) {
+  test(`NFR-04/11 wallet substitution: reject ${attack} before broadcast`, async () => {
+    const h = harness();
+    h.provider.signTransaction = async tx => {
+      h.calls.sign++;
+      const versioned = tx as VersionedTransaction;
+      versioned.sign([operator]);
+      mutate(versioned);
+      return versioned;
+    };
+    await expect(h.send()).rejects.toThrow(message);
+    expect(h.calls).toEqual({ simulate: 1, sign: 1, send: 0 });
+  });
+}
+
+test('NFR-04 wallet disconnect during signing blocks broadcast', async () => {
+  const h = harness();
+  const sign = h.provider.signTransaction;
+  h.provider.signTransaction = async tx => {
+    const signed = await sign(tx);
+    h.provider.publicKey = undefined;
+    return signed;
+  };
+  await expect(h.send()).rejects.toThrow('before broadcast');
+  expect(h.calls).toEqual({ simulate: 1, sign: 1, send: 0 });
+});
+
+test('NFR-04/07 wallet cannot replace a holder partial signature', async () => {
+  const h = harness(), holder = Keypair.generate();
+  const instruction = new TransactionInstruction({ programId: MEMO_PROGRAM_ID,
+    keys: [operator, holder].map(key => ({ pubkey: key.publicKey, isSigner: true, isWritable: false })), data: Buffer.from('holder') });
+  h.provider.signTransaction = async tx => {
+    h.calls.sign++;
+    const signed = tx as VersionedTransaction;
+    signed.sign([operator]); signed.signatures[1].fill(1);
+    return signed;
+  };
+  await expect(phantomSignAndSend({ provider: h.provider, operator: operator.publicKey,
+    instructions: [instruction], partialSigners: [holder], rpc: h.rpc })).rejects.toThrow('changed a holder signature');
+  expect(h.calls.send).toBe(0);
+});
+
+test('NFR-03/08 a broadcast error mentioning blockhash cannot trigger another payment', async () => {
+  const h = harness();
+  h.rpc.sendRawTransaction = async () => { h.calls.send++; throw new Error('Blockhash not found after connection lost'); };
+  await expect(h.send()).rejects.toThrow('broadcast outcome is unknown');
+  expect(h.calls).toEqual({ simulate: 1, sign: 1, send: 1 });
+});
+
+test('NFR-03/08 retain the locally signed transaction ID when RPC loses broadcast response', async () => {
+  const h = harness();
+  let persisted: string | undefined;
+  h.rpc.sendRawTransaction = async () => {
+    expect(persisted).toMatch(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/);
+    h.calls.send++; throw new Error('Connection lost');
+  };
+  await expect(phantomSignAndSend({ provider: h.provider, operator: operator.publicKey,
+    instructions: [memo], rpc: h.rpc, onSubmitted: signature => { persisted = signature; }
+  })).rejects.toThrow(`broadcast outcome is unknown for transaction`);
+  expect(persisted).toBeTruthy(); expect(h.calls.send).toBe(1);
+});
+
+test('NFR-08 blockhash expiration before broadcast can rebuild safely', async () => {
+  const h = harness();
+  let heights = 0;
+  h.rpc.getBlockHeight = async () => ++heights === 1 ? 101 : 50;
+  await expect(h.send()).resolves.toBe('submitted-signature');
+  expect(h.calls).toEqual({ simulate: 2, sign: 2, send: 1 });
+});
+
+test('NFR-04 wallet account change during final block-height check blocks broadcast', async () => {
+  const h = harness();
+  h.rpc.getBlockHeight = async () => { h.provider.publicKey = undefined; return 50; };
+  await expect(h.send()).rejects.toThrow('before broadcast');
+  expect(h.calls.send).toBe(0);
+});
+
+test('NFR-11 provider mutation during final RPC wait cannot change captured wire bytes', async () => {
+  const h = harness();
+  let walletObject: VersionedTransaction;
+  const sign = h.provider.signTransaction;
+  h.provider.signTransaction = async tx => { walletObject = await sign(tx) as VersionedTransaction; return walletObject; };
+  h.rpc.getBlockHeight = async () => { walletObject.message.compiledInstructions.at(-1)!.data[0] ^= 1; return 50; };
+  h.rpc.sendRawTransaction = async bytes => {
+    const captured = VersionedTransaction.deserialize(new Uint8Array(bytes));
+    expect(Buffer.from(captured.message.compiledInstructions.at(-1)!.data)).toEqual(memo.data);
+    return 'submitted-signature';
+  };
+  await expect(h.send()).resolves.toBe('submitted-signature');
+});
+
+test('NFR-11 pre-broadcast retry cannot inherit provider mutations to instruction data', async () => {
+  const h = harness();
+  h.provider.signTransaction = async tx => {
+    h.calls.sign++;
+    const signed = tx as VersionedTransaction;
+    if (h.calls.sign === 1) {
+      signed.message.compiledInstructions.at(-1)!.data[0] ^= 1;
+      throw new Error('Blockhash not found');
+    }
+    expect(Buffer.from(signed.message.compiledInstructions.at(-1)!.data)).toEqual(memo.data);
+    signed.sign([operator]); return signed;
+  };
+  await expect(h.send()).resolves.toBe('submitted-signature');
+  expect(h.calls).toEqual({ simulate: 2, sign: 2, send: 1 });
+});

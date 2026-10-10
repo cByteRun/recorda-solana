@@ -24,6 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run audit:requirements
       - run: npm run build
       - run: npm run test:devnet:setup
       - run: npx playwright install --with-deps chromium
@@ -35,6 +36,7 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            target/security-audit/
           retention-days: 7
 
   coupon-protocol:

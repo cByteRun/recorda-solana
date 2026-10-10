@@ -663,6 +663,19 @@ export function useRecordaController() {
       if (!action?.signatures.approval || !action.entitlements) throw new Error("Approve first");
       if (action.signatures.settlement) throw new Error("Action already settled");
       if (action.pendingSettlementSignature) throw new Error(`Settlement ${action.pendingSettlementSignature} already submitted; reconcile its Devnet status before retrying`);
+      const referenceDeployment = loadJson<DeploymentState>(storageKeys.deployment);
+      if (!action.snapshot || !referenceDeployment?.mint || action.snapshot.holders.length !== HOLDER_IDS.length
+        || new Set(action.snapshot.holders.map(holder => holder.id)).size !== HOLDER_IDS.length) {
+        throw new Error("Invalid snapshot holder set; payment aborted");
+      }
+      for (const holder of runtimeHolders.current) {
+        if (action.snapshot.holders.find(entry => entry.id === holder.id)?.owner !== holder.keypair.publicKey.toBase58()) {
+          throw new Error(`Snapshot holder identity mismatch for ${holder.id}; payment aborted`);
+        }
+      }
+      const { slot, blockTime, holders } = action.snapshot;
+      const snapshotHash = await sha256(JSON.stringify({ actionId: action.actionId, mint: referenceDeployment.mint, slot, blockTime, holders }));
+      if (snapshotHash !== action.snapshot.hash) throw new Error("Snapshot commitment mismatch; payment aborted");
       for (const id of HOLDER_IDS) {
         const snapshot = action.snapshot?.holders.find(holder => holder.id === id);
         const entitlement = action.entitlements[id];

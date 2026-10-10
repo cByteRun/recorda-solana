@@ -121,3 +121,38 @@ test('R1 FR-16/25 NFR-02: corrupted cached entitlement cannot change payout', as
   await expect(page.getByTestId('app-error')).toContainText('Entitlement mismatch for holder A');
   expect(h.submitted).toHaveLength(4);
 });
+
+test('R1 NFR-03/08 payment with lost broadcast response cannot repeat after reload', async ({ page }) => {
+  const h = await bridge(page, { settlementBroadcastResponseFailure: true });
+  for (const name of ['Create snapshot', 'Transfer A → B', 'Calculate entitlement', 'Approve in Phantom', 'Settle KUSD']) await step(page, name);
+  await expect(page.getByTestId('app-error')).toContainText('broadcast outcome is unknown');
+  expect(h.submitted).toHaveLength(5);
+  const pending = await page.evaluate(() => JSON.parse(localStorage.getItem('kase_real_action_v2')!).pendingSettlementSignature);
+  expect(pending).toMatch(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/);
+  await page.reload(); await page.getByTestId('connect-wallet').click();
+  await expect(page.getByTestId('busy-state')).toHaveCount(0, { timeout: 15000 });
+  await expect(page.getByRole('button', { name: 'Settle KUSD', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Finalize receipt', exact: true })).toBeDisabled();
+  expect(h.submitted).toHaveLength(5);
+});
+
+for (const attack of ['holder identity', 'consistent amount and units', 'duplicate holder ID'] as const) {
+  test(`R1 FR-12/16/25 cached snapshot attack: ${attack}`, async ({ page }) => {
+    const h = await bridge(page);
+    for (const name of ['Create snapshot', 'Transfer A → B', 'Calculate entitlement', 'Approve in Phantom']) await step(page, name);
+    await page.evaluate(attack => {
+      const action = JSON.parse(localStorage.getItem('kase_real_action_v2')!);
+      if (attack === 'holder identity') action.snapshot.holders[0].owner = action.snapshot.holders[1].owner;
+      else if (attack === 'duplicate holder ID') action.snapshot.holders[1].id = 'A';
+      else {
+        action.snapshot.holders[0].units = 11;
+        action.entitlements.A = { ...action.entitlements.A, units: 11, amountMinor: 55000, usd: 550 };
+      }
+      localStorage.setItem('kase_real_action_v2', JSON.stringify(action));
+    }, attack);
+    await step(page, 'Settle KUSD');
+    await expect(page.getByTestId('app-error')).toContainText(attack === 'holder identity'
+      ? 'Snapshot holder identity mismatch' : attack === 'duplicate holder ID' ? 'Invalid snapshot holder set' : 'Snapshot commitment mismatch');
+    expect(h.submitted).toHaveLength(4);
+  });
+}
