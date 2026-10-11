@@ -1,119 +1,135 @@
-# Recorda
+# Recorda 🧾
 
 **Corporate actions for tokenized bonds on Solana.**
 
-Tokenizing a bond records ownership, but servicing it still requires determining who held it on the record date, calculating what each investor is owed, approving payment and reconciling the result. When these steps use separate records, errors are harder to prevent and outcomes harder to verify.
+> Turn ownership at a record date into an approved payment, a holder decision or a completed redemption — with proof of who was entitled, who approved it and what happened.
 
-Recorda connects them in one reproducible process: **Record Date → Right → Controlled Execution → Verifiable Proof**. The operator reviews and approves execution; investors and auditors can trace each outcome back to the recorded holdings and formula.
+**🎯 The product edge:** connect historical ownership, investor rights, authorized execution and the final receipt in one traceable workflow. Operators service the bond, investors exercise their rights, and auditors verify the result from chain data.
 
-Investor A held **10 bonds** on the record date, then sold 4. A now holds **6**, but the coupon remains **10 × 1,000 × 10% ÷ 2 = 500**. Recorda preserves that right through the transfer and links the payment to its receipt. This reduces reconciliation between ownership, calculations and payments, and makes the result independently explainable.
+**Record Date → Right → Controlled Execution → Verifiable Proof**
 
-The source now implements **coupons, maturity redemption and voting**, plus the specified Post-MVP FR-49–58. V2 uses distinct typed accounts while retaining the historical Coupon decoder. Current local acceptance and deployment/live-demo gates are tracked separately. [Product context](docs/PRODUCT.md) explains the domain and positioning; [ROADMAP](docs/ROADMAP.md) tracks delivery.
+| Step | Business question | What Recorda records |
+|---|---|---|
+| 📸 Record date | Who held the bonds at the cutoff? | Fixed ownership snapshot |
+| 🧮 Right | What is each holder owed or allowed to vote? | Per-holder payment, voting power or redemption allocation |
+| ✍️ Authorization | Who approved the action or signed for their bonds? | Operator approval and required holder signatures |
+| ⚙️ Execution | Did the payment, vote or retirement happen? | Token payments, vote tally or atomic burn/payment |
+| 🧾 Proof | Can someone independently check the outcome? | On-chain receipt, audit and export |
 
-## Quick start
+**A concrete example:** A holds 10 bonds at the record date, then sells 4. A's coupon stays **10 × 1,000 × 10% ÷ 2 = 500**, even though the current balance is 6. The historical Coupon golden demonstrates this rule; the full MVP demo below demonstrates three actions on one instrument.
 
-Requires Node **22.12+** and npm. Run commands from the repository root:
+The implemented source covers **Coupon, Voting and maturity Redemption**, plus the specified [Post-MVP FR-49–58](docs/implementation/fr-checklist.md). [Product context](docs/PRODUCT.md) explains the positioning; [roadmap](docs/ROADMAP.md) separates implementation from acceptance evidence.
+
+**🚀 Start:** [Devnet demo](#devnet-demo--coupon--voting--redemption) · **🔎 Inspect:** [screens and roles](#product-screens-and-manual-acceptance) · **🛠️ Develop:** [local checks](#development-and-automated-local-checks)
+
+Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting → Full Redemption on one instrument. Local controlled tests are available later for development and adversarial regression; they are not a prerequisite for presenting the Devnet flow.
+
+## Devnet demo — Coupon → Voting → Redemption
+
+Full preparation and screen-by-screen expectations: [DEVNET-DEMO.md](docs/DEVNET-DEMO.md). Allow **20–40 minutes**, including Phantom confirmations and the voting window. Run commands from the repository root.
+
+### 1. Install and prepare the program
+
+Requires Node **22.12+**, npm, desktop Chromium/Chrome and Phantom. Rust **1.90** and Solana/SBF **2.3.0** are needed if building/deploying; see [technical setup](#technical-setup).
 
 ```bash
 npm ci
-npm run dev
-```
-
-Open http://localhost:4444. `/` and `/protocol` show the implemented Anchor Coupon journey. Choose Operator to manage the lifecycle, Investor for your own rights (or an explicit read-only demo), and Auditor for wallet-free verification. Open an existing Action PDA or create a demo coupon. `/reference` retains the Browser/Memo client calculation and simulated golden example.
-
-## Quick validation — see the business rule
-
-On the home page, open **Golden black-box oracle / Known input → logic → expected output** and compare Input → Expected → Actual. Its **SIMULATED / PASS** label proves the calculation example, not an on-chain payment. For automatic client regression:
-
-```bash
-npx playwright install --with-deps chromium
-npm run test:e2e:golden
-```
-
-These tests use a controlled wallet/RPC. For actual Devnet transactions, follow the next section.
-
-## Phase 1 golden on Devnet — real Phantom
-
-Recorda is already deployed at **`CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF`**. You do not need to redeploy for each replay. A fresh checkout needs Node/npm, a desktop Chromium or Chrome, Phantom and a wallet with **Devnet SOL**. [Install tools/browser](#install-tools-and-browser) if missing; Rust/Solana CLI is required for building/deploying the program, not for replaying the existing deployment.
-
-Prepare public configuration once. Copy only if `.env.local` does not already exist; otherwise update its values from `.env.example`:
-
-```bash
 cp -n .env.example .env.local
 ```
 
-The program ID must match the generated IDL; use the same RPC for Vite and the runner. Keep these **three terminals** open:
+If the current Rust binary is already deployed, proceed to the wallets/configuration step. Otherwise build and [deploy or upgrade it](#deploy-a-new-program-or-update-the-existing-one):
 
-### Terminal 1 — application, port 4444
+```bash
+npm run protocol:idl
+npm run protocol:build
+npm run protocol:idl:check
+```
+
+The repository program ID is `CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF`. Publishing the current binary is required for v2 actions; an old Coupon-only deployment is insufficient. Program ID must match Rust, Anchor configuration, generated IDL and frontend configuration. Deployment is done once per Rust update, not per test invocation. The CLI deployer and the Phantom Operator can be different wallets.
+
+### 2. Prepare four Phantom accounts and `.env.local`
+
+Use **one Phantom extension** with four distinct accounts: Operator and investors A/B/C. No additional Google accounts or browsers are needed. Select Solana Devnet and fund them with test SOL. Suggested balances for this demo: Operator **0.5 SOL**, each investor **0.1 SOL**; these are reserves, not exact fee quotes, and exclude CLI deployment costs. D is a disposable zero-unit holder created by the runner.
+
+Copy Solana **public addresses** from Phantom's Receive menu into `.env.local`:
+
+```dotenv
+VITE_SOLANA_RPC_URL=https://api.devnet.solana.com
+VITE_RECORDA_PROGRAM_ID=CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF
+RECORDA_OPERATOR=YOUR_OPERATOR_PUBLIC_ADDRESS
+RECORDA_HOLDER_A=YOUR_A_PUBLIC_ADDRESS
+RECORDA_HOLDER_B=YOUR_B_PUBLIC_ADDRESS
+RECORDA_HOLDER_C=YOUR_C_PUBLIC_ADDRESS
+RECORDA_APP_URL=http://localhost:4444
+RECORDA_BROWSER_CDP=http://127.0.0.1:9222
+RECORDA_VOTE_SECONDS=900
+```
+
+Replace `YOUR_...` with actual addresses. Keep seeds/private keys in Phantom or CLI key files. `.env.local` is excluded from Git; [.env.example](.env.example) is the tracked template. Vite and Devnet runners read it automatically: no `export` or `source` needed. Runner priority is existing shell values > `.env.local` > `.env`; use a fresh terminal or remove old overrides if values appear stale. Optional `RECORDA_DEVNET_RPC` must match the browser RPC; if absent the runner uses `VITE_SOLANA_RPC_URL`. Restart Vite after editing configuration.
+
+### 3. Start three terminals
+
+**🖥️ Terminal 1 — frontend:**
 
 ```bash
 npm run dev
 ```
 
-Vite reads `.env.local` automatically. Restart it after changing environment values.
+Expected: http://localhost:4444. Keep the server running.
 
-### Terminal 2 — wallet browser, debugging port 9222
-
-Close an existing instance of the same test profile before starting it with debugging enabled:
+**🦊 Terminal 2 — Chromium with Phantom:**
 
 ```bash
-chromium \
+chromium-browser \
   --user-data-dir="$HOME/snap/chromium/common/recorda-devnet-profile" \
   --remote-debugging-address=127.0.0.1 \
-  --remote-debugging-port=9222
+  --remote-debugging-port=9222 \
+  http://localhost:4444
 ```
 
-For Google Chrome, replace `chromium` with `google-chrome` and choose a dedicated profile path. If you already started with `/tmp/recorda-devnet-chromium` or another path, **keep that original profile when resuming**; it contains the demo holder keys/cache. The persistent path above also works with Ubuntu's Chromium snap.
+Use `chromium` or `google-chrome` instead if that is your installed executable. Reuse the profile containing Phantom; a new profile needs extension/account setup. Close an existing instance of that same profile before restarting with debugging flags. Install [Phantom](https://phantom.com/download), unlock it, select **Devnet and Operator**, and leave automatic confirmation disabled. Keep the browser open. Playwright's downloaded Chromium is not a substitute for this configured extension profile.
 
-In this browser profile:
-
-1. Open [phantom.com/download](https://phantom.com/download), choose Chrome to install the extension in Chromium, and set up/unlock your test wallet. [Phantom browser support](https://help.phantom.com/articles/48456789393811).
-2. Open Phantom **Settings → Developer Settings**, enable **Testnet Mode**, and use **Solana Devnet**. Keep automatic confirmation disabled for this human-signing replay. [Phantom developer settings](https://help.phantom.com/articles/28951369255699).
-3. Ensure the wallet has Devnet SOL for fees/account rent. Mainnet SOL cannot pay Devnet fees. If already funded, no airdrop is needed; the runner never requests one.
-
-An ordinary tab without port 9222 is enough for manual `/protocol` use, but the automatic runner needs the debugging endpoint. Firefox is not supported by this runner's Chromium CDP connection.
-
-### Terminal 3 — golden runner
-
-Node does not automatically load `.env.local`. Export its public variables in this terminal (the example file uses shell-compatible assignments):
+**▶️ Terminal 3 — full Devnet scenario:**
 
 ```bash
-set -a
-source .env.local
-set +a
-npm run test:e2e:golden:devnet
+npm run test:e2e:actions:devnet
 ```
 
-Alternatively export explicitly in both the application and runner terminals:
+The runner opens its application tab and drives the buttons. **You review/confirm every Phantom prompt and switch accounts when the terminal asks.** Expect Operator → A/B/C → Operator for voting, then the same investor switching for redemption. One stage can require multiple signatures. The runner checks Devnet genesis, uses real Phantom and never requests a faucet or auto-signs.
 
-```bash
-export VITE_RECORDA_PROGRAM_ID=CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF
-export RECORDA_DEVNET_RPC=https://api.devnet.solana.com
-export VITE_SOLANA_RPC_URL=$RECORDA_DEVNET_RPC
-```
+### 4. Expected result and evidence
 
-The runner opens `/protocol` and controls the buttons. **You review and confirm Phantom prompts** for setup, schedule, snapshot, transfer, calculation, approval, funding, settlement and receipt. Stage waits allow five minutes; transaction expiry still follows Solana's blockhash lifetime. The connected wallet is the **Operator**; A/B/C/D are disposable demo investors stored in this profile. The A→B transfer also uses A's local demo key.
+| Action | Expected result |
+|---|---|
+| Setup | One fresh instrument; A/B/C/D hold 10/5/2/0 bonds, total 17 |
+| Coupon | Payments 500/250/100/0 Mock USD; finalized receipt; supply remains 17 |
+| Voting | YES/NO/ABSTAIN = 10/5/2; 50% quorum met; PASSED after closing; finalized receipt |
+| Full Redemption | Principal plus final coupon: 10500/5250/2100/0 Mock USD; supply 17→7→2→0; REDEEMED; finalized receipt |
+| Auditor | Finalized actions reopen without connecting a wallet; Audit: Verified |
 
-For a manual demo, the crucial order is:
+`/actions` displays money in minor units: **100 = 1 Mock USD**. Payments use test Token-2022 tokens, not real USD or SOL. Voting records a decision without automatically changing terms. This fixture does not transfer bonds after the snapshot; the separate historical Coupon golden tests that rule.
 
-1. Wait until the page says **Record date reached on Solana** and enables **Begin / resume snapshot → finalize**, then click it: snapshot A/B/C/D = 10/5/2/0. The countdown uses the program's Clock sysvar, not the computer clock or estimated block time.
-2. While the action is **SNAPSHOTTED**, click **Demo: A transfers 4 → B** and sign. Current units become 6/9/2/0; record-date units remain 10/5/2/0. Rows are ordered by account address, not by A/B/C/D.
-3. Click **Calculate protocol rights**: entitlements are 500/250/100/0, total 850, even though A now holds only six bonds.
-4. Approve → fund → settle → finalize. Refresh/reopen the action to compare current units, immutable snapshot units and paid amounts.
+Success prints `PASS` and saves **`passed: true`** in `target/devnet-evidence/actions-<run-id>/run.json`, alongside action screenshots. It checks actual token balance deltas, mint supply and audited receipts. Retain the JSON, Action URLs and Explorer links for judges. Reopen `/actions?action=<PDA>` as Auditor and use **Export verified audit**; for a clean manual recovery demonstration, use another browser without Phantom.
 
-The protocol permits later transfers after FINALIZED, but doing the demo transfer only then does not establish the intended **sell before payout, retain snapshot entitlement** lifecycle. Start a new golden action/instrument for a clean replay instead of paying the old action again.
+The full runner has **no automatic resume**. On failure inspect `run.json`, `failure.png`, current Action URL and submitted signatures. A new invocation creates a new instrument; reconcile partial progress before retrying payments. A successful run proves this MVP Devnet scenario, not all Post-MVP operations or production readiness. The full human three-action PASS is still pending recorded evidence.
 
-Success independently checks snapshot **10/5/2/0**, current holdings **6/9/2/0**, coupon payment deltas **500/250/100/0**, total **850**, finalized receipt and read-only hash audit. Public evidence is written to `target/devnet-evidence/coupon.json` and `coupon.png`. Human-signed replay passed on 2026-10-06 for action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`; partial progress alone is not a full PASS.
+## Product screens and manual acceptance
 
-The lasting result is stored **on chain**, in Instrument, CorporateAction, EntitlementPosition and ActionReceipt accounts; stage signatures are available in the audit links. Reopen `http://localhost:4444/protocol?action=YOUR_ACTION_PDA` to read it without a connected wallet. Manual clicks alone do not create the runner's `coupon.json`; that file is written only after the automatic runner reaches all its verification checks. A separate read-only audit can retain `target/devnet-evidence/action-YOUR_ACTION_PDA.json` and must state its scope independently of the runner's PASS.
+| Route | Purpose |
+|---|---|
+| `/protocol` | Instrument/holder setup and historical Coupon |
+| `/actions?instrument=<PDA>` | Create Coupon, Voting, Full or Partial Redemption |
+| `/actions?action=<PDA>` | Recover action, inspect rights/results, audit/export |
+| `/claims` | Verify a prepared public manifest and sign a holder-bound claim |
+| `/reference` | Browser/Memo calculation reference and simulated golden example |
 
-To resume a stopped run **before any payments start**, copy the **Action PDA** from the page or its `?action=` URL, keep the same profile, load the variables as above and replace `YOUR_ACTION_PDA`:
+### Manual acceptance
 
-```bash
-RECORDA_DEVNET_ACTION=YOUR_ACTION_PDA npm run test:e2e:golden:devnet
-```
+Use [DEVNET-DEMO.md](docs/DEVNET-DEMO.md) for the exact accounts, buttons and expected amounts. Operator schedules → captures snapshot → calculates → approves. Coupon requires vault funding and operator settlement. Redemption requires vault funding and each nonzero holder's **Sign atomic burn and payment**; Operator completes zero allocations and finalizes the receipt. Full redemption creation requires maturity to have arrived on Solana Clock. Use a distinct reserved period for a separate final coupon.
 
-Resume preserves the action/instrument, skips completed stages and checks chain balances before repeating A→B:4. Failure diagnostics are `target/devnet-evidence/failure.json` and `failure.png`. After payments start, reconcile the existing action in the UI; the golden runner refuses to invent a pre-payment balance baseline. A normal run without the resume variable creates a new instrument.
+For Voting, holders verify the proposal document hash before YES/NO/ABSTAIN. Tally is permitted after the exclusive closing boundary; abstentions count toward quorum, YES must exceed NO, ties fail. No payment vault is used. Dates in `/actions` use the browser's local timezone; the optional maturity field in `/protocol` uses ISO UTC ending in `Z`.
+
+Auditor reads chain data and exports without signing. Choosing a frontend role grants no on-chain authority. For governed instruments, privileged operations require stored intents and configured threshold signatures; governance must be configured before the first snapshot. Claims require a prepared approved/funded distribution and retained manifest, not just an address entered into the page. See [v2 contracts](docs/implementation/action-engine-v2.md) and [operations](docs/implementation/operations-v2.md).
 
 ## Technical setup
 
@@ -145,39 +161,12 @@ sudo snap install chromium
 
 [Chromium installation](https://snapcraft.io/chromium). Other Linux distributions use their own package manager. The desktop browser with Phantom is separate from the Chromium installed by Playwright for controlled tests.
 
-### Build and verify Coupon Core
-
-After changing the program ID/interface, regenerate IDL first:
-
-```bash
-npm ci
-npm run protocol:idl
-npm run protocol:build
-npm run protocol:idl:check
-npm run protocol:test:rust
-npm run build
-npx playwright install --with-deps chromium
-npm run protocol:test:ui
-```
-
-Keep validator RPC **18899**, faucet **19900** and protocol Vite **4445** free. `protocol:test:ui` starts/stops a fresh validator, runs real PDA/token-account and browser checks, prints the retained `/tmp` ledger path and writes `target/protocol-evidence/` plus Playwright reports/traces. Generated JSON/TypeScript IDL files must be committed together.
-
-### Requirements and adversarial audit
-
-```bash
-npm run audit:requirements  # Static mapping of every normative UC/FR/NFR/TC ID
-npm run test:audit:client   # Build and controlled React/RPC/wallet tests
-npm run test:audit          # Also Rust, fresh SBF/IDL and actual validator/browser tests
-```
-
-The full audit requires the tooling above and ports **4444**, **4445**, **18899**, **19900**. Results and hashes are saved in `target/security-audit/run.json`; a failed command stops the run and records failure. [Attack matrix and findings](docs/SECURITY-AUDIT.md) explain coverage, open requirements and the distinction between local controlled signing and real Phantom/Devnet proof. Golden/protocol traces and HTML reports use separate subdirectories.
-
 ### Deploy a new program or update the existing one
 
 For the currently deployed program, skip this section unless rebuilding/redeploying. A new checkout may not contain the ignored deployment keypair; restoring that keypair is necessary to control the same program ID, or generate a new one and synchronize the ID before deployment.
 
 1. Read the program address: `solana address -k target/deploy/recorda-keypair.json`. If the file is missing and you intend to create a new program, run `mkdir -p target/deploy`, then `solana-keygen new --outfile target/deploy/recorda-keypair.json` first. Keep an existing keypair instead of replacing it.
-2. Match that address in `declare_id!` in `programs/recorda/src/lib.rs`, `[programs.localnet]` and `[programs.devnet]` in `Anchor.toml`. Run the build/verification block above to regenerate IDL and compile that ID.
+2. Match that address in `declare_id!` in `programs/recorda/src/lib.rs`, `[programs.localnet]` and `[programs.devnet]` in `Anchor.toml`. Run `npm run protocol:idl`, `npm run protocol:build` and `npm run protocol:idl:check` to regenerate IDL and compile that ID.
 3. Configure a **CLI signer** to pay for upload. Phantom's public address alone cannot sign a CLI deployment. Create a new deployment wallet only if this file does not already exist:
 
 ```bash
@@ -188,7 +177,7 @@ solana address
 solana balance
 ```
 
-Transfer enough **Devnet SOL** to that CLI address from your test wallet, or obtain it from [Solana faucet](https://faucet.solana.com/). Our observed initial upload required approximately **2.759 SOL for accounts plus fees**; check the CLI's current requirement. Funding around 3 test SOL covered that observed requirement. This is a storage deposit, not the cost of each golden iteration. The optional `npm run solana:airdrop -- PUBLIC_ADDRESS` utility is only a funding aid.
+Transfer enough **Devnet SOL** to that CLI address from your test wallet, or obtain it from [Solana faucet](https://faucet.solana.com/). The historical smaller Coupon binary needed about **2.759 SOL** for storage; this is not a current v2 deployment budget. A larger upgrade needs extra program storage plus a temporary upload buffer simultaneously. Check the CLI estimate and current balance before upload; the observed 542,864→1,164,928-byte upgrade needed approximately 3.1601 SOL extra storage plus 5.9187 SOL buffer and fees. This is a storage deposit, not the cost of each golden iteration. The optional `npm run solana:airdrop -- PUBLIC_ADDRESS` utility is only a funding aid.
 
 4. Deploy, then inspect (replace `YOUR_PROGRAM_ID` with the address from step 1):
 
@@ -196,130 +185,114 @@ Transfer enough **Devnet SOL** to that CLI address from your test wallet, or obt
 solana program deploy target/deploy/recorda.so \
   --url devnet \
   --program-id target/deploy/recorda-keypair.json \
-  --keypair ~/.config/solana/recorda-devnet-deployer.json
+  --keypair ~/.config/solana/recorda-devnet-deployer.json \
+  --fee-payer ~/.config/solana/recorda-devnet-deployer.json \
+  --upgrade-authority ~/.config/solana/recorda-devnet-deployer.json
 solana program show YOUR_PROGRAM_ID --url devnet
 ```
 
-5. Update `VITE_RECORDA_PROGRAM_ID` in `.env.local`, keep the RPC on Devnet, restart Vite and follow the three-terminal replay above. The CLI deployer and Phantom Operator can differ; instrument creation establishes the Operator authority. [Official deployment instructions](https://solana.com/docs/programs/deploying).
+5. Update `VITE_RECORDA_PROGRAM_ID` in `.env.local`, keep the RPC on Devnet, restart Vite and follow the [three-terminal Devnet demo](#devnet-demo--coupon--voting--redemption). The CLI deployer and Phantom Operator can differ; instrument creation establishes the Operator authority. [Official deployment instructions](https://solana.com/docs/programs/deploying).
 
-Read-only inspection confirmed the existing deployment at slot **508134659**, data length **542,864 bytes**. Existence is verified; human Coupon golden acceptance passed; a separate comparison of on-chain/local binary hashes remains open. The `/` page's **Deploy KZTB26** creates test token assets, not the Rust program; ComputeBudget/Associated Token program IDs and token mint addresses are not Recorda's ID.
+Historical read-only inspection recorded slot **508134659**, data length **542,864 bytes**; that is not evidence of the current v2 binary. A subsequent Devnet deployment has been reported. Verify the currently deployed binary separately; the human three-action PASS remains to be recorded. The `/` page's **Deploy KZTB26** creates test token assets, not the Rust program; ComputeBudget/Associated Token program IDs and token mint addresses are not Recorda's ID.
 
-## Golden dataset and evidence
+## Development and automated local checks
 
-The [required fixture](golden/coupon-tz-section-22.json), from [TZ §22](docs/TZ.md#22-demo-dataset), contains fixed inputs and independently specified expected outputs. Face value 1,000 × annual coupon 10% ÷ two payments/year gives 50 per bond. Snapshot A/B/C/D = 10/5/2/0; after A sells four to B, current balances = 6/9/2/0, while coupons remain 500/250/100/0, total 850. Money is stored in minor units: `50000` means `500.00`. The [historical fixture](golden/coupon-happy-path.json) is a separate regression, total 1,750.
+Use these for repeatable development, negative scenarios and CI. They do not require human Phantom confirmations and do not replace public Devnet acceptance.
 
-| Command | Execution / signing | Evidence scope |
-| --- | --- | --- |
-| `test:e2e:golden` | Controlled wallet/RPC/DOM | Client/runner regression **44/44**; not public Solana proof |
-| `protocol:test:ui` | Actual Rust/Token-2022 on local validator; generated test keys | Saved validator **16/16**, browser/audit **4/4**; no human Phantom proof |
-| `test:e2e:golden:devnet` | Public Devnet; human Phantom | PASS on 2026-10-06: payouts 500/250/100/0, total 850, finalized receipt and read-only audit |
+| Command | Scope |
+|---|---|
+| `npm run test:devnet:setup` | Offline environment/RPC/faucet setup regression |
+| `npm run test:e2e:golden` | Controlled client/wallet/RPC regression |
+| `npm run protocol:test:rust` | Rust unit tests |
+| `npm run protocol:test:ui` | Actual Rust/Token-2022 on a fresh local validator, full protocol/browser checks |
+| `npm run test:post-mvp` | Offline index/archive/external-event checks |
+| `npm run protocol:test:post-mvp` | Native Post-MVP scenarios on a fresh local validator |
+| `npm run audit:requirements` | Static normative requirement → implementation/test mapping |
+| `npm run test:audit:client` | Client build and controlled checks |
+| `npm run test:audit` | Full requirements/client/Rust/SBF/IDL/native-browser audit |
 
-Tests compare actual calculations/accounts/token deltas against the fixture; the fixture alone cannot prove payment. Local tests sign automatically with generated keys. Human Devnet replay requires your confirmations. [Requirement → code → test mapping](docs/ROADMAP.md#verification-and-gaps) and [test artifacts](docs/ARCHITECTURE.md#test-evidence) retain the detailed audit, including Rust **4/4** and historical build/SBF/IDL results. Remote CI is not established by local runs.
-
-## Manual acceptance
-
-For manual local Coupon replay after building, use the synchronized program ID:
+For local browser checks, install the separate Playwright browser:
 
 ```bash
-solana-test-validator --reset --ledger /tmp/recorda-manual-ledger \
+npx playwright install --with-deps chromium
+npm run test:audit
+```
+
+Full local checks need Rust/Solana tools and free ports **4444, 4445, 4446, 18899, 19900**. The runner starts/stops its validator and retains protocol evidence, benchmarks, reports and traces in `target/`, `test-results/` and `playwright-report/`. `target/security-audit/run.json` is current only when all commands pass and source hashes match. Generated JSON/TypeScript IDL files must be committed together.
+
+Local suites include partial retirement, Merkle claims/reclaim, governance roles/thresholds, eligibility/terms/source attacks, UI recovery, forged-report rejection and production Next checks. Static [FR checkmarks](docs/implementation/fr-checklist.md) describe source delivery; neither mapping nor old counts prove a new revision passed. Consult [the attack matrix](docs/SECURITY-AUDIT.md) and [roadmap evidence](docs/ROADMAP.md#verification-and-gaps).
+
+For a manual local validator, after building:
+
+```bash
+solana-test-validator --ledger /tmp/recorda-manual-ledger \
   --bpf-program CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF target/deploy/recorda.so
 ```
 
-In another terminal:
+In another terminal, `VITE_SOLANA_RPC_URL=http://127.0.0.1:8899 npm run dev`. Use a local-RPC-compatible wallet. The Devnet runners intentionally refuse this network.
+
+## Phase 1 golden on Devnet — real Phantom
+
+This separate historical Coupon-only runner checks the record-date business rule: A owns 10 at snapshot, transfers 4 to B before payment, but still receives 500 Mock USD. Current A/B/C/D = 6/9/2/0; snapshot = 10/5/2/0; payouts = 500/250/100/0, total 850. Fixture: [TZ §22](docs/TZ.md#22-demo-dataset), [golden dataset](golden/coupon-tz-section-22.json).
+
+Use the same Devnet `.env.local`, Vite and Chromium/CDP setup as above, select Operator, then:
 
 ```bash
-VITE_SOLANA_RPC_URL=http://127.0.0.1:8899 npm run dev
+npm run test:e2e:golden:devnet
 ```
 
-Use a wallet compatible with local RPC, fund its public address on the local validator and open `/protocol`. Create the instrument → schedule record date → begin/capture/finalize snapshot after record time → A→B:4 → calculate → approve → fund → settle → finalize. Reopen `/protocol?action=YOUR_ACTION_PDA` without a wallet/cache and verify the receipt, fixed rights, formula and totals. For manual Devnet use the configured Devnet RPC and deployed program instead.
+Unlike the three-action runner, this uses disposable A/B/C/D identities retained in the original browser profile and does not use the configured real `RECORDA_HOLDER_A/B/C` accounts. Keep that profile for transfers/recovery. Public evidence: `target/devnet-evidence/coupon.json` and `coupon.png`; failures: `failure.json`/`failure.png`. Historical human acceptance passed on 2026-10-06 for action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`; it does not establish current v2 three-action acceptance.
 
-Retain program/mint/action/receipt addresses, snapshot metadata/hash, stage signatures and payment before/after balances. The `/reference` Browser/Memo reference keeps lifecycle truth in the browser; its Memo receipt is different from an Anchor receipt. [Runtime boundaries](docs/ARCHITECTURE.md#runtime-and-trust).
+Before any payment starts, the legacy runner can resume the same action:
+
+```bash
+RECORDA_DEVNET_ACTION=YOUR_ACTION_PDA npm run test:e2e:golden:devnet
+```
+
+It skips completed stages and checks balances before repeating the demo transfer. Once payments start, use chain-based reconciliation instead of inventing a new balance baseline. This resume option does not apply to `test:e2e:actions:devnet`.
 
 ## Troubleshooting
 
 | Symptom | Next step |
-| --- | --- |
-| `solana: command not found` | Run the Solana PATH export from installation in this terminal; persist it in the shell config. `source "$HOME/.cargo/env"` restores Cargo/Rust PATH. |
-| `No wallet available` | Configure the CLI deployment keypair and Devnet with `solana config set` above; Phantom is not a CLI signer. |
-| Deploy `insufficient funds for spend ... + fee` | Check the **CLI wallet's Devnet balance**, fund the amount reported by CLI plus fees, then retry. Program storage rent is separate from transaction fees; mainnet funds do not pay Devnet costs. |
-| `airdrop` returns `Internal error` / rate limit | Optional faucet funding failed; use the web faucet or transfer existing Devnet SOL. The golden runner does not depend on airdrop. |
-| Program missing / IDL ID mismatch | Compare `solana program show`, Rust `declare_id!`, Anchor entries, generated IDL and `.env.local`; regenerate/build if the ID changed, then restart Vite. |
-| Browser/RPC configuration mismatch | Export `.env.local` in the runner terminal; Vite loads it automatically but Node does not. `RECORDA_DEVNET_RPC` and `VITE_SOLANA_RPC_URL` must match. |
-| Chromium command missing / runner cannot reach port 9222 | Install desktop Chromium, start the dedicated profile with debugging flags, and keep it running. Check `curl http://127.0.0.1:9222/json/version`. Close an old instance of that same profile before restarting it with flags. |
-| Phantom missing / wrong account/network / rejected signature | Install/unlock Phantom in the **test profile**, select Devnet and the instrument's authorized Operator, then inspect the page alert. |
-| Snapshot button disabled / stage timeout | Wait for **Record date reached on Solana**; the Clock countdown updates automatically and enables the button. If Clock RPC fails, readiness remains disabled. Inspect page alerts and `failure.json`; resume the existing Action PDA before payments start. |
-| `RecordDate` / `Custom:6007` at BeginSnapshot | The program's Clock has not reached the date. Refresh the updated UI and resume the same action; the runner now schedules/waits with Clock sysvar and pins simulation to at least its ready slot. `getBlockTime` is an estimate and can be ahead of program time. No Rust redeployment is needed for this client fix. |
-| Node `TypeError: fetch failed` after snapshot | Verifier reads now run sequentially with up to three retries, backoff and a 15-second timeout per request. If the RPC stays unavailable, resume with `RECORDA_DEVNET_ACTION=<printed-action-PDA> npm run test:e2e:golden:devnet` in the same browser profile before payments start. Transaction sends are not automatically repeated. |
-| Expired blockhash / invalid scheduling date | Sign promptly. If scheduling failed, choose a fresh future record time; if broadcast succeeded or is ambiguous, reconcile its signature before retrying. |
-| RPC `429` / port 4444, 4445, 18899 busy | Use a browser-accessible RPC with the same configuration in both terminals; stop the conflicting server or use `RECORDA_APP_URL` for a different Vite origin. |
-| Payment already started / confirmation unclear | Inspect the saved signature, destination balances and per-holder paid flags; use chain-based UI recovery. Clearing browser storage is not reconciliation and loses demo holder keys. |
-
-If deployment fails after creating an intermediate buffer, retain its recovery instructions locally and inspect that buffer before retrying or reclaiming its rent. Do not publish the recovery seed. Failure JSON/screenshots are diagnostics, not success proof.
+|---|---|
+| `solana: command not found` | Add the installed Solana CLI path using the technical setup section |
+| Deployment funding/allocation error | Check CLI payer balance and the current upload/extension estimate; inspect any intermediate buffer |
+| Buffer `AccountNotFound` | It may never have been created; do not assume funds are locked there |
+| Program/IDL mismatch | Compare deployed address, Rust, Anchor, IDL and `.env.local`; regenerate/build if the ID changed |
+| RPC mismatch or stale values | Restart Vite; remove shell overrides; optional runner RPC must equal frontend RPC |
+| Runner cannot connect to 9222 | Keep the configured desktop browser open; check `curl http://127.0.0.1:9222/json/version` |
+| Phantom missing or wrong wallet | Install/unlock it in the active test profile, select Devnet and the address requested by the runner |
+| Wallet changed the simulated transaction | Reload current frontend; it pins budget/fee before signing. If it persists, retain exact error details; do not bypass the message-integrity guard |
+| Stage waits at record date or vote close | Wait for Solana Clock; inspect alerts if it exceeds the stage/window limits |
+| Expired blockhash | Confirm promptly; inspect submitted signature/status before retrying |
+| Voting window ended before all votes | Inspect/reconcile the current action; adjust the next run's `RECORDA_VOTE_SECONDS` within 300..3600 |
+| RPC 429/fetch failure | Use a reliable browser-accessible Devnet RPC consistently; retain partial-run evidence |
+| Payment confirmation unclear | Check signature, destination balance and processed flags; reopening an Action URL recovers on-chain state |
 
 ## CI and website deployment
 
-`.github/workflows/e2e.yml` checks build, client and Coupon protocol tests and retains artifacts. `.github/workflows/deploy.yml` rechecks merged same-repository PRs to `main` and deploys Vercel prebuilt output; `vercel.json` disables Git auto-deployments. Configure `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`; remote execution and the first merge deployment remain unverified. Website deployment is separate from Solana program deployment.
+`.github/workflows/e2e.yml` checks requirements, builds, controlled client tests, offline Post-MVP, Rust and the full local protocol/browser suite; it retains artifacts. CI does not run human Phantom acceptance. `.github/workflows/deploy.yml` deploys Vercel prebuilt output for eligible merged PRs; `vercel.json` disables Git auto-deployment. Remote CI/deployment success must be established independently. Website publication and Solana program deployment are separate.
 
-For a local production preview:
+Vite production preview:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Documentation
-
-[TZ](docs/TZ.md) → [REQUIREMENTS](docs/REQUIREMENTS.md) defines scope and acceptance; [ROADMAP](docs/ROADMAP.md) maps features to evidence; [ARCHITECTURE](docs/ARCHITECTURE.md), [PRODUCT](docs/PRODUCT.md) and [CHANGELOG](docs/CHANGELOG.md) cover implementation, business context and changes. TZ takes precedence; roadmap checkmarks do not amend requirements.
-
-All rights reserved: [LICENSE](LICENSE). Third-party licenses remain applicable.
-
-
-## Full requirements implementation and local acceptance
-
-The implemented source covers [FR-01–58](docs/implementation/fr-checklist.md). Read [v2 contracts](docs/implementation/action-engine-v2.md), [operations/trust/migration and measured envelope](docs/implementation/operations-v2.md), [requirement mapping](docs/audit-coverage.json) and [attack matrix](docs/SECURITY-AUDIT.md). No new Devnet binary is published by these local changes.
+The Next App Router shell shares the same screens. It uses `next-app` as its project directory, so the root `.env.local` is not automatically loaded by the Next CLI. Supply public settings at build time as below, or in `next-app/.env.local`; they are baked into the browser bundle:
 
 ```bash
-npm ci
-npx playwright install chromium
-npm run test:audit
-```
-
-The full audit requires the pinned Solana/SBF toolchain on PATH and Rust. It builds SBF, rejects unsafe stack diagnostics even when the compiler exits zero, checks generated IDL parity, starts a fresh local validator and verifies legacy Coupon plus Coupon → Voting → Full Redemption on one instrument. Actual holder signatures authorize retirement/payment. It also tests partial retirement, Merkle claims/reclaim, separated threshold roles, eligibility/terms/source attacks, UI recovery, independent forged-report rejection and the production Next runtime. Evidence stays in `target/security-audit`, `target/protocol-evidence`, `target/benchmarks`, `test-results` and Playwright reports. A success is current only when the input hashes remain unchanged.
-
-For the production frontend:
-
-```bash
-NEXT_PUBLIC_SOLANA_RPC_URL=http://127.0.0.1:18899 npm run build:next
+NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com \
+NEXT_PUBLIC_RECORDA_PROGRAM_ID=CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF \
+npm run build:next
 npm run start:next -- --port 3000
 ```
 
-Vite remains available for development. `/protocol` creates the instrument/registry and supports historical Coupon. `/actions?instrument=<PDA>` creates typed Coupon, Voting, Full Redemption or Partial Redemption; `/actions?action=<PDA>` recovers an action without browser storage. Local datetime inputs use your browser timezone. For a human three-action demo, set optional A/B/C public addresses to real holder wallets during setup (10/5/2 units); leave zero-unit D disposable. Keep all nonzero holder keys available in their wallets for redemption. Choose a maturity/record schedule that has arrived on Solana Clock for full redemption. Final coupon is explicit and uses a distinct instrument/period reservation; reserve it before approval. Once consumed, a period cannot be paid again.
+For retained proofs, `npm run distribution:index -- journal.json parameters.json public/distributions` verifies the pinned archive-provider signature and writes content-addressed manifests/proofs. Vite/Next serve the shared directory; generated archives must be backed up and explicitly included in hosting storage. This is separate from the three-action MVP demo; see [operations/provenance](docs/implementation/operations-v2.md).
 
-Operator flow: schedule → snapshot/capture → calculate → review/approve. For payments, fund the vault from the specified existing payment account or use the controlled demo mint. For Coupon, the operator settles each right. For retirement, each connected registered holder opens Investor, checks principal/final coupon and signs atomic burn/payment. Zero retirement allocations permit operator completion. Partial failures resume from chain; a started snapshot cannot be cancelled. Finish all rights, then finalize the receipt. Full redemption ends the instrument's active supply.
+## Documentation
 
-Voting flow: operator enters proposal text/window/quorum, captures and approves; holders open Investor and verify the proposal document against the approved hash before YES/NO/ABSTAIN. The operator tallies after the exclusive closing boundary and finalizes without a payment vault. Snapshot power survives later transfers. Abstentions count toward quorum; YES must strictly exceed NO. Proposal acceptance does not itself modify terms.
+[Devnet demo](docs/DEVNET-DEMO.md) · [Product](docs/PRODUCT.md) · [TZ](docs/TZ.md) · [Requirements](docs/REQUIREMENTS.md) · [Roadmap](docs/ROADMAP.md) · [Architecture](docs/ARCHITECTURE.md) · [FR checklist](docs/implementation/fr-checklist.md) · [Requirement mapping](docs/audit-coverage.json) · [Security audit](docs/SECURITY-AUDIT.md) · [Changelog](docs/CHANGELOG.md).
 
-Wallet-free Auditor can read rights/outcomes, verify commitments/formulas and export decimal inputs, receipts and signature pages. Pruned transaction bodies are disclosed. A frontend role selection grants no signing authority. For a governed instrument, privileged operations create exact on-chain intents; threshold members reopen `?instrument=<PDA>&intent=<PDA>` to approve/execute from stored instruction bytes. Configure governance before the first snapshot; sealed legacy instruments require an explicit migration strategy.
-
-For retained claim proofs, `npm run distribution:index -- journal.json parameters.json public/distributions` validates the externally pinned archive-provider signature and historical bank/registry reconciliation, then persists content-addressed manifests/proofs. The shared public directory is served by Vite/Next. Back it up and include generated directories in deployment storage explicitly. `/claims?distribution=<PDA>&manifest=<public-url>` verifies the manifest and allows only the bound holder's signed claim. An archive signature authenticates its provider's assertion; proof membership is not independent proof of historical ownership.
-
-Individual checks: `test:post-mvp`, `benchmark:distribution`, `protocol:test:rust`, `protocol:test:post-mvp`, `protocol:test:ui`. The native full runner also writes compute/fee/live-program-rent measurements. Offline 10,000-holder indexing is not 10,000-holder on-chain acceptance: the native supported test envelope is four holders. Human Phantom/Devnet replay of the current three-action source, remote CI results, deployment and demo video remain release gates.
-
-### Human Devnet Coupon → Voting → Full Redemption
-
-`test:e2e:golden:devnet` remains the historical Coupon-only golden. The new `test:e2e:actions:devnet` drives all three v2 actions on one fresh instrument through the Vite UI and real Phantom. First deploy the current Rust binary, start `npm run dev` with Devnet `.env.local`, and open Chromium with CDP on port 9222 and Phantom installed/unlocked. Prepare a separate Operator and three distinct holder accounts in Phantom, each funded with Devnet SOL. No holder private keys are supplied to the runner.
-
-In the runner terminal, export the same public RPC/program configuration as the browser, then the holder public addresses:
-
-```bash
-export RECORDA_DEVNET_RPC=https://api.devnet.solana.com
-export VITE_RECORDA_PROGRAM_ID=CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF
-export RECORDA_HOLDER_A=YOUR_HOLDER_A_PUBLIC_ADDRESS
-export RECORDA_HOLDER_B=YOUR_HOLDER_B_PUBLIC_ADDRESS
-export RECORDA_HOLDER_C=YOUR_HOLDER_C_PUBLIC_ADDRESS
-npm run test:e2e:actions:devnet
-```
-
-Begin with Operator selected. Follow terminal prompts to switch Phantom to A/B/C for voting and atomic burn/payment, then back to Operator; confirm every transaction. The runner waits for exact wallet addresses, does not inject providers or auto-sign, and refuses non-Devnet genesis. A/B/C/D start at 10/5/2/0; this scenario does not perform post-record transfers. It checks Coupon payments 500/250/100 Mock USD, YES/NO/ABSTAIN weights 10/5/2 and a passed 50% quorum vote, then full redemption payments 10500/5250/2100 Mock USD (principal plus period-2 coupon), supply 17→7→2→0, receipts, independent client hash/formula audit and wallet-free page recovery. Node independently reads SPL payment balance deltas and retirement mint supply. Maturity is set to chain time +180 seconds; the voting window defaults to 15 minutes. Budget roughly 20–40 minutes including human confirmations; `RECORDA_VOTE_SECONDS` allows 300..3600 seconds, but slow approvals may consume the voting window.
-
-Evidence and screenshots are written to `target/devnet-evidence/actions-<run-id>/`. Only `passed: true` after all checks is acceptance. On failure the file retains the instrument, current action URL and completed results. Automatic resume is not implemented: reconcile that action before retrying; every new invocation creates a new instrument. This script does not accept Post-MVP flows or prove production readiness. Adding the runner alone is not a successful human Devnet replay.
+TZ takes precedence; roadmap checkmarks do not amend requirements. All rights reserved: [LICENSE](LICENSE). Third-party licenses remain applicable.

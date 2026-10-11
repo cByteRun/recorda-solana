@@ -4,6 +4,8 @@
 
 [Specification](TZ.md) · [Requirements](REQUIREMENTS.md) · [Verification](#verification-and-gaps)
 
+[Human Devnet MVP demo](DEVNET-DEMO.md): `.env.local` public configuration, four Phantom accounts and three-terminal `test:e2e:actions:devnet` replay. The runner's existence is not a human PASS; retain its per-run receipt/payment/supply evidence separately from local acceptance.
+
 ## Verification and gaps
 
 Audit revision: **2026-10-10**. [58/58 FR checklist](implementation/fr-checklist.md), [121-ID traceability](audit-coverage.json), [attack matrix](SECURITY-AUDIT.md), [v2 contract](implementation/action-engine-v2.md), [operations/provenance/envelope](implementation/operations-v2.md). Checkboxes below describe implemented source scope. Acceptance for a revision requires successful `npm run test:audit` with unchanged input hashes in `target/security-audit/run.json`; a mapping or source checkbox alone is not passing evidence.

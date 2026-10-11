@@ -3,6 +3,34 @@ import assert from 'node:assert/strict';
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { airdrop, DEVNET_GENESIS } from './devnet.mjs';
 import { createDevnetRpcFetch } from './devnet-rpc-fetch.mjs';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+
+test('Devnet env loader honors shell > .env.local > .env without evaluating shell syntax', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'recorda-env-'));
+  try {
+    writeFileSync(join(directory, '.env'), 'RECORDA_ENV_PRIORITY=base\nRECORDA_ENV_BASE=base\n');
+    writeFileSync(join(directory, '.env.local'), 'RECORDA_ENV_PRIORITY=local\nRECORDA_ENV_LOCAL="quoted value"\nRECORDA_ENV_LITERAL="$(echo unsafe)"\nRECORDA_ENV_SHELL=file\n');
+    const loader = new URL('./load-devnet-env.mjs', import.meta.url).href;
+    const env = { ...process.env, RECORDA_ENV_SHELL: 'shell' };
+    delete env.NODE_TEST_CONTEXT; // Child is a normal CLI process, not a nested test worker.
+    for (const key of ['RECORDA_ENV_PRIORITY', 'RECORDA_ENV_BASE', 'RECORDA_ENV_LOCAL', 'RECORDA_ENV_LITERAL']) delete env[key];
+    const child = spawnSync(process.execPath, ['--input-type=module', '-e', `import {writeFileSync} from 'node:fs'; import {loadDevnetEnv} from ${JSON.stringify(loader)}; loadDevnetEnv(); writeFileSync('observed.json', JSON.stringify(Object.fromEntries(Object.entries(process.env).filter(([k])=>k.startsWith('RECORDA_ENV_')))));`], { cwd: directory, env, encoding: 'utf8' });
+    assert.equal(child.status, 0, child.stderr);
+    assert.deepEqual(JSON.parse(readFileSync(join(directory, 'observed.json'), 'utf8')), { RECORDA_ENV_SHELL: 'shell', RECORDA_ENV_PRIORITY: 'local', RECORDA_ENV_LOCAL: 'quoted value', RECORDA_ENV_LITERAL: '$(echo unsafe)', RECORDA_ENV_BASE: 'base' });
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+test('Devnet env files are optional for existing shell-based invocations', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'recorda-env-'));
+  try {
+    const loader = new URL('./load-devnet-env.mjs', import.meta.url).href;
+    const child = spawnSync(process.execPath, ['--input-type=module', '-e', `import {loadDevnetEnv} from ${JSON.stringify(loader)}; loadDevnetEnv();`], { cwd: directory, encoding: 'utf8' });
+    assert.equal(child.status, 0, child.stderr);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
 test('web3 account read survives fetch failed through configured transport', async () => {
   let calls = 0;
   const rpc = new Connection('http://localhost:8899', { commitment: 'confirmed', disableRetryOnRateLimit: true,

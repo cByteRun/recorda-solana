@@ -2,6 +2,8 @@
 
 ## 2026-10-11 — Human Devnet three-action acceptance runner
 
+- Devnet runners/airdrop now read `.env.local` then `.env` automatically, with shell overrides preserved and frontend RPC fallback. Add public Operator/holder/CDP/window settings to `.env.example`, optional exact Operator validation and a complete judge-facing installation→deployment→wallets→three-terminal demo guide. Real local addresses remain in ignored `.env.local`.
+- Reorganize README around the human Phantom three-action Devnet demo, with prerequisites, configuration, three terminals, expected outcomes and evidence first. Consolidate local development checks, preserve legacy Coupon replay/linked anchors, remove superseded test counts and clarify Next build environment scope.
 - Add `test:e2e:actions:devnet`: real Phantom UI Coupon → Voting → Full Redemption on one fresh 10/5/2/0-holder instrument, explicit wallet switching, Devnet genesis guard, payment deltas, per-holder mint retirement, audited receipts and wallet-free recovery. Persist per-run public evidence/failure checkpoints; no automatic payment resume or Post-MVP acceptance claim. Human execution remains pending.
 - Normalize Phantom signed transactions through canonical wire decoding instead of constructor identity; retain message and partial-signature substitution checks. Explicitly pin compute limit and priority price before simulation/co-signing for non-Memo operations too, avoiding Phantom fee-instruction insertion. Transaction suite: 24 passed; TypeScript passed. Human confirmation of this compatibility fix remains pending.
 

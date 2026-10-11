@@ -36,4 +36,6 @@ The new action/governance/distributor/index/adapter code is written in this repo
 
 Production Next setup follows [official client component documentation](https://nextjs.org/docs/app/api-reference/directives/use-client) and [lazy loading documentation](https://nextjs.org/docs/app/guides/lazy-loading). `next-app` isolates App Router from existing FSD `src/pages`; shared browser screens load client-side with public RPC/program configuration. Only public environment values enter its bundle.
 
-Source implementation and local acceptance do not deploy the new ABI. The historical Devnet binary, remote CI, human Phantom replay of all three current actions and demo video remain separate release evidence gates.
+Source implementation and local acceptance do not deploy the new ABI. The user has reported a subsequent Devnet deployment; retain independent evidence of its current binary. Remote CI, a successful human Phantom replay of all three current actions and demo video remain separate release evidence gates.
+
+Use [the Devnet demo guide](../DEVNET-DEMO.md) for installation/build/deployment, four Phantom accounts, `.env.local` and the three-terminal judge workflow. Devnet runners load `.env.local` and `.env` automatically, preserving shell overrides; absent `RECORDA_DEVNET_RPC`, they use the frontend's `VITE_SOLANA_RPC_URL`. `test:e2e:actions:devnet` requires real holder public addresses and human wallet confirmations/switching. Its per-run evidence must say `passed: true`; it does not test Post-MVP operations or automatically resume partial payments.

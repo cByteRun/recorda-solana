@@ -10,11 +10,11 @@ import { protocolStage } from './protocol-stage.mjs';
 
 const holders = ['A', 'B', 'C'].map(name => {
   const value = process.env[`RECORDA_HOLDER_${name}`];
-  assert.ok(value, `Set RECORDA_HOLDER_${name} to a real Phantom holder public address`);
+  assert.ok(value, `Set RECORDA_HOLDER_${name} in .env.local to a real Phantom holder public address`);
   return new PublicKey(value).toBase58();
 });
 assert.equal(new Set(holders).size, 3, 'Holder addresses must be distinct');
-assert.ok(process.env.VITE_RECORDA_PROGRAM_ID, 'Set VITE_RECORDA_PROGRAM_ID to the deployed current program');
+assert.ok(process.env.VITE_RECORDA_PROGRAM_ID, 'Set VITE_RECORDA_PROGRAM_ID in .env.local to the deployed current program');
 const programId = new PublicKey(process.env.VITE_RECORDA_PROGRAM_ID);
 assert.equal(programId.toBase58(), JSON.parse(readFileSync('src/shared/solana/idl/recorda.json', 'utf8')).address);
 const rpc = await devnetConnection(); // Refuses mainnet even if an RPC variable is wrong.
@@ -150,6 +150,7 @@ try {
   await page.getByRole('button', { name: 'Connect Phantom', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Create / resume demo instrument' })).toBeEnabled();
   const operator = await page.evaluate(() => (window.phantom?.solana ?? window.solana).publicKey.toBase58());
+  if (process.env.RECORDA_OPERATOR) assert.equal(operator, new PublicKey(process.env.RECORDA_OPERATOR).toBase58(), 'Select the RECORDA_OPERATOR account from .env.local in Phantom');
   assert.ok(!holders.includes(operator), 'Use a separate Operator wallet');
   evidence.operator = operator; evidence.genesis = await rpc.getGenesisHash(); save();
   assert.ok(await rpc.getBalance(new PublicKey(operator)) > 0, 'Fund Operator with Devnet SOL');
