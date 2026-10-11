@@ -4,7 +4,9 @@ Dated entries describe their own revisions. Historical counts, deployment addres
 
 ## 2026-10-11 — Documentation consistency cleanup
 
+- Consolidate docs into seven main Markdown files: move implementation contracts/operations to ARCHITECTURE, use REQUIREMENTS as the single FR checklist and README/TZ for product positioning. Remove redundant PRODUCT/implementation files, condense ROADMAP and DEVNET-DEMO, and update reference links/machine-readable evidence paths.
 - Present UC/FR/NFR/TC as implementation/coverage checklists in REQUIREMENTS, with TZ-derived business domains and source references. Keep NFR-05/10/12 partial and live DoD separate; preserve normative wording/IDs. Static parser accepts checkbox syntax; traceability passes 121/121.
+- Reorganize ARCHITECTURE into frameworks/runtime, the single project structure map and key decisions. Remove the duplicate README structure table and clarify the legacy-only coupon-period limitation in the security audit.
 - Replace superseded Coupon-only architecture/gap plans with the current shared Vite/Next client, typed actions, governance, claims, external proposals and trust boundaries.
 - Keep two main verification paths: human Devnet Actions and the feature/attack audit. Preserve their internal suites and historical evidence in this changelog.
 - Correct roadmap/requirements delivery wording, audit freshness and explicit coupon-period release semantics. Remove duplicated old test-count narratives from current architecture/security docs.

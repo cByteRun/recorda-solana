@@ -283,7 +283,7 @@
       "tests": [
         "scripts/benchmark-distribution.mjs",
         "scripts/measure-protocol.mjs",
-        "docs/implementation/operations-v2.md"
+        "docs/ARCHITECTURE.md"
       ],
       "note": "Offline1..10000 measurements and native4-holder compute/fee/rent workload. No100000/production capacity claim. No external engine files copied; pinned lockfiles and license inventory documented."
     },

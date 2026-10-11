@@ -18,7 +18,7 @@
 
 **A concrete example:** A holds 10 bonds at the record date, then sells 4. A's coupon stays **10 × 1,000 × 10% ÷ 2 = 500**, even though the current balance is 6. The feature/attack audit checks this rule; the Devnet MVP demo below demonstrates three actions on one instrument.
 
-The implemented source covers **Coupon, Voting and maturity Redemption**, plus the specified [Post-MVP FR-49–58](docs/implementation/fr-checklist.md). [Product context](docs/PRODUCT.md) explains the positioning; [roadmap](docs/ROADMAP.md) separates implementation from acceptance evidence.
+The implemented source covers **Coupon, Voting and maturity Redemption**, plus the specified [Post-MVP FR-49–58](docs/REQUIREMENTS.md#16-functional-requirements-fr). Recorda is a B2B servicing layer for market operators, issuers/paying agents and depository infrastructure; [roadmap](docs/ROADMAP.md) separates implementation from acceptance evidence.
 
 **🚀 Start:** [Devnet demo](#devnet-demo--coupon--voting--redemption) · **🔎 Inspect:** [screens and roles](#product-screens-and-manual-acceptance) · **🛡️ Verify:** [features and attacks](#feature-and-attack-audit)
 
@@ -120,7 +120,7 @@ The full runner has **no automatic resume**. On failure inspect `run.json`, `fai
 - [x] **On-chain state:** instrument, holder registry, fixed rights, votes and receipts live in program accounts; Token-2022 handles bond/payment balances.
 - [x] **Off-chain helpers:** signed archive replay, retained Merkle proofs and external-event proposals support the specified Post-MVP flows.
 
-Trust boundaries and code map: [Architecture][architecture]. Immutable parameters, action locks and migration rules: [v2 contracts][contracts]. Archive/RPC assumptions: [Operations][operations].
+Frameworks, the single project structure map and key decisions: [Architecture][architecture]. Action lifecycle: [v2 contracts][contracts]. Archive/RPC assumptions: [Operations][operations].
 
 ## ✨ Features and business domains
 
@@ -137,18 +137,7 @@ The [TZ][spec] central axis is **Instrument → Holder → Record-date Right →
 | Proof & roles | Read-only audit, reconciliation, receipts and role-specific views | FR-38–42, 48 |
 | Post-MVP servicing | Merkle claims, threshold governance, eligibility/terms, partial retirement, external proposals and export | FR-49–58 |
 
-Full feature wording and implementation/test links: [58-FR checklist][features]. UC/FR/NFR/TC traceability: [requirement mapping][mapping]. Bypass and failure scenarios: [security audit][security].
-
-## 🗂️ Project structure
-
-| Path | Responsibility |
-|---|---|
-| [`src/`](src/) | React screens, corporate-action controllers, typed Solana clients and shared UI |
-| [`programs/recorda/src/`](programs/recorda/src/) | Rust/Anchor action engine, governance, distributor and external-event binding |
-| [`scripts/`](scripts/) | Human Devnet runners, build/audit tools, archive indexing and benchmarks |
-| [`tests/`](tests/), [`protocol-tests/`](protocol-tests/), [`protocol-ui-tests/`](protocol-ui-tests/) | Client, native-validator and browser acceptance/attack coverage |
-| [`next-app/`](next-app/), [`next-ui-tests/`](next-ui-tests/) | Shared-screen production shell and runtime checks |
-| [`docs/`](docs/), [`golden/`](golden/), [`public/distributions/`](public/distributions/) | Specification/evidence mapping, business fixtures and retained-proof hosting |
+Full feature wording and implementation/test links: [requirement checklist][features]. UC/FR/NFR/TC traceability: [requirement mapping][mapping]. Bypass and failure scenarios: [security audit][security].
 
 ## Product screens and manual acceptance
 
@@ -166,7 +155,7 @@ Use [DEVNET-DEMO.md](docs/DEVNET-DEMO.md) for the exact accounts, buttons and ex
 
 For Voting, holders verify the proposal document hash before YES/NO/ABSTAIN. Tally is permitted after the exclusive closing boundary; abstentions count toward quorum, YES must exceed NO, ties fail. No payment vault is used. Dates in `/actions` use the browser's local timezone; the optional maturity field in `/protocol` uses ISO UTC ending in `Z`.
 
-Auditor reads chain data and exports without signing. Choosing a frontend role grants no on-chain authority. For governed instruments, privileged operations require stored intents and configured threshold signatures; governance must be configured before the first snapshot. Claims require a prepared approved/funded distribution and retained manifest, not just an address entered into the page. See [v2 contracts](docs/implementation/action-engine-v2.md) and [operations](docs/implementation/operations-v2.md).
+Auditor reads chain data and exports without signing. Choosing a frontend role grants no on-chain authority. For governed instruments, privileged operations require stored intents and configured threshold signatures; governance must be configured before the first snapshot. Claims require a prepared approved/funded distribution and retained manifest, not just an address entered into the page. See [action contracts](docs/ARCHITECTURE.md#accounts-and-lifecycle) and [operations](docs/ARCHITECTURE.md#operations-and-supported-scope).
 
 ## Technical setup
 
@@ -292,19 +281,29 @@ npm run build:next
 npm run start:next -- --port 3000
 ```
 
-For retained proofs, `npm run distribution:index -- journal.json parameters.json public/distributions` verifies the pinned archive-provider signature and writes content-addressed manifests/proofs. Vite/Next serve the shared directory; generated archives must be backed up and explicitly included in hosting storage. This is separate from the three-action MVP demo; see [operations/provenance](docs/implementation/operations-v2.md).
+For retained proofs, `npm run distribution:index -- journal.json parameters.json public/distributions` verifies the pinned archive-provider signature and writes content-addressed manifests/proofs. Vite/Next serve the shared directory; generated archives must be backed up and explicitly included in hosting storage. This is separate from the three-action MVP demo; see [operations/provenance](docs/ARCHITECTURE.md#operations-and-supported-scope).
 
 ## Documentation
 
-[Devnet demo](docs/DEVNET-DEMO.md) · [Product](docs/PRODUCT.md) · [TZ](docs/TZ.md) · [Requirements](docs/REQUIREMENTS.md) · [Roadmap](docs/ROADMAP.md) · [Architecture](docs/ARCHITECTURE.md) · [FR checklist](docs/implementation/fr-checklist.md) · [Requirement mapping](docs/audit-coverage.json) · [Security audit](docs/SECURITY-AUDIT.md) · [Changelog](docs/CHANGELOG.md).
+| File | Single responsibility |
+|---|---|
+| [TZ](docs/TZ.md) | Source of truth: product idea, domain rules and scope |
+| [Requirements](docs/REQUIREMENTS.md) | Business domains and UC/FR/NFR/TC checklists; live DoD |
+| [Roadmap](docs/ROADMAP.md) | Delivered milestones and remaining acceptance/release work |
+| [Architecture](docs/ARCHITECTURE.md) | Runtime, accounts/contracts, operations, trust and provenance |
+| [Security audit](docs/SECURITY-AUDIT.md) | Attack matrix, findings and evidence rules |
+| [Devnet demo](docs/DEVNET-DEMO.md) | Presenter workflow, expected outcomes and retained proof |
+| [Changelog](docs/CHANGELOG.md) | Dated change/result history |
+
+[audit-coverage.json](docs/audit-coverage.json) is the machine-readable mapping of 121 requirements to source/evidence; it does not duplicate their normative wording.
 
 TZ takes precedence; roadmap checkmarks do not amend requirements. All rights reserved: [LICENSE](LICENSE). Third-party licenses remain applicable.
 
 [spec]: docs/TZ.md
 [architecture]: docs/ARCHITECTURE.md
-[contracts]: docs/implementation/action-engine-v2.md
-[operations]: docs/implementation/operations-v2.md
+[contracts]: docs/ARCHITECTURE.md#accounts-and-lifecycle
+[operations]: docs/ARCHITECTURE.md#operations-and-supported-scope
 [roadmap]: docs/ROADMAP.md
-[features]: docs/implementation/fr-checklist.md
+[features]: docs/REQUIREMENTS.md#16-functional-requirements-fr
 [mapping]: docs/audit-coverage.json
 [security]: docs/SECURITY-AUDIT.md
