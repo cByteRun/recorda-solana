@@ -1,734 +1,166 @@
 # Technical Specification (TZ)
-## KASE Corporate Actions Engine — lifecycle infrastructure for tokenized securities on Solana
+## KASE Corporate Actions Engine
 
-**Status:** Hackathon MVP / KASE Side Track  
-**Source of truth:** this specification and its normative [REQUIREMENTS annex](REQUIREMENTS.md) → architecture → implementation. UC/FR/NFR/TC and DoD are defined once in the annex; its requirements retain the authority of this TZ.
-**MVP network:** Solana Devnet / Local Validator.  
-**Principle:** corporate-action correctness first, then UX and infrastructure.
+**Authority:** the KASE track brief supplied by the team → this TZ and its [REQUIREMENTS annex](REQUIREMENTS.md) → architecture → implementation. The brief takes precedence for track obligations. Recorda's additional business scope is explicitly separated below and cannot replace required scenarios.
 
----
+This document defines the product boundary and key business rules. Detailed UC/FR/NFR/TC remain in REQUIREMENTS; technical contracts belong in [ARCHITECTURE](ARCHITECTURE.md); implementation and acceptance status belong in [ROADMAP](ROADMAP.md). Section numbers are retained for existing references.
 
 # 1. Challenge context
 
-KASE and Superteam Kazakhstan require a working prototype that automates corporate actions for tokenized financial instruments on Solana.
+KASE and Superteam Kazakhstan require a working prototype for corporate actions on tokenized financial instruments. Core on-chain components must run on Solana.
 
-Required chain:
+> **Identify eligible holders → Calculate entitlements → Execute or initiate the action → Record the outcome on-chain.**
 
-> **Identify eligible holders → Calculate entitlements → Execute/initiate action → Record outcome on-chain**
+Every submission must demonstrate Coupon Payment, Bond Redemption and one additional corporate action. Recorda selects **Bondholder Voting** as the third scenario.
 
-Required scenarios:
-1. Coupon Payment.
-2. Bond Redemption.
-3. At least one additional corporate action.
+Minimum prototype: test tokenized instrument, holder registry, record-date mechanism, entitlement calculation, coupon payment, redemption, additional action and a verifiable on-chain outcome. External/fiat rails may be simulated; entitlement logic and the Solana action flow must function.
 
-At minimum, the prototype must include:
-- a test tokenized financial instrument;
-- holder registry;
-- record-date mechanism;
-- entitlement calculation;
-- coupon payment;
-- bond redemption;
-- an additional corporate action;
-- a verifiable on-chain outcome record.
-
-External/fiat payment rails may be simulated, but entitlement logic and the Solana corporate-action flow must actually work.
-
----
-
-# 2. Core business problem
-
-## 2.1 High-level problem
-
-**Tokenizing a financial instrument does not by itself solve post-issuance servicing.**
-
-After issuance, a bond continues its lifecycle: record dates, coupons, redemption, early events, voting, changes of terms and the need to prove who was entitled to what and what ultimately happened.
-
-If these processes remain fragmented or manual, blockchain becomes only a new asset-accounting format, while the lifecycle still requires separate reconciliation of registries, calculations, payment instructions and audit records.
-
-### The problem in one sentence
-
-> **A shared deterministic mechanism is needed to link a tokenized instrument's state at the record date to a specific holder's right and a provable corporate-action outcome.**
-
----
+All participating teams must also be officially registered for the main hackathon. [Track coverage](REQUIREMENTS.md#kase-track-source-and-coverage) maps the supplied brief to existing requirements.
 
 # 3. Core product goal
 
-Build a **Corporate Actions Engine** for tokenized securities that turns a corporate event into a reproducible end-to-end process on Solana:
+Service tokenized bonds through a shared, verifiable lifecycle:
 
-> **Instrument → Record Date Snapshot → Eligible Holders → Entitlements → Approval → Settlement/Execution → Redemption/State Change → On-chain Receipt**
+> **Instrument → Holder → Record-date Right → Authorized Action → Receipt.**
 
-The product must prove that a tokenized bond's lifecycle can be serviced programmatically, transparently and verifiably beyond issuance and transfer.
-
----
-
-# 4. Value and expected impact
-
-## 4.1 For KASE / market infrastructure
-- one standard workflow for corporate actions on tokenized instruments;
-- less manual reconciliation between holder state, calculations and actual execution;
-- an immutable audit trail of key stages;
-- independent verification of calculations and outcomes;
-- a reusable engine for different issuers and event types;
-- a foundation for scaling tokenized securities beyond issuance.
-
-## 4.2 For the issuer
-- automatic calculation of each holder's obligation;
-- reduced risk of incorrect entitlement;
-- transparent event status: Draft → Snapshotted → Approved → Funded → Settled → Finalized;
-- one source of corporate-action outcome data.
-
-## 4.3 For the investor
-- a clear explanation of eligibility or ineligibility;
-- visible record-date snapshot balance;
-- visible entitlement formula and amount;
-- verifiable transaction signature / on-chain receipt;
-- verifiable voting power and result for voting actions.
-
-## 4.4 Economic impact
-
-The MVP makes no unproven savings-percentage claims. The prototype must demonstrate mechanisms that generate economic value:
-
-1. **fewer operational steps** between registry capture and execution;
-2. **less reconciliation** between independent tables/systems;
-3. **less human-error risk** in calculations and allocations;
-4. **faster verification and audit**, because input parameters, snapshot, entitlement and outcome are linked on-chain;
-5. **scalability:** new corporate actions build on the shared registry/snapshot/entitlement/audit layer.
-
----
-
-# 5. Product thesis
-
-**We are not building an exchange, a DeFi protocol or a bond merely to issue a token.**
-
-We are building a **lifecycle servicing layer** for tokenized securities.
-
-The prototype's key value is the provable chain rather than the SPL token itself:
-
-> **who owned → on what date → what right arose → by which formula → what executed → what happened to the instrument → where is the proof.**
-
----
+The business domains are instrument/registry, record-date rights, Coupon, Redemption, holder decisions and audit. Recorda adds controlled execution and the explicitly scoped extensions in §26. KASE's other asset classes and the alternative additional actions listed in the brief are not cumulative MVP obligations.
 
 # 6. Users and roles
 
-See [Users and roles](REQUIREMENTS.md#6-users-and-roles). This normative section is maintained in the TZ annex.
-
----
+Recorda defines Operator, Issuer/Paying Agent, Investor and read-only Auditor. Operator and Paying Agent may be combined for MVP. UI role selection does not grant execution authority. Detailed journeys: [roles](REQUIREMENTS.md#6-users-and-roles).
 
 # 7. Main E2E scenario
 
-1. The Operator creates a test bond.
-2. The system creates a Token-2022 mint and on-chain `Instrument` state.
-3. Tokens are distributed among 3–5 test holders.
-4. The Operator creates a corporate action and sets its record date.
-5. At snapshot time, the system records eligible holders and their balances.
-6. Once finalized, the snapshot becomes immutable for that action.
-7. The program calculates each holder's entitlement using a deterministic formula.
-8. The UI previews holders, balances, amounts and total obligation.
-9. The Operator explicitly approves execution.
-10. Settlement uses an on-chain mock payment token or creates a verifiable settlement instruction.
-11. For redemption, the corresponding bond-token units are burned/retired/locked.
-12. The program creates/updates the on-chain `ActionReceipt`.
-13. The Investor/Auditor can open the action and independently verify the outcome.
+Create the test instrument and register/distribute holder positions → schedule an action → preserve holdings at its cutoff → finalize a complete snapshot → calculate rights → preview/approve → execute → verify the on-chain outcome.
 
----
+On one instrument, demonstrate **Coupon → Voting → Full Redemption**. Each action has its own record date, snapshot and receipt; shared machinery does not imply shared historical allocations. Full redemption ends the active supply needed for subsequent voting.
 
 # 8. Test bond model
 
-Use the challenge parameters for the baseline demo:
-
-| Field | MVP value |
-|---|---:|
-| Face value | 1,000 |
-| Currency | Mock USD / Mock KZT |
-| Annual coupon | 10% |
-| Frequency | Semi-annual |
-| Coupon periods/year | 2 |
-| Maturity | configurable |
-| Bond token | Token-2022 |
-| Bond unit | 1 token = 1 bond |
-
-### Coupon formula
+The brief's example is a bond with face value **$1,000**, annual coupon **10%**, **semi-annual** payments and **2-year** maturity. These illustrate the required calculations rather than prescribe every instrument's terms. Recorda uses whole bonds and mock currency; accelerated demo maturity must be disclosed.
 
 ```text
-coupon_per_holder =
-  snapshot_balance
-  × face_value
-  × annual_coupon_bps / 10_000
-  ÷ payments_per_year
+coupon_due = snapshot_units × face_value × annual_coupon_bps / 10_000 / payments_per_year
+principal_due = snapshot_units × face_value
+redemption_due = principal_due + final_coupon_due (if due)
 ```
 
-Example:
-
-```text
-10 bonds × $1,000 × 10% ÷ 2 = $500
-```
-
-### Redemption formula
-
-```text
-principal_due = snapshot_balance × face_value
-```
-
-With a final coupon:
-
-```text
-final_settlement = principal_due + final_coupon_due
-```
-
-All financial calculations must use integer/fixed-point arithmetic. Floating-point arithmetic is prohibited.
-
----
+For 10 bonds: coupon = **500**, principal = **10,000**, plus any final coupon due. Recorda uses checked integer/minor-unit arithmetic, rounds down once per holder and sums the individual allocations (FR-16–22). Financial terms used by an action are fixed for its rights.
 
 # 9. Record Date — critical mechanism
 
-## 9.1 Requirement
+Eligibility and rights derive from holdings at the specified record date, not balances at execution time.
 
-Entitlement must be determined by **the balance at the fixed record date**, rather than the current balance at payment time.
+Recorda's controlled mechanism schedules an on-chain cutoff barrier: at `Clock >= record_timestamp`, balance-changing operations are blocked even if snapshot capture starts late. Registry/eligibility changes cannot rewrite the cutoff population. Capture reconciles all eligible holdings with supply and finalizes an immutable snapshot with timestamp/slot/hash.
 
-## 9.2 MVP mechanism
-
-Use a controlled snapshot flow:
-
-1. `Action` contains `record_timestamp` in advance.
-2. When the record date arrives, the Operator calls `begin_snapshot`.
-3. Instrument transfers are temporarily blocked (`Paused/SnapshotPending`).
-4. The system records holder balances in `SnapshotPosition / Entitlement` accounts.
-5. The sum of snapshot balances is checked against eligible outstanding supply.
-6. The snapshot hash/root is calculated and stored.
-7. The Operator calls `finalize_snapshot`.
-8. The snapshot becomes immutable.
-9. For coupon actions, transfers may be enabled again.
-10. For maturity redemption, the instrument remains restricted until redemption is complete.
-
-This makes the demo deterministic and prevents a post-record token transfer from changing payment entitlement.
+Coupon and Voting may release transfer restrictions after capture; their rights remain unchanged. Redemption retains restrictions through retirement/settlement. Incomplete snapshots cannot finalize. Detailed obligations: FR-10–15,43–46 and TC-16,21,29.
 
 ## 9.3 Production evolution
 
-In production, a short transfer pause may be replaced by slot-based snapshots/indexing with a cryptographic commitment/Merkle root and external registry/depository integration.
-
-For the hackathon, this is Post-MVP and must not complicate the required working flow.
-
----
+Historical indexing and committed distributions are a separately scoped extension (§26). A current RPC balance or Merkle proof alone does not prove historical ownership.
 
 # 10. Holder Registry
 
-The system must maintain an unambiguous registry of participants permitted to hold the instrument.
-
-For MVP:
-- holder = Solana public key;
-- each holder has a corresponding Token-2022 token account;
-- a protocol-level `HolderPosition`/registry account is created;
-- the holder must be approved for that instrument;
-- arbitrary wallets outside the registry must not be included;
-- transfer control must prevent registry bypass.
-
-Recommended implementation:
-- Token-2022;
-- Allowlist/Default Frozen State for the permissioned-security flow;
-- Transfer Hook or equivalent protocol-level validation for the controlled transfer lifecycle;
-- Permanent Delegate only for strictly defined admin/redemption operations.
-
-The MVP simulates a KYC/AML provider with `approved=true`; real KYC is outside the hackathon MVP.
-
----
+Maintain unambiguous holder identities and instrument balances. Recorda uses registered Solana wallets and controlled Token-2022 custody; transfers cannot bypass the registry. Eligibility is simulated for MVP; real KYC/AML integration is outside MVP. Detailed obligations: FR-06–09.
 
 # 11. Corporate Action State Machine
 
 ```text
-DRAFT
-  ↓
-SCHEDULED
-  ↓
-SNAPSHOT_PENDING
-  ↓
-SNAPSHOTTED
-  ↓
-CALCULATED
-  ↓
-AWAITING_APPROVAL
-  ↓
-APPROVED
-  ↓
-FUNDED / READY
-  ↓
-EXECUTING
-  ↓
-SETTLED
-  ↓
-FINALIZED
+Coupon / Redemption:
+Schedule → Snapshot → Calculate → Approve → Fund → Execute → Finalize receipt
+
+Voting:
+Schedule → Snapshot → Calculate → Approve → Vote → Tally → Finalize receipt
 ```
 
-Error branches:
-
-```text
-FAILED
-CANCELLED (only before irreversible execution)
-INSUFFICIENT_FUNDS
-PARTIALLY_SETTLED
-```
-
-Every transition must have:
-- authority check;
-- timestamp/slot;
-- transaction signature;
-- event log;
-- protection against invalid state transitions.
-
----
+These are business stages, not literal account enums. Voting requires no funding/vault. Recorda permits cancellation only while Scheduled, before snapshot begins. Failed transactions roll back; partial execution remains visible and resumable and cannot count as full completion (FR-43–44).
 
 # 12. Required Scenario A — Coupon Payment
 
-See [UC-CP-01: Coupon payment — preconditions, flow and acceptance](REQUIREMENTS.md#12-required-scenario-a--coupon-payment). This normative section is maintained in the TZ annex.
+Identify bondholders at the specified record date, calculate each coupon entitlement, then execute payment on-chain or initiate a clearly demonstrated settlement flow. Recorda's selected path pays mock tokens on Solana.
 
----
+Post-record transfers cannot change coupon rights; individual amounts reconcile to the total and cannot be paid twice. Detailed flow and acceptance: [UC-CP-01](REQUIREMENTS.md#12-required-scenario-a--coupon-payment).
 
 # 13. Required Scenario B — Bond Redemption
 
-See [UC-BR-01: Bond redemption — flow and acceptance](REQUIREMENTS.md#13-required-scenario-b--bond-redemption). This normative section is maintained in the TZ annex.
+At maturity identify holders, calculate principal and any final coupon due, execute/initiate settlement and burn, retire, lock or otherwise mark the corresponding units redeemed.
 
----
+Recorda selects holder-signed atomic **burn + payment + supply/rights update** without Permanent Delegate. Maturity uses Solana Clock. Final coupon is shown separately and the same coupon period cannot be paid twice. Full completion requires reconciled retirement and supply; redeemed units cannot circulate or be redeemed again. Detailed flow and acceptance: [UC-BR-01](REQUIREMENTS.md#13-required-scenario-b--bond-redemption).
 
 # 14. Required Scenario C — Bondholder Voting
 
-See [UC-VOTE-01: Bondholder voting — rationale, flow and acceptance](REQUIREMENTS.md#14-required-scenario-c--bondholder-voting). This normative section is maintained in the TZ annex.
+Recorda selects the brief's Bondholder Voting option: record-date units determine voting power; holders sign unique YES/NO/ABSTAIN votes within the approved window; the program records the final tally and outcome.
 
----
+Abstentions count toward quorum; passing requires quorum and YES > NO. Voting has no payment stage and does not itself modify instrument terms. Detailed rules and acceptance: [UC-VOTE-01](REQUIREMENTS.md#14-required-scenario-c--bondholder-voting).
 
 # 15. Human-in-the-Loop / execution control
 
-No monetary or irreversible corporate action may execute automatically merely because a date has arrived.
-
-The MVP must require explicit Operator approval before:
-- settlement;
-- burn/retirement;
-- closing an action early;
-- changing instrument status.
-
-Automation calculates and prepares the action; the authority approves execution.
-
----
-
-# 16. Functional Requirements (FR)
-
-See [FR-01–58: Functional requirements (MVP and explicitly scoped Post-MVP)](REQUIREMENTS.md#16-functional-requirements-fr). This normative section is maintained in the TZ annex.
-
----
-
-# 17. Non-Functional Requirements (NFR)
-
-See [NFR-01–19: Non-functional requirements (MVP and explicitly scoped Post-MVP)](REQUIREMENTS.md#17-non-functional-requirements-nfr). This normative section is maintained in the TZ annex.
-
----
+Recorda requires explicit Operator approval before execution and holder authorization where required for voting/retirement. Dates trigger readiness, not execution authority. This is a project control choice, not a separate mandate of the track (FR-24,43–47).
 
 # 18. On-chain data model
 
-Minimum PDAs/accounts:
+Solana state must bind instrument terms and supply, registered positions, action kind/parameters/cutoff, immutable per-holder rights, aggregate obligations, execution progress and final outcomes. Payment, retirement and voting outcomes must be independently verifiable and linked to their action.
 
-## `Instrument`
-```text
-instrument_id
-issuer_authority
-mint
-face_value_minor
-currency_code
-coupon_bps
-payments_per_year
-maturity_timestamp
-outstanding_supply
-redeemed_supply
-status
-```
-
-## `HolderPosition`
-```text
-instrument
-holder_wallet
-token_account
-approved
-```
-
-## `CorporateAction`
-```text
-action_id
-instrument
-action_type
-record_timestamp
-record_slot
-status
-snapshot_hash
-total_eligible_units
-total_obligation_minor
-created_by
-approved_by
-```
-
-## `Entitlement`
-```text
-action
-holder
-snapshot_units
-amount_minor
-settlement_status
-settlement_tx/reference
-redeemed_units
-```
-
-## `Proposal` / `VoteReceipt`
-```text
-proposal
-holder
-snapshot_voting_power
-choice
-cast_at
-```
-
-## `ActionReceipt`
-```text
-action
-final_status
-settled_total_minor
-processed_holders
-finalized_at
-summary_hash
-```
-
----
+Account layouts and commitments: [ARCHITECTURE](ARCHITECTURE.md#accounts-and-lifecycle). Normative details: FR-21–22,38–48.
 
 # 19. Solana architecture
 
-## Core
-- **Anchor program (Rust)** — corporate-action state machine, entitlement validation, redemption/voting logic.
-- **Token-2022** — tokenized bond.
-- **Token-2022 extensions** as appropriate:
-  - Transfer Hook / access controls;
-  - Default frozen / permissioned holder flow;
-  - Permanent Delegate for controlled retirement/burn where required;
-  - Pausable control where practical.
-- **Mock settlement token** — SPL/Token-2022 token representing test fiat/stable settlement asset.
+The track requires functional Solana core components. Recorda selects Anchor/Rust, Token-2022 and a wallet-connected client with Operator/Investor/Auditor views; Devnet/local validator are its prototype environments. These choices are not extra track obligations.
 
-## Client
-- **Next.js + TypeScript**.
-- Solana wallet adapter.
-- Operator Console.
-- Investor/Auditor views.
-
-## Optional off-chain helper
-Allowed only for orchestration/indexing:
-- enumerate known holder accounts;
-- batch submit snapshot/settlement transactions;
-- cache UI data;
-- generate technical report.
-
-It must **not** be the final source of truth for finalized entitlement/outcome.
-
----
+Off-chain orchestration and indexing may assist execution; finalized rights/outcomes are enforced and recorded on-chain. Runtime, custody, client and trust boundaries: [ARCHITECTURE](ARCHITECTURE.md).
 
 # 20. Settlement model
 
-## MVP preferred path — fully demonstrable
-Use mock settlement token:
+Selected MVP path: **Treasury → Action Vault → Holder**, using a plain two-decimal mock Token-2022 payment mint. Movement is real on-chain; the currency has no real fiat value.
 
-```text
-Issuer Treasury → Action Vault → Eligible Holder
-```
-
-Advantages:
-- judge sees actual balance movement;
-- settlement is independently verifiable;
-- no fake bank integration required;
-- satisfies “execute payment on-chain”.
-
-## Alternative / fallback
-Fiat settlement can be simulated as:
-
-```text
-Entitlement → PaymentInstructionCreated → external_reference_hash → Settled
-```
-
-UI must clearly mark it **SIMULATED / INITIATED**, never “paid on-chain”.
-
----
+The track also permits clearly demonstrated external settlement initiation. An on-chain instruction/reference establishes **INITIATED**, not proof of external payment. Label simulations and do not present them as confirmed payment. Fiat settlement is not a claim of current Recorda implementation.
 
 # 21. UX requirements
 
-## Screen 1 — Instruments
-- instrument status;
-- token supply;
-- coupon/maturity;
-- next action;
-- holders count.
-
-## Screen 2 — Holder Registry
-- holder wallet;
-- approved status;
-- current units;
-- test transfer controls.
-
-## Screen 3 — Corporate Actions
-Timeline/cards:
-- Coupon #1;
-- Redemption;
-- Voting proposal.
-
-Each card shows:
-- action type;
-- record date;
-- state;
-- eligible holders;
-- total obligation;
-- on-chain proof.
-
-## Screen 4 — Action Detail
-The most important screen.
-
-Must visually show:
-
-```text
-Record Date
-↓
-Snapshot
-↓
-Holder × Units
-↓
-Formula
-↓
-Entitlement
-↓
-Approval
-↓
-Settlement / Burn / Vote
-↓
-On-chain Receipt
-```
-
-## Screen 5 — Investor
-- “You held X units on record date”;
-- “Your entitlement = Y”;
-- formula;
-- state;
-- transaction link.
-
-## Screen 6 — Audit
-- inputs;
-- snapshot hash;
-- calculated totals;
-- processed totals;
-- mismatches = 0;
-- tx signatures;
-- final receipt.
-
----
+Show instrument/holder state, action cutoff, snapshot units, formula, entitlement or voting power, authorization, processing status and verifiable outcome. Investors see their rights; auditors can verify without a wallet. Distinguish implemented functionality, test money, simulated integrations and incomplete execution. Detailed journeys: [REQUIREMENTS](REQUIREMENTS.md#6-users-and-roles); screens: [README](../README.md#product-screens-and-manual-acceptance).
 
 # 22. Demo dataset
 
-At least 4 wallets:
+Recorda's existing Coupon fixture is A/B/C/D = **10/5/2/0** bonds → **500/250/100/0**, total **850**. A post-snapshot transfer of 4 bonds from A to B changes current balances to 6/9 but keeps Coupon rights at 10/5. Later actions use their own cutoff holdings.
 
-| Holder | Record-date units | Coupon due |
-|---|---:|---:|
-| A | 10 | 500 |
-| B | 5 | 250 |
-| C | 2 | 100 |
-| D | 0 | 0 |
-
-After the snapshot:
-- A transfers 4 bonds to B.
-
-Expected result:
-- The Coupon action still uses snapshot A=10, B=5.
-- New current balances do not change the already recorded entitlement.
-
-This is a required demo edge case because it visibly demonstrates the purpose of record date.
-
----
-
-# 23. Test cases / acceptance matrix
-
-See [TC-01–19: Test cases / acceptance matrix](REQUIREMENTS.md#23-test-cases--acceptance-matrix). This normative section is maintained in the TZ annex.
-
----
+This is project acceptance coverage (TC-01–05), not a prescribed track dataset. The separate three-action Devnet fixture has no post-record transfer; its actual walkthrough/evidence is in [DEVNET-DEMO](DEVNET-DEMO.md).
 
 # 24. Definition of Done — Hackathon MVP
 
-See [Hackathon MVP Definition of Done](REQUIREMENTS.md#24-definition-of-done--hackathon-mvp). This normative section is maintained in the TZ annex.
+Demonstrate all three functional scenarios and their verifiable Solana outcomes, including correct record-date rights, coupon settlement, maturity principal/final coupon and corresponding token retirement. Clearly separate implemented functionality from simulated integrations.
 
----
+Submit a **working prototype, demo video, source repository and short technical overview** covering architecture, record-date logic, entitlement calculations, settlement flow and Solana components. Confirm main-hackathon registration.
 
-# 25. Outside MVP scope
-
-Do not spend hackathon time on:
-- a full matching/trading engine;
-- order book;
-- production-grade CSD replacement;
-- real bank-rail integration;
-- production KYC/AML vendor;
-- legal recognition of the token as a real security;
-- mainnet deployment;
-- a complex RWA marketplace;
-- secondary trading UI;
-- multi-chain;
-- a general-purpose DAO/governance framework;
-- AI/LLM;
-- a large microservice architecture.
-
-These are outside the challenge's core.
-
----
+Detailed gates: [live DoD](REQUIREMENTS.md#24-definition-of-done--hackathon-mvp) and [submission gates](REQUIREMENTS.md#submission-gates). Source coverage or historical tests alone do not close current acceptance.
 
 # 26. Development priorities
 
-## P0 — required
-1. Instrument + Token-2022.
-2. Holder registry.
-3. Record-date snapshot.
-4. Entitlement engine.
-5. Coupon settlement.
-6. Redemption + token retirement.
-7. On-chain receipts.
-8. Bondholder voting.
-9. Operator UI + audit view.
+**MVP:** instrument/registry → record-date rights → Coupon + Voting + Full Redemption → audit/role journeys → current acceptance and submission artifacts.
 
-## P1 — after P0 is stable
-- batch processing;
-- richer transfer controls;
-- Merkle snapshot commitment;
-- downloadable action report;
-- role separation issuer/operator/auditor;
-- event timeline.
+**Existing Recorda additions, separately scoped Post-MVP:**
 
-## P2 — post-MVP
-- partial/early redemption;
-- dividends;
-- tender offer/buyback;
-- modification workflow;
-- real KYC/AML;
-- external fiat rails;
-- depository integrations;
-- production-grade compliance/custody.
+| Business extension | Existing coverage |
+|---|---|
+| Historical holder index, committed distributions and holder claims | UC-MD-01; FR-49–52 |
+| Separated approval roles, eligibility policies and versioned terms modification | FR-53–55 |
+| Early/partial redemption | UC-PR-01; FR-56 |
+| External corporate-event proposals and provenance | UC-EV-01; FR-57 |
+| Recoverable history and verified audit export | FR-58 |
 
----
+Their detailed rules remain in REQUIREMENTS; delivery status remains in ROADMAP. These extensions cannot expand the track's minimum DoD or replace required scenarios. Dividends/tender offers and other unscoped actions require new requirements. Real fiat/KYC/depository integration, production custody, exchange trading and legal/mainnet rollout remain outside MVP.
 
 # 27. Mapping to judging criteria
 
-## Technical Execution — 30%
-Demonstrate real Solana transactions, a state machine, Token-2022, snapshots, settlement, burn/retirement and tests rather than a mockup.
-
-## Corporate Action Logic — 25%
-This is the core product layer:
-- record date;
-- immutable snapshot;
-- eligibility;
-- deterministic entitlement;
-- no double settlement;
-- correct redemption.
-
-## Product & UX — 20%
-The UI must explain complex financial mechanics through a simple visual pipeline and provide auditability.
-
-## Real-World Applicability — 15%
-Emphasize:
-- permissioned holders;
-- explicit operator approval;
-- separation of on-chain entitlement and external settlement;
-- audit trail;
-- ability to integrate with CSD/KASE/issuer systems later.
-
-## Innovation — 10%
-Do not pitch “blockchain because blockchain”.
-
-Innovation:
-> **a universal programmable lifecycle engine**, where one record-date/snapshot/entitlement layer serves payments, redemption and governance events.
-
----
-
-# 28. Primary MVP success metric
-
-Neither TVL, wallet count nor UI speed.
-
-### Primary Product Metric
-
-> **100% correctly and reproducibly processed corporate-action entitlements for all holders in the test scenario, with verifiable on-chain outcomes.**
-
-### Demo KPIs
-- entitlement mismatch: **0**;
-- double settlement: **0**;
-- unauthorized execution: **0**;
-- corporate actions demonstrated E2E: **3/3**;
-- each finalized action has verifiable on-chain proof: **100%**.
-
----
-
-# 29. Critical demo narrative
-
-Do not open the presentation with “we issued a token on Solana”.
-
-Start with the problem:
-
-> “Issuing a tokenized bond is not enough. Six months later, someone must determine exactly who held it on the record date, how much coupon each investor is owed, execute the payment, redeem principal at maturity and prove the outcome. We built that lifecycle layer.”
-
-Then show the live flow:
-
-```text
-Bond issued
-→ 3 holders
-→ record date
-→ snapshot
-→ entitlement = 500 / 250 / 100
-→ holder transfers bonds after snapshot
-→ entitlement does NOT change
-→ approve
-→ on-chain coupon settlement
-→ maturity redemption
-→ burn/retire
-→ voting from the same snapshot engine
-→ audit receipt
-```
-
-This directly demonstrates the track's business purpose.
-
----
-
-# 30. Architectural decision principle
-
-When deciding what to add, use this order:
-
-1. Does it improve correctness of **Record Date → Entitlement → Execution → Proof**?
-2. Is it required by Required Scenarios / Minimum Prototype Requirements?
-3. Does it improve Technical Execution / Corporate Action Logic / Product UX / Real-World Applicability?
-4. Can it be shown in a live demo?
-
-If the answer is no, the feature is outside MVP scope.
-
----
+| Track criterion | Weight | Demonstration focus |
+|---|---:|---|
+| Technical Execution | 30% | Functional Solana implementation and completeness |
+| Corporate Action Logic | 25% | Holders, cutoff, calculations, settlement and retirement |
+| Product & UX | 20% | Clear, usable action and verification journeys |
+| Real-World Applicability | 15% | Credible market-infrastructure flow and integration boundaries |
+| Innovation | 10% | Shared automation and lifecycle management |
 
 # 31. Sources and specification basis
 
-Reference repository assessment, verified scope and adaptation decisions are maintained in [ARCHITECTURE](ARCHITECTURE.md#reference-assessment-and-adaptation). Original MVP IDs remain stable; appended requirements and their MVP/Post-MVP boundary are defined in [REQUIREMENTS](REQUIREMENTS.md#scope-of-the-reference-driven-extension) and scheduled in [ROADMAP](ROADMAP.md#reference-driven-delivery-order).
+The **full track brief supplied by the team** is the external baseline for this TZ. Its provenance is the [Superteam Kazakhstan x KASE listing](https://superteam.fun/earn/listing/superteam-kazakhstan-x-kase-side-track-corporate-actions-on-blockchain); this edit does not claim fresh verification of that page.
 
-1. Superteam Kazakhstan x KASE Side Track — Corporate Actions on Blockchain  
-   https://superteam.fun/earn/listing/superteam-kazakhstan-x-kase-side-track-corporate-actions-on-blockchain
-
-2. KASE — Corporate Events  
-   https://kase.kz/ru/information/corporate-events
-
-3. Solana — Asset Issuance & Tokenization  
-   https://solana.com/docs/tokenization
-
-4. Solana — Token Extensions  
-   https://solana.com/docs/tokens/extensions
-
-5. Solana — Permanent Delegate  
-   https://solana.com/docs/tokens/extensions/permanent-delegate
-
-6. Solana — Default Account State  
-   https://solana.com/docs/tokens/extensions/default-state
-
-7. Solana — Permissioned Tokens / Token ACL  
-   https://solana.com/docs/tokenization/token-acl
-
----
-
-# 32. Final product definition
-
-**KASE Corporate Actions Engine** is a prototype infrastructure layer on Solana for servicing tokenized financial instruments throughout their lifecycle: it records eligible holders at the record date, deterministically calculates rights, executes or initiates the corporate action and leaves a verifiable on-chain outcome.
-
-**Primary business value:** make a tokenized security an **operationally serviceable financial instrument throughout its lifecycle**, beyond an asset that can merely be issued and transferred.
+[REQUIREMENTS](REQUIREMENTS.md) preserves existing UC/FR/NFR/TC IDs and distinguishes track coverage from Recorda additions. Technical references and adaptation decisions belong in [ARCHITECTURE](ARCHITECTURE.md#reference-assessment-and-adaptation). Additional scope must identify its business purpose and requirements without weakening the supplied brief.

@@ -68,6 +68,7 @@ These are implemented CLI/library/program capabilities, not claims of hosted ind
 - [ ] Finish the live [hackathon DoD](REQUIREMENTS.md#24-definition-of-done--hackathon-mvp), including clean role journeys and no known P0/P1 issues.
 - [ ] Verify remote CI and publish a current preview with configured deployment credentials.
 - [ ] Record the full E2E demo video.
+- [ ] Close the [track submission gates](REQUIREMENTS.md#submission-gates): main-hackathon registration confirmation, judge-accessible repository and attached technical overview with simulation disclosure.
 
 ## Future scope requiring new requirements
 

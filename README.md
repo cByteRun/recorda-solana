@@ -314,7 +314,7 @@ For retained proofs, `npm run distribution:index -- journal.json parameters.json
 
 | File | Single responsibility |
 |---|---|
-| [TZ](docs/TZ.md) | Source of truth: product idea, domain rules and scope |
+| [TZ](docs/TZ.md) | KASE brief obligations, key business rules and separately scoped Recorda additions |
 | [Requirements](docs/REQUIREMENTS.md) | Business domains and UC/FR/NFR/TC checklists; live DoD |
 | [Roadmap](docs/ROADMAP.md) | Delivered milestones and remaining acceptance/release work |
 | [Architecture](docs/ARCHITECTURE.md) | Runtime, accounts/contracts, operations, trust and provenance |

@@ -2,6 +2,17 @@
 
 Dated entries describe their own revisions. Historical counts, deployment addresses and pending-work notes do not establish current acceptance; current architecture is in [ARCHITECTURE](ARCHITECTURE.md), and fresh evidence gates are in [ROADMAP](ROADMAP.md).
 
+## 2026-10-11 — Condensed track-first specification
+
+- Reduce TZ to track obligations, mandatory scenarios, core business rules, acceptance/submission and an explicit table of existing Recorda extensions. Remove repeated positioning, impact claims, presentation script, screen inventories and account layouts.
+- Keep referenced section numbers/anchors and normative UC/FR/NFR/TC IDs. Make the supplied KASE brief authoritative for track obligations; retain detailed project acceptance in REQUIREMENTS and technical decisions in ARCHITECTURE.
+
+## 2026-10-11 — KASE brief documentation coverage review
+
+- Treat the supplied track brief as the external baseline above project TZ; map all mandatory scenarios, minimum prototype items, example, eligibility, submission artifacts and judging criteria to existing requirements and evidence gates.
+- Correct cutoff-before-snapshot causality, action-specific lifecycle/cancellation, holder-signed retirement authority, supported mock settlement token and initiation-versus-payment wording. Place Voting before Full Redemption and distinguish shared machinery from per-action snapshots.
+- Preserve UC/FR/NFR/TC IDs and MVP/Post-MVP scope; add explicit administrative/submission gates without claiming current execution acceptance. Documentation-only review; no program/client behavior changed.
+
 ## 2026-10-11 — Human Phantom wallet-switch guidance
 
 - Show expected/connected wallet addresses and account-switch instructions in the runner's browser tab; bring it to the foreground. Refresh Phantom trusted connection without signing or automatic approval, then synchronize React wallet state.

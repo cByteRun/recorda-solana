@@ -4,6 +4,55 @@ This file is part of [TZ](TZ.md), with the same authority. Original section numb
 
 Current human Devnet MVP reproduction for Coupon, Voting and Redemption is described in [the demo guide](DEVNET-DEMO.md) and [README](../README.md#devnet-demo--coupon--voting--redemption), using a real Operator and A/B/C Phantom accounts. `test:e2e:actions:devnet` supplies happy-path evidence; `test:audit` retains feature and attack coverage, including TC-04/15–19 negative scenarios and Post-MVP. Airdrop supplies test SOL for fees/rent, not coupon funding. Historical v1 evidence does not establish current v2 acceptance.
 
+## KASE track source and coverage
+
+Reviewed 2026-10-11 against the full track brief supplied in the conversation (About KASE, Challenge, Eligibility, Required Scenarios, Minimum Prototype Requirements, Example, Submission Requirements and Judging Criteria). That supplied text is the external requirements baseline for this review; this is not a claim of re-verifying the current listing. The [listing](https://superteam.fun/earn/listing/superteam-kazakhstan-x-kase-side-track-corporate-actions-on-blockchain) is its provenance reference.
+
+The track defines what must be demonstrated; TZ/this annex define Recorda's chosen solution. Architecture, source mappings and historical tests cannot override the brief or establish current submission acceptance. All product obligations below already have normative coverage; administrative/submission gates are tracked separately without inventing feature IDs.
+
+| Track obligation | Existing normative coverage / business domain | Acceptance evidence required |
+|---|---|---|
+| Identify eligible holders | FR-06–15; registry and record-date rights; TZ §§9–10 | Complete eligible population and balances at cutoff, reconciled to supply |
+| Calculate entitlements | FR-16–22; Coupon, Redemption, Voting | Per-holder integer calculations and aggregate reconciliation |
+| Execute or initiate action | FR-24–37,43–47; authorized lifecycle | Real Solana execution or an explicit, verifiable initiation flow |
+| Record outcome; core components on Solana | FR-21–22,37–42,48; audit domain; TZ §§18–19 | Action-linked on-chain rights, result/receipt and transaction evidence for all three scenarios |
+| Coupon at specified record date | UC-CP-01; FR-10–16,20–27; TC-01–05,16 | 10 × 1,000 × 10% ÷ 2 = 500; later transfers preserve rights; once-only settlement |
+| Maturity redemption and token retirement | UC-BR-01; FR-17–18,28–32,45–46; TC-06–10,21–24 | 10,000 principal for 10 bonds, separate final coupon if due, atomic retirement/payment and supply reconciliation |
+| One additional action | UC-VOTE-01; FR-19,33–37,47; TC-11–14,25–27 | Holder-signed snapshot voting, window/quorum/tally and final on-chain result |
+| Test tokenized instrument | FR-01–05; TZ §8 | On-chain instrument/mint, distributed test units and terms |
+| Holder registry and record-date mechanism | FR-06–15; TC-03,12,16,29 | Controlled custody and cutoff barrier, complete immutable snapshot |
+| Functional entitlement and Solana flow despite simulated rails | FR-16–22,25,29–30,37–41; TZ §20 | Program-enforced rights/execution; mock money and integrations clearly labelled |
+| Example: semi-annual 10%, face 1,000, maturity 2 years | TZ §8; UC-CP-01 / UC-BR-01 | Baseline formulas; accelerated demo dates disclosed rather than presented as two elapsed years |
+| Main-hackathon registration | TZ §1; submission gates below | Team registration confirmation; cannot be inferred from code/tests |
+| Prototype, video, repository, technical overview, simulation disclosure | TZ §24 and submission gates below | Actual submission artifacts and current evidence |
+| Judging weights 30/25/20/15/10% | TZ §27; role/UX requirements and NFRs | Demonstrate technical completeness, action correctness, usable journeys, realistic boundaries and shared lifecycle innovation |
+
+KASE's support for equities, bonds, FX, derivatives and money markets describes the exchange context; the brief does not require implementing every asset class. Recorda selects bonds and Voting. The listed additional actions are alternatives, not cumulative obligations. Token-2022, Phantom, Operator approval, holder-signed burn and a Devnet deployment are project design choices, not additional mandates of the track. Post-MVP features cannot substitute for any of the three required demonstrations.
+
+### Causal acceptance chain
+
+| Cause / prerequisite | Required effect and completion gate | Existing coverage |
+|---|---|---|
+| Registered instrument, permitted custody and a scheduled cutoff | At the cutoff no balance-changing operation can alter the population before capture; a late snapshot does not move the record date | FR-01–15; TZ §9; TC-16,29 |
+| Complete, reconciled, finalized snapshot | Immutable action-specific rights derive from record-date units and copied terms; post-record transfers change current holdings only | FR-13–22,43; TC-01–03,05,11–12,16 |
+| Correct rights, explicit approval and sufficient payment funds | Coupon payment occurs once; failure leaves balances/counters unchanged and partial progress remains visible | FR-24–27,44; TC-04,15,17–19 |
+| Maturity, secured units, approved funded redemption and holder signature | Principal/final coupon and retirement execute atomically; full reconciliation ends active supply; unpaid/unretired units block full completion | FR-28–32,45–46; TC-06–10,21–24 |
+| Approved proposal, fixed rights and open voting window | Unique holder votes produce quorum/tally after closing; no funding dependency or automatic terms modification | FR-33–37,47; TC-11–14,25–27 |
+| All action-specific completion conditions met | Receipt binds inputs, totals and actual outcome; an interface status, content hash or simulated payment cannot stand in for execution proof | FR-38–42,48; TC-20,28; NFR-05,14 |
+
+A shared engine means shared rules and machinery, not reuse of one historical holder allocation for every event. Each action has its own cutoff, rights and receipt. On one instrument demonstrate Coupon → Voting → Full Redemption: full redemption removes the active supply needed for subsequent holder voting. If a Coupon post-record transfer changes A/B from 10/5 to 6/9, later snapshots use the then-current 6/9; the earlier Coupon rights remain 10/5. The separate no-transfer Devnet fixture retains 10/5/2 and must not be represented as demonstrating that edge case.
+
+### Submission gates
+
+These are delivery obligations of the brief, separate from FR implementation and the historical live DoD checks. Open means confirmation/artifact evidence is still required, not necessarily that the team has not performed the step.
+
+- [ ] Confirm the participating team is officially registered for the main hackathon.
+- [ ] Deliver the working prototype with current three-scenario acceptance and reproducible setup ([ROADMAP](ROADMAP.md#remaining-acceptance-and-release-work), [DEVNET-DEMO](DEVNET-DEMO.md)).
+- [ ] Provide the source repository URL/access for judges; local source files alone do not prove submission access.
+- [ ] Record and attach a demo video showing all three functional flows and their Solana outcomes.
+- [ ] Attach a short technical overview covering architecture, record-date logic, entitlement calculations, settlement flow and Solana components; [ARCHITECTURE](ARCHITECTURE.md) and [TZ §§8–9,18–20](TZ.md#8-test-bond-model) supply the covered material.
+- [ ] Clearly distinguish implemented program/client functionality from mock money, simulated KYC, conceptual fiat rails and unhosted Post-MVP integrations in the submitted overview and video.
+
 ## Scope of the reference-driven extension
 
 Reviewed 2026-10-06 against the local Coupon program/client/tests and the linked upstream repository documentation. [Reference assessment](ARCHITECTURE.md#reference-assessment-and-adaptation) distinguishes documented patterns from tested Recorda behavior. The requirements below remain design/acceptance obligations; current implementation and evidence are tracked in ROADMAP, not inferred from their inclusion here.
@@ -12,7 +61,7 @@ MVP remains **Coupon + Full Redemption + Bondholder Voting**. FR-43–48 and NFR
 
 ## Checklist legend and business domains
 
-[TZ](TZ.md) is the source of truth; this annex preserves its requirement IDs and wording. The checklist annotations below are a view of [audit-coverage.json](audit-coverage.json), not a change to normative scope. `[x]` means source implementation (UC/FR/NFR) or executable test coverage (TC) is mapped; `[ ]` means the mapped status remains partial or undelivered. These marks do not claim that the current revision passed its suites or that the live hackathon DoD is complete. Fresh execution evidence belongs in [ROADMAP](ROADMAP.md#verification-and-gaps), [security audit](SECURITY-AUDIT.md) and the separate DoD at the end of this file.
+The supplied KASE brief takes precedence for track obligations; [TZ](TZ.md) and this annex define the selected solution and explicitly scoped Recorda additions. This annex preserves existing requirement IDs and wording. The checklist annotations below are a view of [audit-coverage.json](audit-coverage.json), not a change to normative scope. `[x]` means source implementation (UC/FR/NFR) or executable test coverage (TC) is mapped; `[ ]` means the mapped status remains partial or undelivered. These marks do not claim that the current revision passed its suites or that the live hackathon DoD is complete. Fresh execution evidence belongs in [ROADMAP](ROADMAP.md#verification-and-gaps), [security audit](SECURITY-AUDIT.md) and the separate DoD at the end of this file.
 
 **Central axis from TZ §§3,7,9,18:** Instrument → Holder → Record-date Right → Authorized Action → Receipt. The domains below group existing obligations; they introduce no new features or IDs.
 
