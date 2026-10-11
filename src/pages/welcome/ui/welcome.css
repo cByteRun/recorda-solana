@@ -1,9 +1,9 @@
 /* Source of truth: tmp_assets video — black field, edge copy, live light sculpture. */
 .welcome.welcome-light { --light-surface: #050505; --light-text: #eeedeb; --light-secondary: #bfc2bd; --light-muted: #818782; --light-border: #ffffff20; --light-accent: #c5edda; min-height: 100svh; display: flex; flex-direction: column; background: var(--light-surface); color: var(--light-text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
 .welcome-light button, .welcome-light a { -webkit-tap-highlight-color: transparent; }
-.light-header { display: flex; align-items: center; justify-content: space-between; min-height: 78px; padding: 0 42px; gap: 24px; }
-.light-wordmark { display: inline-flex; align-items: center; gap: 9px; font-size: 23px; font-weight: 550; letter-spacing: -.9px; color: #f0efec; }
-.light-wordmark svg { width: 29px; height: 29px; }
+.light-header { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 24px; gap: 24px; }
+.light-wordmark { display: inline-flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 550; letter-spacing: -.9px; color: #f0efec; }
+.light-wordmark svg { width: 21px; height: 21px; }
 .light-wordmark i { height: 3px; width: 3px; border-radius: 100%; background: #b9e7d0; margin-left: -5px; margin-top: 13px; }
 .light-header-context { font: 8px ui-monospace, monospace; color: #72736f; letter-spacing: 1.4px; margin-right: auto; margin-left: 19px; }
 .light-header-actions { display: flex; align-items: center; gap: 23px; }
@@ -11,41 +11,41 @@
 .light-language .is-current { color: #eeedeb; }
 .light-open { display: inline-flex; align-items: center; gap: 14px; padding: 10px 14px; border: 1px solid #ffffff22; border-radius: 6px; font-size: 11px; }
 .light-open:hover { border-color: #ffffff50; }
-.light-main { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 625px; }
-.light-kicker { display: flex; justify-content: center; align-items: center; gap: 9px; margin: 19px auto 0; padding: 9px 13px; border: 1px solid #ffffff1c; border-radius: 30px; font: 8px ui-monospace, monospace; letter-spacing: 1.2px; color: #aeafaa; }
+.light-main { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 540px; }
+.light-kicker { display: flex; justify-content: center; align-items: center; gap: 9px; margin: 20px auto 0; padding: 7px 12px; border: 1px solid #ffffff12; border-radius: 30px; font: 8px ui-monospace, monospace; letter-spacing: 1.2px; color: #aeafaa; }
 .light-kicker-dot { width: 4px; height: 4px; border-radius: 100%; background: #c5dcd0; box-shadow: 0 0 7px #c5dcd050; }
-.light-composition { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, .65fr); flex: 1; align-items: center; padding: 0 42px; position: relative; min-height: 500px; }
+.light-composition { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); flex: 1; align-items: center; padding: 0 24px; position: relative; min-height: 460px; }
 .light-copy { position: relative; z-index: 2; padding: 6px 0 0; margin-top: -5px; }
-.welcome-light h1 { font-size: clamp(42px, 4.25vw, 68px); font-weight: 400; letter-spacing: -3px; line-height: 1.1; margin: 0; color: #eeedeb; }
-.welcome-light h1 span { color: #bfc2bd; }
-.light-copy > p { color: #818782; font-size: 12px; line-height: 1.65; margin-top: 21px; max-width: 290px; }
-.light-cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 27px; }
-.light-start { display: inline-flex; align-items: center; justify-content: space-between; gap: 24px; font-size: 12px; font-weight: 550; padding: 12px 17px; background: #efefeb; border-radius: 24px; color: #101310; transition: background .2s, transform .2s; }
+.welcome-light h1 { font-size: clamp(32px, 3vw, 76px); font-weight: 400; letter-spacing: -1.9px; line-height: 1.04; margin: 0; color: #eeedeb; }
+.welcome-light h1 span { color: #eeedeb; }
+.light-copy > p { color: #818782; font-size: 10px; line-height: 1.65; margin-top: 17px; max-width: 275px; }
+.light-cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 22px; }
+.light-start { display: inline-flex; align-items: center; justify-content: space-between; gap: 17px; font-size: 10px; font-weight: 550; padding: 9px 14px; background: #efefeb; border-radius: 24px; color: #101310; transition: background .2s, transform .2s; }
 .light-start:hover { background: #bdeed5; transform: translateY(-1px); }
-.light-why { display: inline-flex; align-items: center; gap: 16px; border: 1px solid #ffffff20; border-radius: 24px; padding: 12px 17px; color: #b6bbb6; font-size: 12px; cursor: pointer; transition: border-color .2s; }
+.light-why { display: inline-flex; align-items: center; gap: 12px; border: 1px solid #ffffff20; border-radius: 24px; padding: 9px 14px; color: #b6bbb6; font-size: 10px; cursor: pointer; transition: border-color .2s; }
 .light-why:hover { border-color: #ffffff65; }
-.light-sculpture { position: relative; height: 540px; min-width: 0; z-index: 1; display: grid; place-items: center; }
-.light-field { position: absolute; height: 650px; width: 900px; max-width: 75vw; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.light-sculpture { position: absolute; inset: 0; min-width: 0; z-index: 1; display: grid; place-items: center; }
+.light-field { position: absolute; height: 100%; width: 100%; inset: 0; }
 .light-field canvas, .light-field-fallback { width: 100%; height: 100%; display: block; position: absolute; inset: 0; }
 .light-field canvas { opacity: 0; transition: opacity 1s; }
 .light-field[data-renderer=webgl] canvas { opacity: 1; }
 .light-field[data-renderer=webgl] .light-field-fallback { opacity: 0; }
-.light-art-caption { position: absolute; bottom: 35px; display: flex; align-items: center; gap: 16px; white-space: nowrap; font: 7px ui-monospace, monospace; color: #686f69; letter-spacing: .6px; pointer-events: none; }
+.light-art-caption { position: absolute; bottom: 42px; display: flex; align-items: center; gap: 16px; white-space: nowrap; font: 7px ui-monospace, monospace; color: #686f69; letter-spacing: .6px; pointer-events: none; }
 .light-art-index { color: #8b9a91; border-right: 1px solid #ffffff22; padding-right: 16px; }
-.light-right-copy { position: relative; z-index: 2; justify-self: end; width: 215px; margin: 0 0 0 20px; }
-.light-phase-symbol { height: 34px; width: 34px; margin-bottom: 18px; }
-.light-phase-symbol > svg { height: 34px; width: 34px; color: #c4ecd6; }
-.light-phase-name { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.light-right-copy { position: relative; z-index: 2; justify-self: start; width: 215px; margin: 0 0 0 3vw; grid-column: 3;; }
+.light-phase-symbol { height: 20px; width: 20px; margin-bottom: 12px; }
+.light-phase-symbol > svg { height: 20px; width: 20px; color: #c4ecd6; }
+.light-phase-name { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .light-phase-name strong { font-size: 11px; font-weight: 500; letter-spacing: 1px; }
 .light-phase-name > span { font: 7px ui-monospace, monospace; letter-spacing: .8px; color: #65746a; border-left: 1px solid #ffffff20; padding-left: 12px; }
-.light-description p { color: #c1c4bf; font-size: 12px; margin: 0 0 12px; line-height: 1.5; }
+.light-description p { color: #c1c4bf; font-size: 10px; margin: 0 0 7px; line-height: 1.5; }
 .light-proof-link { margin-top: 23px; display: grid; grid-template-columns: 1fr 14px; gap: 5px 12px; font-size: 9px; text-align: left; color: #7a867d; cursor: pointer; padding: 0; }
 .light-proof-link > span { display: flex; gap: 9px; justify-content: space-between; }
 .light-proof-link b { font-weight: 450; color: #afc4b7; }
 .light-proof-link small { font: 6px ui-monospace, monospace; color: #7a867d; }
 .light-proof-link > svg { grid-row: 1 / 3; grid-column: 2; align-self: center; color: #9ba69d; }
 .light-proof-link:hover b { color: #daffe9; }
-.light-bottom { position: relative; z-index: 2; padding: 0 42px 35px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 22px; }
+.light-bottom { position: relative; z-index: 2; padding: 0 24px 24px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 22px; }
 .light-quiet-note, .light-series { font: 7px ui-monospace, monospace; letter-spacing: .6px; color: #686c66; }
 .light-series { justify-self: end; }
 .light-sequence { display: flex; align-items: center; gap: 16px; }
@@ -60,7 +60,7 @@
 .light-player { border: 1px solid #ffffff1a; border-radius: 50%; height: 26px; width: 26px; display: grid; place-items: center; color: #8e998f; cursor: pointer; }
 .light-player:hover { border-color: #8e998f; color: #fff; }
 .light-player:disabled { opacity: .3; cursor: default; }
-.light-footer { display: flex; justify-content: space-between; gap: 20px; padding: 20px 42px; font: 7px ui-monospace, monospace; letter-spacing: .7px; color: #59645b; border-top: 1px solid #ffffff0b; }
+.light-footer { display: flex; justify-content: space-between; gap: 20px; padding: 13px 24px; font: 7px ui-monospace, monospace; letter-spacing: .7px; color: #59645b; border-top: 1px solid #ffffff0b; }
 .welcome-light a:focus-visible, .welcome-light button:focus-visible { outline: 1px solid #c5edda; outline-offset: 5px; }
 /* The explanation uses the welcome's black field, quiet lines and white pills. */
 .light-explanation { margin: auto; width: min(590px, calc(100vw - 32px)); max-height: calc(100svh - 40px); overflow-y: auto; padding: 34px; border: 1px solid var(--light-border); border-radius: 12px; background: var(--light-surface); color: var(--light-text); box-shadow: 0 30px 100px #000b; color-scheme: dark; }
@@ -92,9 +92,9 @@
 .light-role-tabs button[aria-selected=true] { color: #101310; background: #efefeb; border-color: #efefeb; }
 .light-role-panel { font-size: 11px; line-height: 1.7; color: var(--light-muted); min-height: 38px; margin-top: 16px; }
 .light-dialog-start { margin-top: 19px; }
-@media(min-width: 1700px) { .light-composition { padding-inline: 64px; } .welcome-light h1 { font-size: 78px; } .light-right-copy { width: 250px; } .light-description p { font-size: 15px; } }
-@media(max-width: 1150px) { .light-header, .light-composition { padding-inline: 28px; } .light-header-context { display: none; } .light-composition { grid-template-columns: 1fr 1fr .7fr; } .welcome-light h1 { font-size: 46px; letter-spacing: -2px; } .light-field { width: 760px; height: 580px; max-width: 80vw; } .light-right-copy { width: 175px; } .light-description p { font-size: 10px; } .light-cta-row { gap: 8px; } .light-start, .light-why { font-size: 11px; padding: 11px 15px; gap: 14px; } .light-bottom { grid-template-columns: 1fr; justify-items: center; gap: 15px; padding-inline: 28px; } .light-bottom .light-series { display: none; } .light-quiet-note { order: 2; } .light-footer { padding-inline: 28px; } }
-@media(max-width: 760px) { .light-header { min-height: 70px; padding-inline: 22px; } .light-header-actions { gap: 16px; } .light-open { font-size: 10px; padding: 8px 10px; gap: 9px; } .light-wordmark { font-size: 21px; gap: 6px; } .light-wordmark svg { width: 26px; height: 26px; } .light-main { min-height: 0; } .light-kicker { font-size: 6px; letter-spacing: .8px; margin-top: 16px; padding: 8px 10px; } .light-composition { display: grid; grid-template-columns: 1fr; padding: 0 22px; min-height: 0; } .light-copy { text-align: center; padding-top: 39px; margin: 0; } .welcome-light h1 { font-size: clamp(39px, 6vw, 54px); letter-spacing: -1.9px; } .light-copy > p { margin: 16px auto 0; max-width: 310px; font-size: 11px; } .light-cta-row { justify-content: center; margin-top: 23px; } .light-sculpture { height: 310px; margin: 0 -22px; } .light-field { width: 100%; height: 440px; max-width: 100%; } .light-art-caption { bottom: 7px; font-size: 6px; } .light-right-copy { display: grid; grid-template-columns: 26px 1fr; align-items: center; column-gap: 12px; justify-self: center; width: min(100%, 390px); margin: 28px 0 26px; } .light-phase-symbol { width: 26px; height: 26px; margin: 0; } .light-phase-symbol > svg { width: 26px; height: 26px; } .light-phase-name { margin: 0; } .light-description { grid-column: 1 / 3; margin-top: 17px; text-align: center; } .light-description p { display: inline; font-size: 10px; line-height: 1.8; } .light-description p:not(:last-child)::after { content: ' '; white-space: pre; } .light-proof-link { grid-column: 1 / 3; justify-self: center; margin-top: 14px; min-width: 195px; } .light-bottom { padding: 0 22px 27px; gap: 13px; } .light-sequence { gap: 12px; } .light-track { font-size: 7px; letter-spacing: .5px; gap: 5px; } .light-track-line { width: 14px; margin-left: 4px; } .network-icon, .network-icon > svg { width: 13px; height: 13px; } .light-footer { font-size: 6px; padding: 16px 22px; line-height: 1.7; gap: 18px; } .light-footer > span:last-child { text-align: right; } }
+@media(min-width: 1700px) { .light-composition { padding-inline: 2vw; } .light-right-copy { width: 19vw; } .light-description p { font-size: clamp(12px, .8vw, 19px); } }
+@media(max-width: 1150px) { .light-header, .light-composition { padding-inline: 28px; } .light-header-context { display: none; } .light-composition { grid-template-columns: 1fr 1fr .7fr; } .welcome-light h1 { font-size: 34px; letter-spacing: -1.6px; }  .light-right-copy { width: 175px; } .light-description p { font-size: 10px; } .light-cta-row { gap: 8px; } .light-start, .light-why { font-size: 11px; padding: 11px 15px; gap: 14px; } .light-bottom { grid-template-columns: 1fr; justify-items: center; gap: 15px; padding-inline: 28px; } .light-bottom .light-series { display: none; } .light-quiet-note { order: 2; } .light-footer { padding-inline: 28px; } }
+@media(max-width: 760px) { .light-header { min-height: 70px; padding-inline: 22px; } .light-header-actions { gap: 16px; } .light-open { font-size: 10px; padding: 8px 10px; gap: 9px; } .light-wordmark { font-size: 21px; gap: 6px; } .light-wordmark svg { width: 26px; height: 26px; } .light-main { min-height: 0; } .light-kicker { font-size: 6px; letter-spacing: .8px; margin-top: 16px; padding: 8px 10px; } .light-composition { display: grid; grid-template-columns: 1fr; padding: 0 22px; min-height: 0; } .light-copy { text-align: center; padding-top: 39px; margin: 0; } .welcome-light h1 { font-size: clamp(39px, 6vw, 54px); letter-spacing: -1.9px; } .light-copy > p { margin: 16px auto 0; max-width: 310px; font-size: 11px; } .light-cta-row { justify-content: center; margin-top: 23px; } .light-sculpture { position: relative; inset: auto; height: 310px; margin: 0 -22px; grid-column: 1; grid-row: 2; } .light-field { width: 100%; height: 100%; } .light-art-caption { bottom: 7px; font-size: 6px; } .light-right-copy { grid-column: 1; grid-row: 3; display: grid; grid-template-columns: 26px 1fr; align-items: center; column-gap: 12px; justify-self: center; width: min(100%, 390px); margin: 28px 0 26px; } .light-phase-symbol { width: 26px; height: 26px; margin: 0; } .light-phase-symbol > svg { width: 26px; height: 26px; } .light-phase-name { margin: 0; } .light-description { grid-column: 1 / 3; margin-top: 17px; text-align: center; } .light-description p { display: inline; font-size: 10px; line-height: 1.8; } .light-description p:not(:last-child)::after { content: ' '; white-space: pre; } .light-proof-link { grid-column: 1 / 3; justify-self: center; margin-top: 14px; min-width: 195px; } .light-bottom { padding: 0 22px 27px; gap: 13px; } .light-sequence { gap: 12px; } .light-track { font-size: 7px; letter-spacing: .5px; gap: 5px; } .light-track-line { width: 14px; margin-left: 4px; } .network-icon, .network-icon > svg { width: 13px; height: 13px; } .light-footer { font-size: 6px; padding: 16px 22px; line-height: 1.7; gap: 18px; } .light-footer > span:last-child { text-align: right; } }
 @media(max-width: 380px) { .light-header { padding-inline: 16px; } .light-open { display: none; } .light-kicker { font-size: 5.5px; } .light-composition { padding-inline: 16px; } .welcome-light h1 { font-size: 35px; } .light-start, .light-why { font-size: 10px; padding: 11px 14px; } .light-sequence { gap: 8px; } .light-track-line { width: 8px; } .light-track { font-size: 6px; gap: 4px; } .light-player { height: 24px; width: 24px; } .light-explanation { padding: 25px 20px; } .welcome-light .light-explanation h2 { font-size: 26px; } .light-example { padding: 18px 0; } .light-example-stats { gap: 8px; } .light-example-stats span { font-size: 7px; } .light-example-stats strong { font-size: 25px; } }
 @media(prefers-reduced-motion: reduce) { .welcome-light *, .welcome-light *::before, .welcome-light *::after { animation: none !important; transition: none !important; } }
 @media(max-width: 380px) { .light-sculpture { margin-inline: -16px; } }

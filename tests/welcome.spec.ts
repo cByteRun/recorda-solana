@@ -102,6 +102,9 @@ test('hand-drawn marks, light stages, pause, replay and explanation focus work t
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
   await expect(page.getByRole('button', { name: 'Why Recorda?', exact: true })).toBeFocused();
+  await page.locator('.light-proof-link').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.light-proof-link')).toBeFocused();
 });
 
 test('without WebGL the SVG sculpture remains visible and the welcome still opens the workspace', async ({ page }) => {
@@ -119,4 +122,59 @@ test('without WebGL the SVG sculpture remains visible and the welcome still open
   await expect(page.locator('.welcome')).toHaveAttribute('data-phase', '2');
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
   await expect(page).toHaveURL(/\/actions$/);
+});
+
+test('reference light responds to the pointer, freezes on pause and survives context loss', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 868 });
+  await page.clock.install({ time: new Date('2026-10-12T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-10-12T00:00:01Z'));
+  await page.goto('/');
+  const field = page.locator('.light-field');
+  const canvas = field.locator('canvas');
+  await expect(field).toHaveAttribute('data-renderer', 'webgl');
+  await page.clock.runFor(1600);
+  const bounds = (await field.boundingBox())!;
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height * .4);
+  await page.clock.runFor(100);
+  const illuminated = await canvas.screenshot();
+  await page.mouse.move(bounds.x + bounds.width * .7, bounds.y + bounds.height * .4);
+  await page.clock.runFor(100);
+  expect((await canvas.screenshot()).equals(illuminated)).toBe(false);
+  await page.mouse.move(10, 10);
+  await page.getByRole('button', { name: 'Pause animation', exact: true }).click();
+  const paused = await canvas.screenshot();
+  await page.clock.runFor(500);
+  expect((await canvas.screenshot()).equals(paused)).toBe(true);
+  await canvas.evaluate(element => element.dispatchEvent(new Event('webglcontextlost', { cancelable: true })));
+  await expect(field).toHaveAttribute('data-renderer', 'svg');
+  await expect(field.locator('.light-field-fallback')).toBeVisible();
+  await expect(field.locator('.light-field-fallback circle')).toHaveCount(10);
+  await page.getByRole('button', { name: 'SOLANA: The execution', exact: true }).click();
+  await expect(page.locator('.light-right-copy')).toContainText('Coupon. Voting. Redemption.');
+  await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/actions$/);
+  expect(errors).toEqual([]);
+});
+
+test('welcome fills the reference viewport and keeps its triangle across product stages', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 2590, height: 1560 });
+  await page.goto('/');
+  const field = page.locator('.light-field');
+  const canvas = field.locator('canvas');
+  await expect(field).toHaveAttribute('data-renderer', 'webgl');
+  expect(await page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }))).toEqual({ width: 2590, height: 1560 });
+  const geometry = await field.locator('circle').evaluateAll(nodes => nodes.map(node => [node.getAttribute('cx'), node.getAttribute('cy')]));
+  let previous: Buffer | undefined;
+  for (const [index, name] of ['KASE: The instrument', 'SOLANA: The execution', 'RECORDA: The record'].entries()) {
+    await page.getByRole('button', { name, exact: true }).click();
+    await expect(page.locator('.welcome')).toHaveAttribute('data-phase', String(index));
+    expect(await field.locator('circle').evaluateAll(nodes => nodes.map(node => [node.getAttribute('cx'), node.getAttribute('cy')]))).toEqual(geometry);
+    const image = await canvas.screenshot();
+    if (previous) expect(image.equals(previous)).toBe(false);
+    previous = image;
+    await page.screenshot({ path: `target/design-evidence/welcome-reference-stage-${index}.png` });
+  }
 });

@@ -10,10 +10,10 @@ import './welcome.css';
 gsap.registerPlugin(useGSAP);
 const copy = {
   en: {
-    title: ['Real assets.', 'Lasting rights.'], intro: 'Ownership moves. The right stays recorded.', start: 'Get started', idea: 'Why Recorda?',
+    title: ['Real assets.', 'Lasting rights.'], intro: 'KASE bonds. Solana settlement. Rights that stay recorded.', start: 'Get started', idea: 'Why Recorda?',
     label: 'CORPORATE ACTIONS, IN A NEW LIGHT', cue: 'Move through the light', pause: 'Pause animation', play: 'Play animation', replay: 'Replay animation', close: 'Close explanation',
     stages: ['The instrument', 'The execution', 'The record'],
-    descriptions: [ ['Tokenized bonds.', 'Ownership at the cutoff.', 'The origin of every right.'], ['Coupon. Voting. Redemption.', 'Authorized execution.', 'Settled on Solana.'], ['Ownership can change.', 'Recorded rights remain.', 'An outcome you can verify.'] ],
+    descriptions: [ ['Tokenized KASE bonds.', 'Ownership at the record date.', 'The origin of every right.'], ['Coupon. Voting. Redemption.', 'Authorized execution.', 'Settled on Solana.'], ['Ownership can change.', 'Recorded rights remain.', 'An outcome you can verify.'] ],
     tags: ['INSTRUMENT', 'EXECUTION', 'RECORD'],
     note: 'ILLUSTRATIVE · NOT A LIVE TRANSACTION', prototype: 'HACKATHON PROTOTYPE / TEST ASSETS',
     example: 'A transfer changes the balance. It cannot rewrite the right.', now: 'Bonds held now', snapshot: 'At record date', entitlement: 'Coupon entitlement',
@@ -25,10 +25,10 @@ const copy = {
     roleTexts: ['Review record-date rights, authorize execution and follow completion.', 'See what you hold now beside the right you earned at the cutoff.', 'Verify on-chain outcomes without connecting a wallet.'],
   },
   ru: {
-    title: ['Реальные активы.', 'Неизменные права.'], intro: 'Владение меняется. Право остаётся в записи.', start: 'Начать', idea: 'Почему Recorda?',
+    title: ['Реальные активы.', 'Неизменные права.'], intro: 'Облигации KASE. Расчёты на Solana. Права остаются в записи.', start: 'Начать', idea: 'Почему Recorda?',
     label: 'КОРПОРАТИВНЫЕ ДЕЙСТВИЯ В НОВОМ СВЕТЕ', cue: 'Проведите курсором по свету', pause: 'Остановить анимацию', play: 'Продолжить анимацию', replay: 'Повторить анимацию', close: 'Закрыть объяснение',
     stages: ['Инструмент', 'Исполнение', 'Запись'],
-    descriptions: [ ['Токенизированные облигации.', 'Владение на дату фиксации.', 'Начало каждого права.'], ['Купон. Голосование. Погашение.', 'Авторизованное исполнение.', 'Расчёты на Solana.'], ['Владение может меняться.', 'Зафиксированные права остаются.', 'Результат можно проверить.'] ],
+    descriptions: [ ['Токенизированные облигации KASE.', 'Владение на дату фиксации.', 'Начало каждого права.'], ['Купон. Голосование. Погашение.', 'Авторизованное исполнение.', 'Расчёты на Solana.'], ['Владение может меняться.', 'Зафиксированные права остаются.', 'Результат можно проверить.'] ],
     tags: ['ИНСТРУМЕНТ', 'ИСПОЛНЕНИЕ', 'ЗАПИСЬ'],
     note: 'ИЛЛЮСТРАЦИЯ · НЕ ЖИВАЯ ТРАНЗАКЦИЯ', prototype: 'ПРОТОТИП ДЛЯ ХАКАТОНА / ТЕСТОВЫЕ АКТИВЫ',
     example: 'Перевод меняет баланс. Но не переписывает право.', now: 'Облигаций сейчас', snapshot: 'На дату фиксации', entitlement: 'Право на купон',
@@ -46,6 +46,7 @@ export function WelcomePage() {
   const root = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const dialogTrigger = useRef<HTMLButtonElement>(null);
+  const explanationOrigin = useRef<HTMLElement | null>(null);
   const [language, setLanguage] = useState<'en' | 'ru'>('en');
   const [phase, setPhase] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -80,14 +81,14 @@ export function WelcomePage() {
     gsap.fromTo('.light-track-active .network-icon', { y: 3, opacity: .4 }, { y: 0, opacity: 1, duration: .7 });
   }, { scope: root, dependencies: [phase, motionAllowed, replay], revertOnUpdate: true });
   function selectPhase(value: number) { setPhase(value); setPlaying(false); }
-  function openExplanation() { setExplaining(true); dialog.current?.showModal(); }
+  function openExplanation() { explanationOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : dialogTrigger.current; setExplaining(true); dialog.current?.showModal(); }
   function closeExplanation() { dialog.current?.close(); }
 
   return <div ref={root} className="welcome welcome-light" lang={language} data-motion={playing && !explaining ? 'playing' : 'paused'} data-phase={phase}>
     <a className="skip-link" href="#welcome-content">{ru ? 'К содержимому' : 'Skip to content'}</a>
     <header className="light-header">
       <a className="light-wordmark" href="/" aria-label="Recorda home"><RecordaMark /><span>recorda</span><i /></a>
-      <span className="light-header-context">RWA / CORPORATE ACTIONS ENGINE</span>
+      <span className="light-header-context">KASE / SOLANA</span>
       <div className="light-header-actions"><button className="light-language" onClick={() => setLanguage(ru ? 'en' : 'ru')} aria-label={ru ? 'Switch to English' : 'Switch to Russian'}><span className={ru ? '' : 'is-current'}>EN</span><span className={ru ? 'is-current' : ''}>RU</span></button><a href="/actions" className="light-open">{ru ? 'Открыть продукт' : 'Open workspace'}<ArrowUpRight size={13} /></a></div>
     </header>
     <main className="light-main" id="welcome-content" tabIndex={-1}>
@@ -120,7 +121,7 @@ export function WelcomePage() {
       </div>
     </main>
     <footer className="light-footer"><span>{t.prototype}</span><span>{ru ? 'Фиксация → Исполнение → Проверяемый результат' : 'Record → Execute → Verifiable outcome'}</span></footer>
-    <dialog ref={dialog} className="light-explanation" aria-labelledby="explanation-title" onCancel={() => closeExplanation()} onClose={() => { setExplaining(false); dialogTrigger.current?.focus(); }} onClick={event => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeExplanation(); } }}>
+    <dialog ref={dialog} className="light-explanation" aria-labelledby="explanation-title" onCancel={() => closeExplanation()} onClose={() => { setExplaining(false); explanationOrigin.current?.focus(); }} onClick={event => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeExplanation(); } }}>
       <button className="light-dialog-close" aria-label={t.close} onClick={closeExplanation}><X size={18} /></button>
       <span className="light-dialog-eyebrow">RECORDA / THE RIGHT BEHIND THE ASSET</span>
       <h2 id="explanation-title">{t.dialogTitle}</h2><p className="light-dialog-intro">{t.dialogIntro}</p>
