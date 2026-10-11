@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.18.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "node scripts/build-bondops.mjs && vite",
+    "build": "node scripts/build-bondops.mjs && tsc -b && vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -26,14 +26,17 @@
     "audit:requirements": "node scripts/audit-requirements.mjs",
     "test:audit": "node scripts/security-audit.mjs",
     "test:audit:client": "node scripts/security-audit.mjs --client",
-    "dev:next": "next dev next-app --webpack",
-    "build:next": "next build next-app --webpack",
+    "dev:next": "node scripts/build-bondops.mjs && next dev next-app --webpack",
+    "build:next": "node scripts/build-bondops.mjs && next build next-app --webpack",
     "start:next": "next start next-app",
     "test:post-mvp": "node --test --test-isolation=none scripts/post-mvp.test.mjs",
     "benchmark:distribution": "node scripts/benchmark-distribution.mjs",
     "distribution:index": "node scripts/distribution-index.mjs",
     "protocol:test:post-mvp": "node scripts/protocol-test.mjs --suite=post-mvp",
-    "benchmark:protocol": "node scripts/measure-protocol.mjs"
+    "benchmark:protocol": "node scripts/measure-protocol.mjs",
+    "build:bondops": "node scripts/build-bondops.mjs",
+    "test:bondops": "node --test --test-isolation=none server/bondops/*.test.mjs",
+    "bondops:serve": "node scripts/bondops-server.mjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.32.1",

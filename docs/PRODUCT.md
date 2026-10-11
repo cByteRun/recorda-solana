@@ -1,6 +1,6 @@
 # Recorda BondOps — product direction
 
-This document supplements [TZ](TZ.md) and [REQUIREMENTS](REQUIREMENTS.md). It defines the product value and proposed evolution; it does not amend normative IDs, claim delivered features or close acceptance gates. [ROADMAP](ROADMAP.md) owns delivery status.
+This document supplements [TZ](TZ.md) and [REQUIREMENTS](REQUIREMENTS.md). It defines product value and evolution; it does not amend protocol IDs or close acceptance gates. BO-01–07 now specify the operational layer; current source delivery and live limits are documented in BONDOPS-OPERATIONS and ROADMAP. [ROADMAP](ROADMAP.md) owns delivery status.
 
 ## Central value
 
@@ -12,7 +12,7 @@ Investor signing and Auditor verification support the operator's workflow. Issua
 
 ## Proposed demonstration: missing coupon payment
 
-**Illustrative future feature, not real Recorda data or the current Devnet fixture.** Dollar amounts below describe an example obligation, not actual fiat settlement.
+**Illustrative product scenario, not real Devnet payment data.** The operational frontend/backend now exposes this workflow; live acceptance is separate. The original product example below uses 35 units. The implemented demo is aligned to TZ: 17 units, rights 500/250/100/0, illustrative confirmations 350 and unknown 500 Mock USD. Dollar amounts describe obligations, not actual fiat settlement.
 
 | Investor | Coupon entitlement | Confirmed execution | Unsettled |
 |---|---:|---:|---:|
@@ -33,7 +33,7 @@ Operator flow:
 
 For on-chain settlement, confirm with the transaction and corresponding program/token account state under the documented RPC trust and finality assumptions. Current wallet balances alone cannot establish historical payment. For bank transfers, a separate reliable bank/paying-agent confirmation source and reconciliation integration are required. An external-event proposal is not settlement confirmation. Unknown/unavailable evidence must remain visible, rather than being treated as zero or success.
 
-The operational metric is **expected entitlement minus matched confirmed execution**, in the same currency and units, with unresolved evidence shown separately. Proposed acceptance: the fixture shows one $500 exception, drill-down explains A's right and confirmation gap, an unauthorized/duplicate correction is blocked, an uncertain result remains unresolved, and valid confirmation clears the exception without changing the historical right. These criteria require future implementation and tests.
+The operational metric is **expected entitlement minus matched confirmed execution**, in the same currency and units, with unresolved evidence shown separately. Proposed acceptance: the fixture shows one $500 exception, drill-down explains A's right and confirmation gap, an unauthorized/duplicate correction is blocked, an uncertain result remains unresolved, and valid confirmation clears the exception without changing the historical right. The current local service/API/browser tests cover these criteria with fixtures/injected readers. Real-wallet Devnet acceptance and bank confirmations remain open; see [operational evidence](BONDOPS-OPERATIONS.md#verification).
 
 ## Interface progression: simple to complex
 
@@ -41,9 +41,9 @@ Use a **financial operations workspace**: tables, clear amounts, status filters,
 
 | Stage | Layout and flow | Delivery boundary |
 |---|---|---|
-| 1. One action | Instrument setup → action detail; Expected / Confirmed / Unsettled summary, holder reconciliation table, exception detail and one permitted next action | Recommended first BondOps increment; existing lifecycle is the foundation, exception presentation is proposed |
-| 2. Servicing workspace | Instruments / Actions / Exceptions / Audit navigation; search, due-date filters and cross-action attention queue → action → holder → evidence | Requires portfolio discovery, aggregation and explicit exception rules |
-| 3. Team operations | Calendar, assignments, notifications, approval queue and retained resolution history | Requires operational persistence, organization permissions and new requirements; existing protocol governance does not supply all of these |
+| 1. One action | Instrument setup → action detail; Expected / Confirmed / Unsettled summary, holder reconciliation table, exception detail and one permitted next action | Locally implemented reconciliation/case views; live evidence gate remains open |
+| 2. Servicing workspace | Instruments / Actions / Exceptions / Audit navigation; search, due-date filters and cross-action attention queue → action → holder → evidence | Locally implemented portfolio/calendar/queues and source adapter; live indexing acceptance remains open |
+| 3. Team operations | Calendar, assignments, notifications, approval queue and retained resolution history | SQLite persistence, workspace wallet roles/scopes and in-app notification/escalation outbox implemented; SSO/external delivery/production acceptance remain open |
 | 4. Infrastructure | API/SDK, settlement connectors and embedded servicing views | Long-term integration product; requires reliability, security, support and demand evidence |
 
 Recommended first layout: a compact instrument header; three amount cards; a prominent exception row; a holder table; a detail panel containing right, formula, evidence and permitted action. Show principal and final coupon separately for redemption, together with required holder signature and retired supply. Voting uses its own quorum/tally view rather than payment metrics.

@@ -2,17 +2,17 @@
 
 The central product promise is **Control coupon payments, redemptions, errors and confirmations from one workspace — Recorda BondOps.** **Ownership changes. Rights stay recorded.** remains a supporting explanation of entitlement correctness. The primary user is the bond servicing Operator; Investor and Auditor perspectives explain the consequence of the same action. This presentation does not add track requirements or replace [TZ](TZ.md), live acceptance or submission gates.
 
-## Proposed BondOps interface
+## BondOps operational interface
 
 The recommended category is a financial operations workspace. Start with one action: Expected / Confirmed / Unsettled cards → holder reconciliation table → exception detail with fixed right, formula and authoritative evidence → permitted corrective action → refreshed confirmation. Portfolio queues, team operations and integration APIs follow later. Full flow and the illustrative $500 missing-payment case: [PRODUCT](PRODUCT.md#interface-progression-simple-to-complex).
 
-This is product direction, not a description of the current screens. The current welcome and routes below remain the implemented presentation; updating their copy and building reconciliation views is separate work. Preserve readable amounts, technical evidence drill-down, holder signatures and wallet-free audit access.
+The operational frontend/backend now covers portfolio, deadline calendar, confirmation states, exception investigation/assignment/history, team authorization and in-app reminders/escalations. Demo and live are separate sources; [setup and limits](BONDOPS-OPERATIONS.md) and [ROADMAP](ROADMAP.md) distinguish source delivery from live acceptance. Preserve readable amounts, technical evidence drill-down, holder signatures and wallet-free audit access.
 
 ## Entry and working journey
 
 - `/` introduces the problem without a wallet or RPC request. The EN/RU story shows 10 record-date units, a later transfer of four, six current units and an unchanged 500 Mock USD coupon. It is explicitly illustrative, not a transaction or a live receipt.
-- **Get started / Начать** opens `/actions` as Operator, initially selecting Coupon. Shared `/actions?action=…` links open as Auditor and recover real state from chain.
-- **Instrument setup** opens `/protocol`. After creating/selecting an instrument, **Continue to actions** carries its address into the Coupon form.
+- **Get started / Начать** opens `/dashboard`. Corporate actions opens `/actions` as Operator, initially selecting Coupon. Shared `/actions?action=…` links open as Auditor and recover real state from chain.
+- `/bonds` links to **Instrument setup** at `/protocol`. After creating/selecting an instrument, **Continue to actions** carries its address into the Coupon form.
 - The workspace connects Coupon → Voting → Full Redemption for that instrument. Actions have separate cutoffs; completing full redemption ends the active supply. Lifecycle statuses describe loaded records only, never inferred completion.
 - The action summary explains state, approval/execution progress, readable amounts, quorum, cutoff, paid amount and supply. The Investor card places current holdings beside record-date holdings, entitlement and formula.
 - Audit, raw minor-unit amounts, full holder/destination addresses, commitments and transaction evidence remain available. Voting document verification, role authorization and wallet signature requirements remain enforced.

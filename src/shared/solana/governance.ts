@@ -1,7 +1,7 @@
 import { PublicKey, SystemProgram, type Connection, TransactionInstruction } from '@solana/web3.js';
-import { createProtocol, u64, type ProtocolAccounts } from './protocol';
-export function createGovernance(rpc:Connection){
- const {program,pdas}=createProtocol(rpc);const pda=(...seeds:Uint8Array[])=>PublicKey.findProgramAddressSync(seeds,program.programId)[0];
+import { createProtocol, RECORDA_PROGRAM_ID, u64, type ProtocolAccounts } from './protocol';
+export function createGovernance(rpc:Connection,programId=RECORDA_PROGRAM_ID){
+ const {program,pdas}=createProtocol(rpc,programId);const pda=(...seeds:Uint8Array[])=>PublicKey.findProgramAddressSync(seeds,program.programId)[0];
  const governance=(instrument:PublicKey)=>pda(Buffer.from('governance'),instrument.toBytes());
  const signer=(instrument:PublicKey)=>pda(Buffer.from('governance-signer'),instrument.toBytes());
  const intent=(g:PublicKey,id:bigint)=>pda(Buffer.from('intent'),g.toBytes(),u64(id).toArrayLike(Buffer,'le',8));

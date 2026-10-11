@@ -1,6 +1,6 @@
 # Requirements — normative TZ annex
 
-**Product context:** [PRODUCT](PRODUCT.md) defines BondOps servicing value and a proposed missing-payment workflow. Existing UC/FR/NFR/TC remain unchanged. Exception aggregation, operational case management and external settlement confirmation require separately specified requirements and acceptance before delivery claims.
+**Product context:** [PRODUCT](PRODUCT.md) defines BondOps servicing value and the operational missing-confirmation workflow. Existing UC/FR/NFR/TC remain unchanged. BO-01–07 below specify portfolio, deadline, reconciliation and team features; implementation/evidence boundaries live in ROADMAP and BONDOPS-OPERATIONS.
 
 This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained; new IDs are appended. Delivery status belongs in [ROADMAP](ROADMAP.md); evidence is maintained in [ROADMAP](ROADMAP.md#verification-and-gaps).
 
@@ -469,7 +469,7 @@ Checked foundation/Coupon items were demonstrated by the human-signed Devnet gol
 
 ## BondOps operator dashboard — reference adaptation (2026-10-12)
 
-Reference: `tmp_assets/dashboard/recorda_bondops.html`. Product message: «Recorda помогает оператору контролировать весь процесс — от фиксации прав инвесторов до исполнения и проверки выплат». The React overview preserves the reference composition, surfaces, navigation and responsive breakpoints. Its fixture uses TZ's 10/5/2/0 units and 500/250/100/0 coupon rights; illustrative confirmation of B/C creates a $500 attention case. This fixture is not protocol evidence. Existing FR-01–58 are unchanged; the following appended product requirements require backend implementation and acceptance.
+Reference: `tmp_assets/dashboard/recorda_bondops.html`. Product message: «Recorda помогает оператору контролировать весь процесс — от фиксации прав инвесторов до исполнения и проверки выплат». The React overview preserves the reference composition, surfaces, navigation and responsive breakpoints. Its fixture uses TZ's 10/5/2/0 units and 500/250/100/0 coupon rights; illustrative confirmation of B/C creates a $500 attention case. This fixture is not protocol evidence. Existing FR-01–58 are unchanged; the following appended product requirements define the operational frontend/backend addition. Delivery is tracked separately from live acceptance.
 
 | ID | Business domain / feature | Requirement and acceptance |
 |---|---|---|
@@ -481,4 +481,17 @@ Reference: `tmp_assets/dashboard/recorda_bondops.html`. Product message: «Recor
 | BO-06 | Timeliness / notifications | Send deduplicated deadline and exception notifications to configured responsible operators, with delivery status and escalation. Unavailable evidence produces a review task rather than automatic execution. |
 | BO-07 | Integration / external confirmation | Verify bank/payment-provider callbacks, bind confirmations to exact action/holder/asset/amount, prevent replay and reconcile against rights. External confirmations must remain distinct from Solana transaction evidence. |
 
-Frontend boundary: `/dashboard` is an explicitly labelled illustrative overview with JSON export and exception disclosure. `/bonds`, `/settlements`, `/audit`, `/infrastructure`, `/settings` are frontend placeholders; they do not mutate settlement or simulate successful backend operations. `/protocol`, `/actions`, `/holders`, `/claims` retain existing working flows. Theme switching is presentation only. Portfolio aggregation, deadline monitoring, case management, team authorization and connectors are not delivered by this dashboard.
+Current frontend/backend boundary: `/dashboard`, `/bonds`, `/calendar`, `/settlements`, `/audit`, `/settings`, `/notifications` and `/infrastructure` use the server BondOps workspace. Case/schedule/team/outbox data persists in SQLite; finalized financial rights and execution remain program-owned. Demo and live are separate sources. `/protocol`, `/actions`, `/holders`, `/claims` retain their operational flows and are reachable in navigation. The bank connector and external email/messenger delivery are explicitly deferred, not simulated successes. [Operational contract](BONDOPS-OPERATIONS.md) owns API/runtime details; [ROADMAP](ROADMAP.md) owns delivery and live acceptance status.
+
+### BondOps acceptance scenarios (supplement to protocol TC-01–38)
+
+- **BO-TC-01 / BO-01:** Calendar and queues distinguish record date, explicit payment deadline, maturity and voting close; timezone-qualified coupon edits persist, a pre-cutoff due date and contract-deadline overwrite are rejected.
+- **BO-TC-02 / BO-02:** Expected equals Confirmed + Unsettled per settlement asset; Unknown is a disclosed subset of Unsettled; Voting never contributes payments; unavailable verification does not become success or fixture data.
+- **BO-TC-03 / BO-02–03:** A retained transaction is bound to the exact settle instruction/action/right. Pending, failed, pruned and finalized evidence produce distinct states; an uncertain reference blocks replacement and a confirmed right blocks another payment reference.
+- **BO-TC-04 / BO-03:** Stable action/holder cases retain assignment, notes and history across restart. Server rejects unconfirmed closure; matching verified execution resolves once; evidence loss reopens investigation without rewriting historical rights.
+- **BO-TC-05 / BO-04:** Real wallet message signature verifies a one-use origin-bound challenge; expired/replayed/forged login, invalid CSRF, untrusted origin, out-of-scope mutation and revoked sessions are rejected. A UI role selector cannot grant real authority.
+- **BO-TC-06 / BO-05:** Scoped observation/audit exports declare demo/live, network, finality and historical limits. Operational notes link to cases/actions and never masquerade as a receipt or an exhaustive transaction history.
+- **BO-TC-07 / BO-06:** Reminder, overdue and escalation events deduplicate per action/deadline/recipient and persist. Only the recipient can acknowledge an inbox item; schedule changes supersede prior unread reminders. In-app availability is distinct from external delivery.
+- **BO-TC-08 / BO-07, deferred:** Future authenticated provider callbacks bind event/action/holder/asset/amount/evidence; duplicate or conflicting confirmations cannot create a second payment or rewrite a snapshot. Requires a selected bank/paying-agent provider before acceptance.
+
+Evidence: backend `server/bondops/*.test.mjs`; browser `tests/bondops.spec.ts` and `tests/dashboard.spec.ts` via `playwright.bondops.config.ts`. These new IDs do not assert completion of the existing human Phantom/Devnet MVP gates.

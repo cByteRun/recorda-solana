@@ -21,7 +21,7 @@ test('judge can understand fixed rights, change perspectives, and enter the real
   expect(rpcRequests).toEqual([]);
   await page.getByRole('dialog').getByRole('link', { name: 'Get started', exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await page.getByRole('link', { name: 'Corporate actions', exact: true }).click();
+  await page.locator('.rail').getByRole('link', { name: 'Corporate actions', exact: true }).click();
   await expect(page.getByLabel('Role', { exact: true })).toHaveValue('Operator');
   await expect(page.getByLabel('Action kind', { exact: true })).toHaveValue('coupon');
   await expect(page.getByRole('button', { name: 'Create action', exact: true })).toBeDisabled();
@@ -39,7 +39,7 @@ test('Russian welcome retains the story and start route', async ({ page }) => {
   await page.getByRole('button', { name: 'Изменить владение', exact: true }).click();
   await expect(page.locator('.coupon-value')).toContainText('500.00');
   await page.getByRole('dialog').getByRole('link', { name: 'Начать', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Every asset. Every right.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Operations overview.', exact: true })).toBeVisible();
 });
 
 test('reduced motion stops automatic storytelling but preserves manual exploration and keyboard tabs', async ({ page }) => {

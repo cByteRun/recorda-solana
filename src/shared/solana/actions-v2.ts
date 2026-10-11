@@ -1,7 +1,7 @@
 import { PublicKey, SystemProgram, type Connection } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, getAccount, getMint } from "@solana/spl-token";
 import { createGovernance } from "./governance";
-import { createProtocol, u64, type ProtocolAccounts } from "./protocol";
+import { createProtocol, RECORDA_PROGRAM_ID, u64, type ProtocolAccounts } from "./protocol";
 import { Buffer } from "buffer";
 
 export type ActionKindV2 = "coupon" | "redemption" | "voting" | "partialRedemption";
@@ -9,8 +9,8 @@ export type ParametersV2 = ProtocolAccounts["actionV2"]["parameters"];
 export const kindV2 = (a: ProtocolAccounts["actionV2"]) => Object.keys(a.parameters.kind)[0] as ActionKindV2;
 export const stageV2 = (a: ProtocolAccounts["actionV2"]) => Object.keys(a.status)[0];
 const integer = (n: { toString(): string }) => BigInt(n.toString());
-export function createActionsV2(rpc: Connection) {
-  const { program, pdas: legacy } = createProtocol(rpc);
+export function createActionsV2(rpc: Connection, programId = RECORDA_PROGRAM_ID) {
+  const { program, pdas: legacy } = createProtocol(rpc, programId);
   const pda = (...seeds: Uint8Array[]) => PublicKey.findProgramAddressSync(seeds, program.programId)[0];
   const text = (s: string) => Buffer.from(s);
   const number = (n: bigint | string) => u64(n).toArrayLike(Buffer, "le", 8);
@@ -22,7 +22,7 @@ export function createActionsV2(rpc: Connection) {
     vault: (action: PublicKey) => pda(text("vault-v2"), action.toBytes()),
     period: (instrument: PublicKey, period: bigint | string) => pda(text("period-v2"), instrument.toBytes(), number(period))
   };
-  const governance=createGovernance(rpc);
+  const governance=createGovernance(rpc, programId);
   const tokenProgram = TOKEN_2022_PROGRAM_ID, systemProgram = SystemProgram.programId;
   async function owned<K extends keyof ProtocolAccounts>(name: K, address: PublicKey) {
     const info = await rpc.getAccountInfo(address, "confirmed");

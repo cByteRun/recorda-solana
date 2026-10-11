@@ -2,15 +2,17 @@
 
 Source scope **FR-01–58 is implemented**. The current focus is fresh feature/attack evidence, human Phantom three-action Devnet acceptance and release. [TZ](TZ.md) defines the product; [REQUIREMENTS](REQUIREMENTS.md) owns UC/FR/NFR/TC wording and checklists; this file owns delivery and open work.
 
-## BondOps product evolution — proposed
+## BondOps operational product evolution
 
-[PRODUCT](PRODUCT.md) supplements TZ with a servicing focus. These steps are open product work, separate from implemented FR-01–58 and current release gates:
+[PRODUCT](PRODUCT.md) defines the recurring operator job; BO-01–07 in [REQUIREMENTS](REQUIREMENTS.md) specify this increment. Source delivery and live acceptance are separate. [Operational contract and setup](BONDOPS-OPERATIONS.md).
 
-- [ ] Specify authoritative confirmation/finality and exception classification, including uncertain or unavailable evidence; map the new acceptance criteria before implementation.
-- [ ] Build one-action Expected / Confirmed / Unsettled reconciliation and holder exception drill-down; validate the illustrative CA-001 case and safe correction/recovery.
-- [ ] Align welcome/workspace copy with BondOps and validate the recurring servicing job with issuers, paying agents and operations specialists.
-- [ ] Add portfolio discovery and an attention queue after the one-action flow works; specify team assignments, notifications and resolution history separately.
-- [ ] Validate bank confirmation connectors and Infrastructure API/SDK demand, reliability and supported operations before expanding the offering.
+- [x] Define authoritative finality, integer/asset reconciliation, uncertainty and proof-gated case closure.
+- [x] Build Expected / Confirmed / Unsettled / Unknown views with holder drill-down, retained references and permitted recovery links.
+- [x] Add portfolio discovery, coupon deadline calendar, overdue queue, assignment, retained resolution history, team scope enforcement and in-app reminders/escalations.
+- [ ] Accept the complete live operator flow with a configured Devnet wallet/portfolio and a reliable RPC; public RPC discovery returned 429 on 2026-10-12.
+- [ ] Validate recurring servicing usage, timeliness rules and willingness to pay with issuers/paying agents/operators.
+- [ ] Add bank/paying-agent confirmation after provider selection; add external email/messenger delivery and organization SSO separately.
+- [ ] Validate persistent production hosting, worker scheduling, backup/retention and measured portfolio indexing capacity before production release.
 
 ## Verification and gaps
 
@@ -99,16 +101,20 @@ The [product experience](PRODUCT-EXPERIENCE.md) makes the existing business beha
 - [x] Investor card comparing current and record-date positions, entitlement and formula; finalized-action result and onward navigation.
 - [x] Desktop/mobile welcome and working-route checks. Local chain/browser checks remain scoped evidence; historical full-audit hashes above do not certify this UI revision.
 
-## BondOps reference dashboard delivery (2026-10-12)
+## BondOps frontend/backend delivery (2026-10-12)
 
-- [x] Adapt the supplied HTML's light/dark surfaces, two-column navigation, overview metric cards, attention queue, settlement progress, snapshot distribution, lifecycle and example activity into React; retain welcome and operational routes.
-- [x] Adapt the scenario to TZ's 17 units / $850 coupon obligation; label all overview confirmations and events illustrative, provide a source-labelled JSON export and frontend placeholders for missing services.
-- [ ] BO-01: build instrument/action portfolio index and authoritative record-date/payment/maturity calendar; verify overdue/timezone behavior.
-- [ ] BO-02: build finalized-evidence reconciliation service; verify totals and missing/unknown/partial states, independent of current holdings.
-- [ ] BO-03: implement deduplicated exception cases, assignment and evidence-backed recovery; demonstrate repeat-safe resolution without duplicate payment.
-- [ ] BO-04: add authenticated team/workspace authorization; verify unauthorized requests cannot access or change another instrument.
-- [ ] BO-05: implement durable portfolio audit index and verified exports; test restart/recovery and explicit unavailable evidence.
-- [ ] BO-06: add delivery-tracked deadline alerts and escalation after calendar/case ownership is available.
-- [ ] BO-07: implement authenticated external settlement connectors only after confirmation contracts and replay protection are specified.
+- [x] Reference dashboard: preserve welcome, light/dark operator shell and working Coupon/Voting/Redemption/claims routes; adapt demo to TZ's 17 units / 850 Mock USD obligation.
+- [x] **BO-01 — Timeliness:** month calendar, deadline queues, operator-set coupon due dates and contract-sourced voting/maturity dates; persist timezone-qualified schedules.
+- [x] **BO-02 — Reconciliation:** server finalized-reader adapter reuses protocol audits; asset-separated integer summaries and Due/Pending/Failed/Unknown/Confirmed states. Failed live reads never fall back to demo.
+- [x] **BO-03 — Exception investigation and management:** fixed right/formula/cutoff, approval/funding/proof and permitted next action; durable assignment/history, retained signature, repeat-safe reconciliation and proof-gated resolution.
+- [x] **BO-04 — Team security:** origin-bound single-use wallet challenge, server roles/scopes, membership administration/revocation, HttpOnly session and CSRF validation; sandbox identities are explicit and production-disabled.
+- [x] **BO-05 — Portfolio and audit:** instrument/action tables, durable observation/decision journal, case/action links and provenance-labelled exports; full independent action audit remains in operational screens.
+- [x] **BO-06 — Notifications/escalations:** minute worker, deduplicated in-app outbox, per-recipient inbox/read status, assigned-case escalation and configurable lead/escalation hours.
+- [x] **BO-07 — Source boundary:** Solana source/status screen and documented future bank-confirmation contract; no simulated bank settlement.
+- [ ] **BO-01–06 live acceptance:** complete real wallet login → scoped portfolio → finalized reconciliation → evidence-backed exception closure on Devnet. Public RPC smoke currently blocked by 429; no live PASS claimed.
+- [ ] **BO-05 archival/scale acceptance:** validate complete historical retention, backups and reliable recovery at the supported portfolio size.
+- [ ] **BO-06 external delivery:** select email/messenger provider, implement delivery/retry state and verify recipient delivery; current delivery is in-app only.
+- [ ] **BO-07 bank connector:** provider selection is explicitly deferred by user; implement authenticated final confirmations and replay/conflict tests after selection.
+- [ ] Production hosting: persistent database/worker, operational SLA, organization SSO and deployment verification; current runtime envelope is a persistent single-node service.
 
-Frontend placeholders are reviewable product scope, not evidence of backend delivery. BO requirements supplement FR-01–58; they do not change MVP protocol acceptance gates.
+Verification: 11 backend tests and 47 isolated browser checks passed; Vite and Next builds passed. Backend tests exercise confirmed/failure/unknown flows with injected authoritative readers; transaction tests use real instruction encoding and login tests use real Ed25519 signatures. Browser tests cover the API/SQLite demo path and source isolation, not a real Devnet payment. Detailed evidence and limitations: [BONDOPS-OPERATIONS](BONDOPS-OPERATIONS.md#verification). Existing FR-01–58 and human MVP submission gates are unchanged.

@@ -8,7 +8,7 @@
 
 **🎯 The product value:** help issuers, paying agents and operations specialists see what is owed, what execution is confirmed, and what still requires attention. Fixed record-date rights, authorized execution and verifiable evidence underpin that servicing workflow.
 
-**Current foundation:** issuance/registry → rights → approval/funding → execution → audit. **Next product step:** an exception-focused settlement workspace; this interface is proposed, not shipped. [Product direction and illustrative missing-payment case](docs/PRODUCT.md) supplement TZ without replacing its required scenarios.
+**Current foundation:** issuance/registry → rights → approval/funding → execution → audit. **Operational frontend/backend:** portfolio and deadline calendar, confirmation reconciliation, durable exception cases, team permissions, audit and in-app notifications are implemented locally. Live Devnet acceptance, production hosting and bank/external delivery connectors remain open. [Setup and boundaries](docs/BONDOPS-OPERATIONS.md). [Product direction and illustrative missing-payment case](docs/PRODUCT.md) supplement TZ without replacing its required scenarios.
 
 **Long-term direction — Recorda Infrastructure:** API/SDK for exchanges, tokenization platforms, custodians and financial developers to integrate bond-servicing mechanisms on Solana. Production reliability and market demand must be demonstrated before treating this as a proven offering.
 
@@ -61,7 +61,7 @@ Full preparation and screen-by-screen expectations: [DEVNET-DEMO.md](docs/DEVNET
 
 ### 1. Install and prepare the program
 
-Requires Node **22.12+**, npm, desktop Chromium/Chrome and Phantom. Rust **1.90** and Solana/SBF **2.3.0** are needed if building/deploying; see [technical setup](#technical-setup).
+Requires Node **22.18+**, npm, desktop Chromium/Chrome and Phantom. Rust **1.90** and Solana/SBF **2.3.0** are needed if building/deploying; see [technical setup](#technical-setup).
 
 ```bash
 npm ci
@@ -377,3 +377,13 @@ TZ takes precedence; roadmap checkmarks do not amend requirements. All rights re
 [features]: docs/REQUIREMENTS.md#16-functional-requirements-fr
 [mapping]: docs/audit-coverage.json
 [security]: docs/SECURITY-AUDIT.md
+
+## BondOps operational workspace
+
+`npm run dev` now serves both the browser and `/api/bondops`; restart a previously running Vite server to load the API plugin. Demo and Solana Devnet are separate sources. Demo lets reviewers explore the TZ 17-unit / 850 Mock USD scenario, persist a case decision and assign a deadline without presenting fixtures as actual payments. Select Solana Devnet and sign in with a configured team wallet for scoped finalized-source reconciliation.
+
+Routes: `/dashboard` overview; `/bonds` instruments/actions; `/calendar` upcoming/overdue deadlines; `/settlements` rights and exceptions; `/audit` retained portfolio observations/proof links; `/settings` team roles/scopes and notification rules; `/notifications` own inbox; `/infrastructure` source/connector status. `/protocol`, `/actions`, `/holders`, `/claims` preserve the financial and investor journeys.
+
+Configure server-only `BONDOPS_DB_PATH`, `BONDOPS_ORIGINS`, `BONDOPS_RPC_URL`, `BONDOPS_PROGRAM_ID` and initial `BONDOPS_MEMBERS`; [complete operational setup](docs/BONDOPS-OPERATIONS.md). The server stores no payment keys and cannot manually mark an unconfirmed obligation paid. Runtime requires persistent Node/SQLite and a running scheduler; static Vite hosting or ephemeral serverless filesystem is insufficient. Bank/paying-agent and external notification providers are deferred. Public Devnet discovery returned RPC 429 during this revision, so live acceptance remains open.
+
+Checks: `npm run test:bondops`, `npx playwright test --config playwright.bondops.config.ts`, `npm run build`, `npm run build:next`.

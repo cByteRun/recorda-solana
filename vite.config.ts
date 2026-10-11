@@ -2,10 +2,11 @@ import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { bondOpsPlugin } from "./server/bondops/vite.mjs";
 
 export default defineConfig({
   cacheDir: process.env.RECORDA_VITE_CACHE_DIR || "node_modules/.vite",
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), bondOpsPlugin()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

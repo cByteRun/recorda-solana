@@ -14,6 +14,6 @@ const OverviewPage = lazy(() => import("@/pages/overview/ui/overview-page").then
 export function App() {
   if (location.pathname === "/" && !new URLSearchParams(location.search).has('action')) return <WelcomePage />;
   if (location.pathname === "/reference") return <Suspense fallback={<p className="workspace-loading">Opening reference…</p>}><DashboardPage /></Suspense>;
-  const page = location.pathname === '/dashboard' ? <BondOpsPage /> : ['/bonds','/settlements','/audit','/infrastructure','/settings'].includes(location.pathname) ? <BondOpsPlaceholder /> : location.pathname === '/holders' ? <OverviewPage /> : location.pathname === "/claims" ? <ClaimsPage /> : location.pathname === "/actions" ? <ActionsPage /> : <ProtocolPage />;
+  const page = location.pathname === '/dashboard' ? <BondOpsPage /> : ['/bonds','/settlements','/exceptions','/calendar','/notifications','/audit','/infrastructure','/settings'].includes(location.pathname) ? <BondOpsPlaceholder /> : location.pathname === '/holders' ? <OverviewPage /> : location.pathname === "/claims" ? <ClaimsPage /> : location.pathname === "/actions" ? <ActionsPage /> : <ProtocolPage />;
   return <BondOpsShell><Suspense fallback={<p className="workspace-loading" role="status">Opening your workspace…</p>}>{page}</Suspense></BondOpsShell>;
 }
