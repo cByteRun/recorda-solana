@@ -2,6 +2,13 @@
 
 Dated entries describe their own revisions. Historical counts, deployment addresses and pending-work notes do not establish current acceptance; current architecture is in [ARCHITECTURE](ARCHITECTURE.md), and fresh evidence gates are in [ROADMAP](ROADMAP.md).
 
+## 2026-10-12 — Welcome and connected product experience
+
+- Add a wallet-free EN/RU welcome with a clear Operator promise, orbital background motion and an interactive 10 → 6 current units / 10 fixed rights / 500 Mock USD coupon story. Include pause, manual steps, keyboard role tabs and reduced-motion behavior.
+- Connect instrument setup to the Coupon → Voting → Redemption workspace; preserve direct Auditor links and historical root Coupon recovery. Share graphite/off-white/lime styling, action progress, readable money/percentages, record-date rights cards and finalized-action handoff. Keep raw amounts, full addresses and commitments in technical disclosures.
+- Pass Vite and Next builds, welcome/mobile/keyboard checks, 25 native protocol tests, existing chain UI checks and two additional chain-backed presentation checks. One initial Coupon browser read timed out during a 51-second local RPC response; its targeted replay passed on the retained ledger. All six production Next route checks passed. Screenshots are retained under `target/design-evidence/`.
+- Update the route guide, demo introduction and [product experience](PRODUCT-EXPERIENCE.md). These local checks do not close the human Phantom Devnet or publication/video gates, and do not refresh the historical full security-audit hashes.
+
 ## 2026-10-11 — Live Redemption on a Devnet-cloned local validator
 
 - Clone the upgradeable Devnet Recorda program into an isolated local ledger; retain matching SBF SHA-256 and distinct local genesis. Exercise a fresh 10/5/2/0 instrument in the existing Chromium on CDP 9222 through ordinary UI and real Phantom accounts; no new runner scripts or injected wallet provider.

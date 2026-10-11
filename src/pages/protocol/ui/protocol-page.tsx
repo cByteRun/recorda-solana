@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Badge } from "@/shared/ui/badge";
 import { AddressLink } from "@/shared/ui/address-link";
+import { ArrowRight } from "lucide-react";
+import { ActionJourney } from "@/widgets/action-journey/ui/action-journey";
 
 function minor(value: { toString(): string }) {
   const raw = BigInt(value.toString()); return `${raw / 100n}.${(raw % 100n).toString().padStart(2, "0")}`;
@@ -56,6 +58,8 @@ export function ProtocolPage() {
       </div>
       <div className="space-y-2"><Button disabled={busy} onClick={() => void run(connect)}>{operator ? "Reconnect Phantom" : "Connect Phantom"}</Button>{operator && <p className="max-w-56 break-all text-xs text-zinc-600" title={operator.toBase58()}>Wallet: {operator.toBase58().slice(0, 6)}…{operator.toBase58().slice(-6)}</p>}</div>
     </header>
+    <div className="workspace-onboarding"><span className="onboarding-icon">01</span><div><h2>{instrument ? 'Continue with this instrument' : 'Set up the instrument first'}</h2><p>Create the test bond and register holders below. Then continue to Coupon → Voting → Redemption in the shared workspace. The Coupon foundation remains available here.</p></div>{validAddress(instrument) && !busy ? <a className="workspace-button" href={`/actions?instrument=${encodeURIComponent(instrument)}&kind=coupon`}>Continue to actions <ArrowRight size={15} /></a> : <span className="form-helper">Create or select an instrument to continue</span>}</div>
+    <ActionJourney instrument={validAddress(instrument) ? instrument : ''} busy={busy} />
     <p className="text-sm text-zinc-600" data-testid="protocol-boundary">IMPLEMENTED: Anchor PDA state and Token-2022 settlement. Mock USD is a test payment asset. Local Validator / Devnet only.</p>
     <nav aria-label="View role" className="flex flex-wrap gap-2">{(["Operator", "Investor", "Auditor"] as const).map(value => <Button key={value} variant={role === value ? "primary" : "outline"} aria-pressed={role === value} onClick={() => { setRole(value); setDemoHolder(""); }}>{value}</Button>)}</nav>
     <p className="text-sm text-zinc-600">{role === "Operator" ? "Manage the coupon and funding. Only the instrument authority can sign operations." : role === "Investor" ? "See your holdings, record-date rights and payment outcome. This view is read-only." : "Verify rights, payments and receipt independently. No wallet is required."}</p>

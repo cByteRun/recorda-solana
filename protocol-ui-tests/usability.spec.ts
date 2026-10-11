@@ -4,6 +4,10 @@ test('primary entry and roles remain usable without a wallet or action', async (
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: /Ownership changes/ })).toBeVisible();
+  await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
+  await expect(page.getByRole('heading', { name: 'Corporate actions', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Instrument setup', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: 'Coupon servicing' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Create / resume demo instrument' })).toBeDisabled();
   await page.getByRole('button', { name: 'Investor', exact: true }).click();

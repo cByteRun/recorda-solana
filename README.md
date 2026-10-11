@@ -134,7 +134,7 @@ The runner opens its application tab and drives the buttons. **You review/confir
 | Full Redemption | Principal plus final coupon: 10500/5250/2100/0 Mock USD; supply 17→7→2→0; REDEEMED; finalized receipt |
 | Auditor | Finalized actions reopen without connecting a wallet; Audit: Verified |
 
-`/actions` displays money in minor units: **100 = 1 Mock USD**. Payments use test Token-2022 tokens, not real USD or SOL. Voting records a decision without automatically changing terms. This fixture does not transfer bonds after the snapshot; the feature/attack audit tests that rule.
+`/actions` displays human-readable Mock USD amounts and percentages; raw minor-unit totals remain under **Instrument & action details** (**100 = 1 Mock USD**). Payments use test Token-2022 tokens, not real USD or SOL. Voting records a decision without automatically changing terms. This fixture does not transfer bonds after the snapshot; the feature/attack audit tests that rule.
 
 Success prints `PASS` and saves **`passed: true`** in `target/devnet-evidence/actions-<run-id>/run.json`, alongside action screenshots. It checks actual token balance deltas, mint supply and audited receipts. Retain the JSON, Action URLs and Explorer links for judges. Reopen `/actions?action=<PDA>` as Auditor and use **Export verified audit**; for a clean manual recovery demonstration, use another browser without Phantom.
 
@@ -182,11 +182,15 @@ Full feature wording and implementation/test links: [requirement checklist][feat
 
 | Route | Purpose |
 |---|---|
-| `/protocol` | Instrument/holder setup and historical Coupon |
+| `/` | Welcome, interactive record-date story, EN/RU copy and role perspectives → Get started |
+| `/actions` | Operator workspace with Coupon → Voting → Redemption journey |
+| `/protocol` | Instrument/holder setup and historical Coupon → Continue to actions |
 | `/actions?instrument=<PDA>` | Create Coupon, Voting, Full or Partial Redemption |
 | `/actions?action=<PDA>` | Recover action, inspect rights/results, audit/export |
 | `/claims` | Verify a prepared public manifest and sign a holder-bound claim |
 | `/reference` | Browser/Memo calculation reference and simulated golden example |
+
+Welcome and visual-system decisions: [Product experience](docs/PRODUCT-EXPERIENCE.md). The welcome is an illustrative explanation, not live-chain evidence. Shared action links still open directly as Auditor; existing root `/?action=<PDA>` links retain Coupon recovery.
 
 ### Manual acceptance
 
@@ -258,7 +262,7 @@ solana program show YOUR_PROGRAM_ID --url devnet
 
 5. Update `VITE_RECORDA_PROGRAM_ID` in `.env.local`, keep the RPC on Devnet, restart Vite and follow the [three-terminal Devnet demo](#devnet-demo--coupon--voting--redemption). The CLI deployer and Phantom Operator can differ; instrument creation establishes the Operator authority. [Official deployment instructions](https://solana.com/docs/programs/deploying).
 
-Historical read-only inspection recorded slot **508134659**, data length **542,864 bytes**; that is not evidence of the current v2 binary. A subsequent Devnet deployment has been reported. Verify the currently deployed binary separately; the human three-action PASS remains to be recorded. The `/` page's **Deploy KZTB26** creates test token assets, not the Rust program; ComputeBudget/Associated Token program IDs and token mint addresses are not Recorda's ID.
+Historical read-only inspection recorded slot **508134659**, data length **542,864 bytes**; that is not evidence of the current v2 binary. A subsequent Devnet deployment has been reported. Verify the currently deployed binary separately; the human three-action PASS remains to be recorded. The `/reference` page's **Deploy KZTB26** creates test token assets, not the Rust program; ComputeBudget/Associated Token program IDs and token mint addresses are not Recorda's ID.
 
 ## Feature and attack audit
 

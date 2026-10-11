@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
-import { DashboardPage } from "@/pages/dashboard/ui/dashboard-page";
+import { WelcomePage } from "@/pages/welcome/ui/welcome-page";
+import { ProductShell } from "@/shared/ui/product-shell";
+const DashboardPage = lazy(() => import("@/pages/dashboard/ui/dashboard-page").then(module => ({ default: module.DashboardPage })));
 const ProtocolPage = lazy(() => import("@/pages/protocol/ui/protocol-page").then(module => ({ default: module.ProtocolPage })));
 
 const ActionsPage = lazy(() => import("@/pages/actions/ui/actions-page").then(module => ({ default: module.ActionsPage })));
@@ -7,9 +9,8 @@ const ActionsPage = lazy(() => import("@/pages/actions/ui/actions-page").then(mo
 const ClaimsPage = lazy(() => import("@/pages/claims/ui/claims-page").then(module => ({ default: module.ClaimsPage })));
 
 export function App() {
-  if (location.pathname === "/claims") return <Suspense fallback={<p className="p-8">Loading claims…</p>}><ClaimsPage /></Suspense>;
-  if (location.pathname === "/actions") return <Suspense fallback={<p className="p-8">Loading actions…</p>}><ActionsPage /></Suspense>;
-  return location.pathname !== "/reference"
-    ? <Suspense fallback={<p className="p-8">Loading Coupon Core…</p>}><ProtocolPage /></Suspense>
-    : <DashboardPage />;
+  if (location.pathname === "/" && !new URLSearchParams(location.search).has('action')) return <WelcomePage />;
+  if (location.pathname === "/reference") return <Suspense fallback={<p className="workspace-loading">Opening reference…</p>}><DashboardPage /></Suspense>;
+  const page = location.pathname === "/claims" ? <ClaimsPage /> : location.pathname === "/actions" ? <ActionsPage /> : <ProtocolPage />;
+  return <ProductShell><Suspense fallback={<p className="workspace-loading" role="status">Opening your workspace…</p>}>{page}</Suspense></ProductShell>;
 }

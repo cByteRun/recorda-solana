@@ -19,10 +19,11 @@ export function useActionsController() {
   const client = useMemo(() => createActionsV2(connection), []);
   const [address, setAddress] = useState(new URLSearchParams(location.search).get("action") || "");
   const [instrument, setInstrument] = useState(new URLSearchParams(location.search).get("instrument") || "");
-  const [wallet, setWallet] = useState<PublicKey | null>(null), [role, setRole] = useState("Auditor");
+  const [wallet, setWallet] = useState<PublicKey | null>(null), [role, setRole] = useState(address ? "Auditor" : "Operator");
   const [report, setReport] = useState<ReportV2 | null>(null), [issues, setIssues] = useState<string[]>([]);
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [signature, setSignature] = useState("");
-  const [kind, setKind] = useState<ActionKindV2>("voting"), [period, setPeriod] = useState("1"), [includeCoupon, setIncludeCoupon] = useState(false);
+  const requestedKind = new URLSearchParams(location.search).get('kind');
+  const [kind, setKind] = useState<ActionKindV2>(requestedKind && ['coupon','voting','redemption','partialRedemption'].includes(requestedKind) ? requestedKind as ActionKindV2 : "coupon"), [period, setPeriod] = useState("1"), [includeCoupon, setIncludeCoupon] = useState(false);
   const [record, setRecord] = useState(""), [opens, setOpens] = useState(""), [closes, setCloses] = useState(""), [quorum, setQuorum] = useState("5000"), [fraction, setFraction] = useState("2000"), [proposal, setProposal] = useState("");
   const [historyItems,setHistoryItems]=useState<Awaited<ReturnType<typeof listActionHistory>>["entries"]>([]),[historyCursor,setHistoryCursor]=useState<string|null>(null);
   const lock = useRef(false);

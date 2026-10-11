@@ -77,3 +77,14 @@ These are implemented CLI/library/program capabilities, not claims of hosted ind
 - [ ] Production security, provider operations, capacity and legal review.
 
 These tasks are not silently included in the implemented FR-01–58 checklist and are not closed by the MVP demo.
+
+## Product and presentation experience
+
+The [product experience](PRODUCT-EXPERIENCE.md) makes the existing business behavior visible; it does not change track scope or close the human Devnet gate.
+
+- [x] Welcome at `/` with a clear promise, Operator audience, EN/RU and Get started.
+- [x] Separate background orbital motion and foreground interactive record-date story, pause and reduced-motion support.
+- [x] Instrument setup → contextual Coupon → Voting → Redemption journey and direct wallet-free Auditor links.
+- [x] Readable Mock USD and percentage inputs; raw units and commitments in technical disclosures.
+- [x] Investor card comparing current and record-date positions, entitlement and formula; finalized-action result and onward navigation.
+- [x] Desktop/mobile welcome and working-route checks. Local chain/browser checks remain scoped evidence; historical full-audit hashes above do not certify this UI revision.

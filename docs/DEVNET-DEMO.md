@@ -18,6 +18,8 @@ No Google accounts, holder private keys in env, manual faucet requests from the 
 
 ## Present the scenario
 
+Start at `/`: show the illustrative 10 → 6 current holdings / 10 fixed record-date units / 500 Mock USD coupon story, then choose **Get started**. This explanation is not a transaction or proof of the live runner. The runner still uses `/protocol` and `/actions` directly.
+
 In terminal 3, with Operator selected:
 
 ```bash
@@ -34,7 +36,7 @@ The runner attaches to the already open browser and opens its own tab. Confirm e
 | Full redemption | Confirm Operator setup; switch A → B → C for burn/payment; return to Operator | Payouts 10500/5250/2100 Mock USD; supply 17→7→2→0; REDEEMED; finalized receipt |
 | Audit | Runner opens separate pages without connecting a wallet | Audit: Verified; recorded rights and receipts recover from chain |
 
-The `/actions` money display uses minor units: **100 = 1 Mock USD**. Payments are test Token-2022 tokens, not real USD/SOL. Show the role view, snapshot rights, actual payment destination, tally and final supply. Proposal acceptance records a decision without automatically changing bond terms.
+The `/actions` money display uses readable Mock USD amounts; raw values remain in **Instrument & action details** (**100 = 1 Mock USD**). Payments are test Token-2022 tokens, not real USD/SOL. Show the role view, snapshot rights, actual payment destination, tally and final supply. Proposal acceptance records a decision without automatically changing bond terms.
 
 Maturity is Solana Clock +180 seconds. The voting window defaults to 15 minutes; waiting for record dates/closing is expected. `RECORDA_VOTE_SECONDS` accepts 300..3600; all votes must finish before closing. Dates are entered in the browser's local timezone by the runner.
 

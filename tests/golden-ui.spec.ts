@@ -12,6 +12,7 @@ const test = base.extend<{ runtimeErrors: string[] }>({
 test.describe("Recorda React golden UI", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/reference");
+    await expect(page.getByRole('heading', { name: /Record Date → Right → Controlled Execution/ })).toBeVisible();
   });
 
   test("communicates the product axis and trust boundary", async ({ page }) => {
