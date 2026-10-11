@@ -113,6 +113,43 @@ Success prints `PASS` and saves **`passed: true`** in `target/devnet-evidence/ac
 
 The full runner has **no automatic resume**. On failure inspect `run.json`, `failure.png`, current Action URL and submitted signatures. A new invocation creates a new instrument; reconcile partial progress before retrying payments. A successful run proves this MVP Devnet scenario, not all Post-MVP operations or production readiness. The full human three-action PASS is still pending recorded evidence.
 
+## 🏗️ Architecture at a glance
+
+- [x] **React UI:** Operator manages actions, Investor signs for their rights, Auditor reads and exports proof. Vite serves development; Next shares the screens.
+- [x] **Phantom → RPC → Solana:** the client prepares instructions; the wallet signs; the deployed Rust/Anchor program enforces permissions and transitions.
+- [x] **On-chain state:** instrument, holder registry, fixed rights, votes and receipts live in program accounts; Token-2022 handles bond/payment balances.
+- [x] **Off-chain helpers:** signed archive replay, retained Merkle proofs and external-event proposals support the specified Post-MVP flows.
+
+Trust boundaries and code map: [Architecture][architecture]. Immutable parameters, action locks and migration rules: [v2 contracts][contracts]. Archive/RPC assumptions: [Operations][operations].
+
+## ✨ Features and business domains
+
+The [TZ][spec] central axis is **Instrument → Holder → Record-date Right → Authorized Action → Receipt**. The table maps implemented source features to their normative FR groups; live acceptance remains a separate [roadmap][roadmap] gate.
+
+| Domain | Business capability | Requirements |
+|---|---|---|
+| Bond & registry | Issue controlled bond units and register approved holders | FR-01–08 |
+| Record-date rights | Preserve holder entitlements independently of later ownership | FR-09–15 |
+| Coupon | Calculate, approve, fund and pay fixed rights | FR-16, 20–27 |
+| Redemption | Holder-signed atomic burn/payment, principal and optional final coupon | FR-17–18, 28–32, 45–46 |
+| Voting | Snapshot-weighted YES/NO/ABSTAIN, quorum and unique votes | FR-19, 33–37, 47 |
+| Action lifecycle | Typed immutable parameters, action-specific transitions and scheduled cancellation | FR-43–44 |
+| Proof & roles | Read-only audit, reconciliation, receipts and role-specific views | FR-38–42, 48 |
+| Post-MVP servicing | Merkle claims, threshold governance, eligibility/terms, partial retirement, external proposals and export | FR-49–58 |
+
+Full feature wording and implementation/test links: [58-FR checklist][features]. UC/FR/NFR/TC traceability: [requirement mapping][mapping]. Bypass and failure scenarios: [security audit][security].
+
+## 🗂️ Project structure
+
+| Path | Responsibility |
+|---|---|
+| [`src/`](src/) | React screens, corporate-action controllers, typed Solana clients and shared UI |
+| [`programs/recorda/src/`](programs/recorda/src/) | Rust/Anchor action engine, governance, distributor and external-event binding |
+| [`scripts/`](scripts/) | Human Devnet runners, build/audit tools, archive indexing and benchmarks |
+| [`tests/`](tests/), [`protocol-tests/`](protocol-tests/), [`protocol-ui-tests/`](protocol-ui-tests/) | Client, native-validator and browser acceptance/attack coverage |
+| [`next-app/`](next-app/), [`next-ui-tests/`](next-ui-tests/) | Shared-screen production shell and runtime checks |
+| [`docs/`](docs/), [`golden/`](golden/), [`public/distributions/`](public/distributions/) | Specification/evidence mapping, business fixtures and retained-proof hosting |
+
 ## Product screens and manual acceptance
 
 | Route | Purpose |
@@ -296,3 +333,12 @@ For retained proofs, `npm run distribution:index -- journal.json parameters.json
 [Devnet demo](docs/DEVNET-DEMO.md) · [Product](docs/PRODUCT.md) · [TZ](docs/TZ.md) · [Requirements](docs/REQUIREMENTS.md) · [Roadmap](docs/ROADMAP.md) · [Architecture](docs/ARCHITECTURE.md) · [FR checklist](docs/implementation/fr-checklist.md) · [Requirement mapping](docs/audit-coverage.json) · [Security audit](docs/SECURITY-AUDIT.md) · [Changelog](docs/CHANGELOG.md).
 
 TZ takes precedence; roadmap checkmarks do not amend requirements. All rights reserved: [LICENSE](LICENSE). Third-party licenses remain applicable.
+
+[spec]: docs/TZ.md
+[architecture]: docs/ARCHITECTURE.md
+[contracts]: docs/implementation/action-engine-v2.md
+[operations]: docs/implementation/operations-v2.md
+[roadmap]: docs/ROADMAP.md
+[features]: docs/implementation/fr-checklist.md
+[mapping]: docs/audit-coverage.json
+[security]: docs/SECURITY-AUDIT.md
