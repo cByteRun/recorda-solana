@@ -2,6 +2,20 @@
 
 Dated entries describe their own revisions. Historical counts, deployment addresses and pending-work notes do not establish current acceptance; current architecture is in [ARCHITECTURE](ARCHITECTURE.md), and fresh evidence gates are in [ROADMAP](ROADMAP.md).
 
+## 2026-10-11 — Live Redemption on a Devnet-cloned local validator
+
+- Clone the upgradeable Devnet Recorda program into an isolated local ledger; retain matching SBF SHA-256 and distinct local genesis. Exercise a fresh 10/5/2/0 instrument in the existing Chromium on CDP 9222 through ordinary UI and real Phantom accounts; no new runner scripts or injected wallet provider.
+- Complete Full Redemption with a separate final coupon: principal 1700000 + coupon 85000 = paid 1785000 minor units, verified holder payment deltas 1050000/525000/210000 and supply 17→7→2→0. All four rights processed, vault empty, instrument REDEEMED and receipt finalized.
+- Verify wallet-free recovery and retain the real UI audit export, screenshots, balance checkpoints and scoped PASS at `target/live-redemption-evidence/`. Local maturity was accelerated with validator warp-slot 4175; confirmations were agent-assisted. This result verifies local Redemption, not the original failed human three-action Devnet runner.
+
+## 2026-10-11 — Devnet runner reconciliation and current audit
+
+- Fix the initial action-read/connect race, detect delayed UI errors and lost wallet/report state, and preserve failure checkpoints. Add explicit guarded pre-payment Coupon resume; never repeat payments automatically. Exclude non-client source edits from Vite wallet-session reloads and fix stage-test timeout propagation.
+- Complete stable-source `test:audit`: ten commands, 216 tests (client 101, setup 8, offline 7, Rust 15, native 25, protocol UI 55, Next 5), unchanged inputs and compiler IDL/SBF parity. Traceability: 121/121 IDs; 118 implemented/3 partial. Evidence: `target/security-audit/run.json`.
+- Independently verify deployed ProgramData against local SBF: SHA-256 `938c5e670485aa16fc258830ae850990ffdd0a420586605aeee479863ad3b905`, slot 509846382; retained `target/devnet-debug/deployment.json`.
+- Resume the original instrument and fully verify Coupon payment deltas 50000/25000/10000 minor units and finalized receipt. The three-action runner subsequently times out waiting for holder B. Reconcile Voting through real Phantom UI: finalized, actual votes 10/0/0; agent-assisted finalization is disclosed separately. Original failed evidence is preserved under `target/devnet-evidence/actions-1791721749406/`, with `reconciliation.json`.
+- Public Devnet RPC 429 prevents further execution, including getGenesisHash. Full Redemption and successful human three-action runner evidence remain pending; this revision does not claim full live acceptance.
+
 ## 2026-10-11 — Condensed track-first specification
 
 - Reduce TZ to track obligations, mandatory scenarios, core business rules, acceptance/submission and an explicit table of existing Recorda extensions. Remove repeated positioning, impact claims, presentation script, screen inventories and account layouts.
@@ -47,9 +61,9 @@ Dated entries describe their own revisions. Historical counts, deployment addres
 - [x] Implement floor partial redemption, authenticated finalized-slot journal replay, deterministic retained Merkle manifests/proofs, approved/funded bound claims, deadline/dust/reclaim accounting and vault closure.
 - [x] Add separated administration/registry/approval/funding threshold roles and exact chain-stored recoverable intents, mandatory versioned eligibility and distinct approved terms modification with immutable historical rights. External feeds only produce canonical deduplicated proposals; source/evidence binding cannot approve execution.
 - [x] Add FSD action/claim pages, actual holder signing and zero-allocation operator completion, loss-of-storage recovery, stable history cursors and verified decimal exports with pruning disclosure. Instrument setup accepts real holder public addresses. Production Next App Router shares existing React screens; Vite development remains supported.
-- [x] Extend requirement mapping to all121 normative IDs (all58 FR implemented in source;118 implemented/3 partial across all IDs), add AT-21–36 to the attack matrix and document archive/RPC trust, public proof retention, migration and source/license inventory.
+- [x] Extend requirement mapping to all121 normative IDs (all58 FR implemented in source; 118 implemented/3 partial across all IDs), add AT-21–36 to the attack matrix and document archive/RPC trust, public proof retention, migration and source/license inventory.
 - [x] Add Rust/native/browser adversarial suites, actual failed CPI transactions, independent forged v2 reports, chain-only multisig recovery, proof archive restart and production runtime checks. The full runner records stable hashes; SBF acceptance rejects unsafe stack diagnostics even with exit zero. Offline1..10000 and native4-holder compute/fee/rent measurements make no production scale claim.
-- [x] Final complete `npm run test:audit` passed against stable sources: client/wallet84, setup6, offline Post-MVP7, Rust15, native validator25, protocol browser55 and production Next5 —197 tests including native parent tests/Rust test_id. All10 runner commands exit0, generated IDL/compiler parity passes and changedInputs is empty. Current signed native/UI artifacts, input/IDL/SBF hashes and measurements are retained under target/; no new human Devnet acceptance claimed.
+- [x] Final complete `npm run test:audit` passed against stable sources: client/wallet84, setup6, offline Post-MVP7, Rust 15, native validator25, protocol browser55 and production Next 5 —197 tests including native parent tests/Rust test_id. All10 runner commands exit0, generated IDL/compiler parity passes and changedInputs is empty. Current signed native/UI artifacts, input/IDL/SBF hashes and measurements are retained under target/; no new human Devnet acceptance claimed.
 - [ ] Fresh human Phantom/Devnet acceptance of all current three actions, v2 deployment, remote CI, hosted proof backup/availability and demo video remain release gates. Unscoped dividends/tender, fiat/custody and operational/legal rollout remain future work.
 
 

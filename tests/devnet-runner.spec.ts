@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { actionsStage } from '../scripts/actions-stage.mjs';
 import { protocolStage } from '../scripts/protocol-stage.mjs';
 import { waitForDevnetWallet } from '../scripts/devnet-wallet.mjs';
 
@@ -100,4 +101,45 @@ test('wallet timeout reports the wrong connected account without accepting or si
   });
   await expect(waitForDevnetWallet(page, 'holder-A', { timeout: 150, interval: 20, onChange: () => {} })).rejects.toThrow('"active":"operator"');
   await expect(page.locator('#recorda-wallet-wait')).toHaveCount(0);
+});
+
+
+test('actions runner surfaces an error arriving after initial idle instead of waiting ten minutes', async ({ page }) => {
+  await page.setContent(`<main data-testid="actions-root" data-state="snapshotted" data-busy="false">
+    <button onclick="setTimeout(() => {const p=document.createElement('p');p.setAttribute('role','alert');p.textContent='Signature rejected';document.body.append(p)}, 100)">Calculate rights</button>
+  </main>`);
+  await expect(actionsStage(page, 'Calculate rights', 'awaitingApproval', { timeout: 2000, interval: 20 })).rejects.toThrow('Signature rejected');
+});
+
+test('actions runner stops on wallet/page reset without re-clicking a signing operation', async ({ page }) => {
+  await page.setContent(`<main data-testid="actions-root" data-state="snapshotted" data-busy="false">
+    <button id="wallet">Wallet operator</button>
+    <button onclick="window.clicks=(window.clicks||0)+1;setTimeout(()=>document.querySelector('#wallet').textContent='Connect Phantom',100)">Calculate rights</button>
+  </main>`);
+  await expect(actionsStage(page, 'Calculate rights', 'awaitingApproval', { timeout: 2000, interval: 20 })).rejects.toThrow('disconnected or page state reset');
+  expect(await page.evaluate(() => (window as any).clicks)).toBe(1);
+});
+
+test('actions runner waits for the complete calculation and chain refresh', async ({ page }) => {
+  await page.setContent(`<main data-testid="actions-root" data-state="snapshotted" data-busy="false">
+    <button>Wallet operator</button><button onclick="const m=document.querySelector('main');m.dataset.busy='true';setTimeout(()=>{m.dataset.state='awaitingApproval';setTimeout(()=>m.dataset.busy='false',100)},100)">Calculate rights</button>
+  </main>`);
+  expect(await actionsStage(page, 'Calculate rights', 'awaitingApproval', { timeout: 2000, interval: 20 })).toEqual({ state: 'awaitingApproval' });
+  await expect(page.getByTestId('actions-root')).toHaveAttribute('data-busy', 'false');
+});
+
+
+test('actions runner refuses to sign before the URL action report has loaded', async ({ page }) => {
+  await page.setContent(`<main data-testid="actions-root" data-state="" data-busy="false">
+    <button onclick="document.body.dataset.clicked='yes'">Approve action</button>
+  </main>`);
+  await expect(actionsStage(page, 'Approve action', 'approved', { timeout: 1000 })).rejects.toThrow('action report is not loaded');
+  expect(await page.locator('body').getAttribute('data-clicked')).toBeNull();
+});
+
+test('actions runner detects a lost report with the wallet still connected', async ({ page }) => {
+  await page.setContent(`<main data-testid="actions-root" data-state="awaitingApproval" data-busy="false">
+    <button>Wallet operator</button><button onclick="setTimeout(()=>document.querySelector('main').dataset.state='',100)">Approve action</button>
+  </main>`);
+  await expect(actionsStage(page, 'Approve action', 'approved', { timeout: 2000, interval: 20 })).rejects.toThrow('action report reset');
 });

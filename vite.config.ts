@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     port: 4444,
     // Reports/proofs and documentation are not application inputs. Watching
-    // them can reload an active wallet journey while another test writes evidence.
-    watch: { ignored: ["**/test-results/**", "**/playwright-report/**", "**/target/**", "**/docs/**", "**/.next/**", "**/next-app/**"] }
+    // them or non-client runner/test/program sources can reload an active wallet journey during verification.
+    watch: { ignored: ["**/test-results/**", "**/playwright-report/**", "**/target/**", "**/docs/**", "**/.next/**", "**/next-app/**", "**/scripts/**", "**/tests/**", "**/protocol-tests/**", "**/protocol-ui-tests/**", "**/next-ui-tests/**", "**/programs/**"] }
   }
 });

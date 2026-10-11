@@ -7,6 +7,7 @@ import { getAccount, getMint, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_
 import { devnetConnection } from './devnet.mjs';
 import { readChainClock, waitForRecordDate } from '../src/shared/solana/chain-clock.mjs';
 import { protocolStage } from './protocol-stage.mjs';
+import { actionsStage } from './actions-stage.mjs';
 import { waitForDevnetWallet } from './devnet-wallet.mjs';
 
 const holders = ['A', 'B', 'C'].map(name => {
@@ -24,30 +25,44 @@ for (const holder of holders) assert.ok(await rpc.getBalance(new PublicKey(holde
 const voteSeconds = Number(process.env.RECORDA_VOTE_SECONDS || 900);
 assert.ok(Number.isInteger(voteSeconds) && voteSeconds >= 300 && voteSeconds <= 3600, 'RECORDA_VOTE_SECONDS must be 300..3600');
 const origin = process.env.RECORDA_APP_URL || 'http://localhost:4444';
+const args = process.argv.slice(2);
+assert.ok(args.length === 0 || (args.length === 2 && args[0] === '--resume'), 'Usage: npm run test:e2e:actions:devnet -- [--resume path/to/run.json]');
+const resume = args.length ? JSON.parse(readFileSync(args[1], 'utf8')) : null;
+if (resume) {
+  assert.equal(resume.passed, false, 'Do not resume a successful run');
+  assert.deepEqual(resume.actions, [], 'Resume is supported only for interrupted pre-payment Coupon');
+  assert.equal(resume.program, programId.toBase58());
+  assert.deepEqual(resume.holders, holders);
+  assert.equal(resume.genesis, await rpc.getGenesisHash());
+  for (const field of ['operator', 'instrument', 'currentAction']) new PublicKey(resume[field]);
+}
 const runId = String(Date.now());
 const output = `target/devnet-evidence/actions-${runId}`;
 mkdirSync(output, { recursive: true });
 const evidence = { passed: false, scope: 'Human Phantom Coupon → Voting → Full Redemption; 10/5/2/0, no post-record transfers; not Post-MVP acceptance', program: programId.toBase58(), holders, actions: [], startedAt: new Date().toISOString() };
+if (resume) evidence.resumedFrom = args[1];
 const save = () => writeFileSync(`${output}/run.json`, JSON.stringify(evidence, null, 2) + '\n');
 save();
 const browser = await chromium.connectOverCDP(process.env.RECORDA_BROWSER_CDP || 'http://127.0.0.1:9222');
-const page = await browser.contexts()[0].newPage();
+const page = (resume && browser.contexts()[0].pages().find(page => page.url().includes(resume.currentAction))) || await browser.contexts()[0].newPage();
 page.setDefaultTimeout(600_000);
 const expect = baseExpect.configure({ timeout: 600_000 });
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function idle() {
+  // A fresh actions route renders idle before its initial effect starts reading.
+  // Do not let Connect run first and consume the controller's operation lock.
+  if (new URL(page.url()).searchParams.has('action')) {
+    await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state', /^(scheduled|snapshotPending|snapshotted|awaitingApproval|approved|funded|executing|settled|finalized|cancelled)$/);
+  }
   await expect(page.getByTestId('actions-root')).toHaveAttribute('data-busy', 'false');
   const alerts = await page.getByRole('alert').allTextContents();
   assert.deepEqual(alerts, [], 'UI reported an error; inspect chain before retrying');
 }
 async function click(name, target) {
   console.log(`Stage: ${name} — confirm all Phantom prompts`);
-  await page.getByRole('button', { name, exact: true }).click();
-  await idle();
-  if (target) await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state', target);
+  await actionsStage(page, name, target);
 }
 async function wallet(address) {
   console.log(`Switch Phantom to ${address}, unlock it. Waiting for that exact account…`);
@@ -68,11 +83,12 @@ async function report() {
     const client = createActionsV2(connection), r = await client.read(address);
     const audit = await auditActionsV2(address, r);
     return {
+      kind: Object.keys(r.action.parameters.kind)[0], recordAt: r.action.parameters.recordAt.toString(), maturity: r.instrument.maturityTimestamp.toString(), paid: r.action.paid.toString(),
       address: address.toBase58(), instrument: r.action.instrument.toBase58(), mint: r.instrument.mint.toBase58(),
       paymentMint: r.instrument.paymentMint.toBase58(), state: stageV2(r.action), issues: audit.issues,
       supply: r.mintSupply.toString(), outstanding: r.instrument.outstandingSupply.toString(), redeemed: r.instrument.redeemed,
       total: r.action.total.toString(), yes: r.action.yes.toString(), no: r.action.no.toString(), abstain: r.action.abstain.toString(),
-      passed: r.action.passed, quorumMet: r.action.quorumMet, vault: r.vault?.amount.toString() ?? null,
+      passed: r.action.passed, quorumMet: r.action.quorumMet, vault: r.vault?.amount.toString() ?? null, periodReserved: !!r.period,
       receipt: r.receipt ? client.pdas.receipt(address).toBase58() : null,
       rights: r.rights.map(({ account: a }) => ({ holder: a.holder.toBase58(), units: a.units.toString(), retire: a.retireUnits.toString(), principal: a.principal.toString(), coupon: a.coupon.toString(), total: a.total.toString(), processed: a.processed, destination: a.destination.toBase58() })),
       signatures: r.signatures
@@ -131,55 +147,84 @@ async function finalized(kind) {
 }
 
 try {
-  await page.goto(`${origin}/protocol`);
+  await page.goto(resume ? `${origin}/actions?action=${resume.currentAction}` : `${origin}/protocol`);
   const config = await page.evaluate(async () => {
     const { connection } = await import('/src/shared/solana/config.ts');
     const { RECORDA_PROGRAM_ID } = await import('/src/shared/solana/protocol.ts');
     return { rpc: connection.rpcEndpoint, program: RECORDA_PROGRAM_ID.toBase58() };
   });
   assert.equal(config.rpc, rpc.rpcEndpoint); assert.equal(config.program, programId.toBase58());
-  console.log('Connect OPERATOR in Phantom on Devnet. This run creates a NEW instrument; no automatic payment retries.');
-  await page.getByRole('button', { name: 'Connect Phantom', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Create / resume demo instrument' })).toBeEnabled();
+  console.log(resume ? 'Reconciling interrupted Coupon. Resume refuses any funded/processed action; no automatic payment retries.' : 'Connect OPERATOR in Phantom on Devnet. This run creates a NEW instrument; no automatic payment retries.');
+  if (resume) await idle();
+  await page.getByRole('button', { name: /^(Connect Phantom|Wallet )/ }).click();
   const operator = await page.evaluate(() => (window.phantom?.solana ?? window.solana).publicKey.toBase58());
   if (process.env.RECORDA_OPERATOR) assert.equal(operator, new PublicKey(process.env.RECORDA_OPERATOR).toBase58(), 'Select the RECORDA_OPERATOR account from .env.local in Phantom');
   assert.ok(!holders.includes(operator), 'Use a separate Operator wallet');
   evidence.operator = operator; evidence.genesis = await rpc.getGenesisHash(); save();
   assert.ok(await rpc.getBalance(new PublicKey(operator)) > 0, 'Fund Operator with Devnet SOL');
-  const maturity = (await readChainClock(rpc)).timestamp + 180n;
-  await page.getByLabel('Demo instrument ID', { exact: true }).fill(runId);
-  await page.getByLabel('Optional demo maturity (ISO UTC)', { exact: true }).fill(new Date(Number(maturity) * 1000).toISOString());
-  for (const [i, name] of ['A', 'B', 'C'].entries()) await page.getByLabel(`Optional holder ${name} public address`, { exact: true }).fill(holders[i]);
-  await protocolStage(page, 'Create / resume demo instrument', undefined, { timeout: 600_000 });
-  const instrument = await page.getByLabel('Instrument PDA', { exact: true }).inputValue();
+  let instrument, maturity;
+  if (resume) {
+    assert.equal(operator, resume.operator);
+    await idle();
+    const r = await report();
+    assert.equal(r.address, resume.currentAction); assert.equal(r.instrument, resume.instrument);
+    assert.equal(r.kind, 'coupon'); assert.deepEqual(r.issues, []);
+    assert.ok(['scheduled','snapshotPending','snapshotted','awaitingApproval','approved'].includes(r.state), 'Resume refuses payment/execution stages');
+    assert.equal(r.vault, null, 'Resume refuses an existing vault; reconcile funding/payments manually');
+    assert.equal(r.paid, '0'); assert.ok(r.rights.every(right => !right.processed));
+    assert.equal(r.supply, '17'); assert.equal(r.outstanding, '17'); assert.equal(r.redeemed, false);
+    if (['snapshotted','awaitingApproval','approved'].includes(r.state)) {
+      assert.equal(r.rights.length, 4);
+      holders.forEach((holder,i) => assert.equal(r.rights.find(right => right.holder === holder)?.units, String([10,5,2][i])));
+      assert.equal(r.rights.filter(right => !holders.includes(right.holder)).length, 1);
+      assert.equal(r.rights.find(right => !holders.includes(right.holder)).units, '0');
+    }
+    instrument = r.instrument; maturity = BigInt(r.maturity);
+    evidence.resumeCheckpoint = r; evidence.currentAction = r.address;
+  } else {
+    await expect(page.getByRole('button', { name: 'Create / resume demo instrument' })).toBeEnabled();
+    maturity = (await readChainClock(rpc)).timestamp + 180n;
+    await page.getByLabel('Demo instrument ID', { exact: true }).fill(runId);
+    await page.getByLabel('Optional demo maturity (ISO UTC)', { exact: true }).fill(new Date(Number(maturity) * 1000).toISOString());
+    for (const [i, name] of ['A', 'B', 'C'].entries()) await page.getByLabel(`Optional holder ${name} public address`, { exact: true }).fill(holders[i]);
+    await protocolStage(page, 'Create / resume demo instrument', undefined, { timeout: 600_000 });
+    instrument = await page.getByLabel('Instrument PDA', { exact: true }).inputValue();
+  }
   evidence.instrument = instrument; save();
   const proposal = 'Recorda Devnet acceptance: keep maturity unchanged.';
   for (const kind of ['coupon', 'voting', 'redemption']) {
     if (kind === 'redemption') await waitForRecordDate(rpc, maturity);
-    await page.goto(`${origin}/actions?instrument=${instrument}`);
+    const continuing = !!resume && kind === 'coupon';
+    await page.goto(continuing ? `${origin}/actions?action=${resume.currentAction}` : `${origin}/actions?instrument=${instrument}`);
     await idle(); await wallet(operator);
     await page.getByLabel('Role', { exact: true }).selectOption('Operator');
-    await page.getByLabel('Action kind', { exact: true }).selectOption(kind);
     const recordAt = (await readChainClock(rpc)).timestamp + 60n;
-    await page.getByLabel('Record date', { exact: true }).fill(await localDate(recordAt));
     const opens = recordAt + 60n, closes = opens + BigInt(voteSeconds);
-    if (kind === 'voting') {
-      await page.getByLabel('Proposal', { exact: true }).fill(proposal);
-      await page.getByLabel('Opens', { exact: true }).fill(await localDate(opens));
-      await page.getByLabel('Closes', { exact: true }).fill(await localDate(closes));
-      await page.getByLabel('Quorum bps', { exact: true }).fill('5000');
-    } else {
-      await page.getByLabel('Coupon period', { exact: true }).fill(kind === 'coupon' ? '1' : '2');
-      if (kind === 'redemption') await page.getByRole('checkbox', { name: 'Include separate final coupon' }).check();
+    if (!continuing) {
+      await page.getByLabel('Action kind', { exact: true }).selectOption(kind);
+      await page.getByLabel('Record date', { exact: true }).fill(await localDate(recordAt));
+      if (kind === 'voting') {
+        await page.getByLabel('Proposal', { exact: true }).fill(proposal);
+        await page.getByLabel('Opens', { exact: true }).fill(await localDate(opens));
+        await page.getByLabel('Closes', { exact: true }).fill(await localDate(closes));
+        await page.getByLabel('Quorum bps', { exact: true }).fill('5000');
+      } else {
+        await page.getByLabel('Coupon period', { exact: true }).fill(kind === 'coupon' ? '1' : '2');
+        if (kind === 'redemption') await page.getByRole('checkbox', { name: 'Include separate final coupon' }).check();
+      }
+      await click('Create action', 'scheduled');
     }
-    await click('Create action', 'scheduled');
     evidence.currentAction = await page.getByLabel('Action PDA', { exact: true }).inputValue(); save();
-    if (kind !== 'voting') await click('Reserve coupon period', 'scheduled');
-    await waitForRecordDate(rpc, recordAt);
-    await click('Capture snapshot / resume', 'snapshotted');
-    await click('Calculate rights / resume', 'awaitingApproval');
+    let checkpoint = await report();
+    if (checkpoint.state === 'scheduled' && kind !== 'voting' && !checkpoint.periodReserved) await click('Reserve coupon period', 'scheduled');
+    if (['scheduled','snapshotPending'].includes(checkpoint.state)) {
+      await waitForRecordDate(rpc, BigInt(checkpoint.recordAt));
+      await click('Capture snapshot / resume', 'snapshotted');
+    }
+    checkpoint = await report();
+    if (checkpoint.state === 'snapshotted') await click('Calculate rights / resume', 'awaitingApproval');
     let r = await report(); assertRights(r, kind);
-    await click('Approve action', 'approved');
+    if (r.state === 'awaitingApproval') await click('Approve action', 'approved');
     if (kind === 'voting') {
       await waitForRecordDate(rpc, opens);
       await page.getByLabel('Role', { exact: true }).selectOption('Investor');
@@ -229,7 +274,9 @@ try {
   evidence.passed = true; evidence.finishedAt = new Date().toISOString(); save();
   console.log(`PASS: all three actions on one Devnet instrument. Evidence: ${output}/run.json`);
 } catch (error) {
-  evidence.error = error.message; evidence.failedAt = new Date().toISOString(); evidence.url = page.url(); save();
+  evidence.error = error.message; evidence.failedAt = new Date().toISOString(); evidence.url = page.url();
+  evidence.browser = await page.evaluate(() => ({ state: document.querySelector('[data-testid="actions-root"]')?.getAttribute('data-state'), busy: document.querySelector('[data-testid="actions-root"]')?.getAttribute('data-busy'), role: document.querySelector('[aria-label="Role"]')?.value, alerts: [...document.querySelectorAll('[role="alert"]')].map(node => node.textContent), wallet: (window.phantom?.solana ?? window.solana)?.publicKey?.toBase58() ?? null })).catch(() => null);
+  evidence.chain = await report().catch(error => ({ error: error.message })); save();
   await page.screenshot({ path: `${output}/failure.png`, fullPage: true }).catch(() => {});
   console.error(`FAIL: inspect ${output}/run.json and current Action URL. A rerun creates a new instrument; reconcile this run before retrying. No automatic resume.`);
   throw error;

@@ -5,15 +5,15 @@ export async function protocolStage(page, name, target, { timeout = 300_000, int
   let clicked = false;
   let state = null;
   while (Date.now() < deadline) {
-    const busy = await page.getByTestId('protocol-root').getAttribute('data-busy');
+    const busy = await page.getByTestId('protocol-root').getAttribute('data-busy', { timeout: Math.max(1, deadline - Date.now()) });
     const summary = page.getByTestId('protocol-summary');
-    state = await summary.count() ? await summary.getAttribute('data-state') : null;
+    state = await summary.count() ? await summary.getAttribute('data-state', { timeout: Math.max(1, deadline - Date.now()) }) : null;
     if (busy !== 'true') {
       const alerts = await page.getByRole('alert').allTextContents();
       if (alerts.length) throw new Error(`${name}: ${alerts.join('; ')} (state: ${state || 'notCreated'})`);
       if (target && states.indexOf(state) >= states.indexOf(target) && states.includes(state)) return { clicked, state };
       if (!target && clicked) return { clicked, state };
-      if (!clicked && await button.isEnabled().catch(() => false)) {
+      if (!clicked && await button.isEnabled({ timeout: Math.max(1, deadline - Date.now()) }).catch(() => false)) {
         const disclosure = button.locator('xpath=ancestor::details[1]');
         if (await disclosure.count() && !await disclosure.getAttribute('open').then(value => value !== null)) {
           await disclosure.locator('summary').first().click();

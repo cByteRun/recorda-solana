@@ -50,7 +50,17 @@ target/devnet-evidence/actions-<run-id>/run.json
 
 Keep the JSON, three action screenshots, Action URLs and Explorer signatures. Open `/actions?action=<PDA>` as Auditor and click **Export verified audit**. For an independent manual recovery demonstration, open the URL in another browser without Phantom. The runner's separate audit tabs have no connected React wallet state but share the extension profile.
 
-On failure inspect `run.json`, `failure.png`, the current Action URL and any submitted signatures. The runner has no automatic resume; a rerun creates a new instrument and may leave the old one partially executed. Reconcile chain progress before repeating payments.
+On failure inspect `run.json`, `failure.png`, the current Action URL and any submitted signatures. A plain rerun creates a new instrument and may leave the old one partially executed. Reconcile chain progress before repeating payments.
+
+For an interrupted **pre-payment Coupon only**, explicitly resume its saved run:
+
+```bash
+npm run test:e2e:actions:devnet -- --resume target/devnet-evidence/actions-<run-id>/run.json
+```
+
+The runner checks matching Devnet/program/Operator/holders, the original Action/Instrument, unchanged 17-unit supply, zero processed rights/payment and no vault. It refuses successful runs, completed-action histories, funded or execution stages and any existing vault. It reads current rights and skips completed capture/calculation/approval, then continues Coupon → Voting → Redemption on the same instrument; original failed evidence remains unchanged. Funded/partially settled runs require manual chain reconciliation, not this resume path.
+
+Do not navigate, edit Action PDA or reload the runner tab during a stage. It now waits for the URL action to load before Connect and reports late UI errors, wallet disconnects and lost reports rather than silently waiting for a state transition. On failure retain the browser/chain checkpoints in `run.json`.
 
 ## Verification paths
 

@@ -138,7 +138,7 @@ The runner opens its application tab and drives the buttons. **You review/confir
 
 Success prints `PASS` and saves **`passed: true`** in `target/devnet-evidence/actions-<run-id>/run.json`, alongside action screenshots. It checks actual token balance deltas, mint supply and audited receipts. Retain the JSON, Action URLs and Explorer links for judges. Reopen `/actions?action=<PDA>` as Auditor and use **Export verified audit**; for a clean manual recovery demonstration, use another browser without Phantom.
 
-The full runner has **no automatic resume**. On failure inspect `run.json`, `failure.png`, current Action URL and submitted signatures. A new invocation creates a new instrument; reconcile partial progress before retrying payments. A successful run proves this MVP Devnet scenario, not all Post-MVP operations or production readiness. The full human three-action PASS is still pending recorded evidence.
+The full runner has **no automatic resume**. On failure inspect `run.json`, `failure.png`, current Action URL and submitted signatures. A plain invocation creates a new instrument; reconcile partial progress before retrying payments. Explicit `--resume path/to/run.json` supports only interrupted pre-payment Coupon after chain validation; see [recovery rules](docs/DEVNET-DEMO.md#retain-proof-and-reopen-manually). A successful run proves this MVP Devnet scenario, not all Post-MVP operations or production readiness. The full human three-action PASS is still pending recorded evidence.
 
 ## Architecture at a glance
 
@@ -151,18 +151,30 @@ Frameworks, the single project structure map and key decisions: [Architecture][a
 
 ## Features and business domains
 
-The [TZ][spec] central axis is **Instrument → Holder → Record-date Right → Authorized Action → Receipt**. The table maps implemented source features to their normative FR groups; live acceptance remains a separate [roadmap][roadmap] gate.
+The KASE brief takes precedence through [TZ][spec]. Its core flow is **Instrument → Holder → Record-date Right → Authorized Action → Receipt**. Checked items mean implemented functionality with verification evidence; they do not close submission or the complete human Devnet acceptance. The core runs on Solana; payments move real on-chain mock tokens, with no real fiat value.
 
-| Domain | Business capability | Requirements |
-|---|---|---|
-| Bond & registry | Issue controlled bond units and register approved holders | FR-01–08 |
-| Record-date rights | Preserve holder entitlements independently of later ownership | FR-09–15 |
-| Coupon | Calculate, approve, fund and pay fixed rights | FR-16, 20–27 |
-| Redemption | Holder-signed atomic burn/payment, principal and optional final coupon | FR-17–18, 28–32, 45–46 |
-| Voting | Snapshot-weighted YES/NO/ABSTAIN, quorum and unique votes | FR-19, 33–37, 47 |
-| Action lifecycle | Typed immutable parameters, action-specific transitions and scheduled cancellation | FR-43–44 |
-| Proof & roles | Read-only audit, reconciliation, receipts and role-specific views | FR-38–42, 48 |
-| Post-MVP servicing | Merkle claims, threshold governance, eligibility/terms, partial retirement, external proposals and export | FR-49–58 |
+**Required business domains — KASE / TZ MVP**
+
+- [x] **Test bond instrument:** issuance, face value, coupon rate/frequency, maturity and supply (FR-01–05).
+- [x] **Holder registry:** registered wallets, approved positions and controlled transfers (FR-06–09).
+- [x] **Record-date rights:** cutoff barrier, complete immutable snapshot and rights unaffected by later balances (FR-10–15).
+- [x] **Entitlement calculation:** checked integer/minor-unit arithmetic, per-holder allocations and reconciled totals (FR-16–22).
+- [x] **Coupon Payment:** fixed coupon rights, funded settlement and duplicate-payment prevention; current Devnet payments and finalized receipt verified (FR-23–27).
+- [x] **Bond Redemption:** maturity principal and separate final coupon, holder-signed atomic burn/payment and reconciled retirement. Live Chromium/Phantom verification on a fresh instrument with a Devnet-cloned local program confirmed supply **17→7→2→0**, all rights processed and finalized receipt (FR-28–32,45–46).
+- [x] **Bondholder Voting — selected third scenario:** snapshot voting power, unique YES/NO/ABSTAIN votes, window, quorum and final tally. Rules are covered locally; current Devnet outcome finalized with actual votes **10/0/0** (FR-33–37,47).
+- [x] **On-chain outcome and verification:** action-linked parameters, rights, progress and receipts; Operator/Investor/Auditor views and wallet-free recovery. Live Redemption audit verified (FR-38–42,48).
+
+**Recorda additions — beyond the track minimum**
+
+- [x] **Controlled action execution:** explicit approval, immutable typed parameters, action-specific transitions, scheduled cancellation and visible resumable progress (FR-24,43–44).
+- [x] **Historical distributions and holder claims:** finalized-history replay, committed Merkle allocations, approved/funded claims and expiry/reclaim (FR-49–52).
+- [x] **Governance and eligibility:** separate threshold approval roles, exact authorized intents and eligibility policies (FR-53–54).
+- [x] **Instrument terms management:** versioned terms, copied immutable metadata and approved modification (FR-55).
+- [x] **Early/partial redemption:** per-holder retirement allocations and atomic settlement against reduced supply (FR-56). This is additional to the selected Voting scenario.
+- [x] **External corporate-event proposals:** provenance-bound evidence, durable deduplication and approval before execution (FR-57).
+- [x] **Recoverable audit history and export:** stable pagination, retained proof and verified exports (FR-58).
+
+The full stable-source audit passed **216 tests**. Additional domains are covered by local suites; the latest live Redemption check does not claim their complete live acceptance. Evidence and remaining three-action Devnet/submission gates: [roadmap][roadmap].
 
 Full feature wording and implementation/test links: [requirement checklist][features]. UC/FR/NFR/TC traceability: [requirement mapping][mapping]. Bypass and failure scenarios: [security audit][security].
 
@@ -270,6 +282,26 @@ Keep ports **4444, 4445, 4446, 18899, 19900** free. The runner starts/stops its 
 
 Coverage and findings: [FR checklist][features] · [requirement mapping][mapping] · [attack matrix][security] · [roadmap][roadmap]. Devnet Actions does not replace negative/Post-MVP coverage; the audit does not replace the human Devnet replay.
 
+### Business domains and critical invariants
+
+Derived from [TZ](docs/TZ.md) and its [normative requirements](docs/REQUIREMENTS.md). `[x]` means implementation and executable checks cover the stated scope; `[ ]` marks a remaining gap or acceptance boundary. These marks do not close live Devnet acceptance. See the [expanded invariant checklist](docs/BUSINESS-INVARIANTS.md) for individual rules, requirement IDs and test sources, and the [attack matrix](docs/SECURITY-AUDIT.md#attack-matrix) / [v2 and Post-MVP matrix](docs/SECURITY-AUDIT.md#v2--post-mvp-attack-matrix) for bypass scenarios.
+
+- [x] **Instrument and holder registry:** registered balances reconcile to supply; holder-signed controlled transfers prevent custody bypass; redeemed units cannot circulate. FR-06–09,30–32; AT-03–04,17.
+- [x] **Record date and rights:** the Clock cutoff preserves ownership even with late capture; complete snapshots reconcile holders/supply; finalized rights remain immutable after transfers; each action has its own snapshot. FR-10–15; TC-03,12,16; AT-05–06.
+- [x] **Financial calculations:** checked integer minor units, per-holder floor rounding, aggregate reconciliation, zero-position handling and copied historical terms. FR-16–22,43,55; AT-09,26,32.
+- [x] **Coupon:** explicit approval/full funding, bound payment destinations, once-only entitlement settlement, CPI rollback and completion only after all obligations are processed. FR-24–27; AT-07–12.
+- [x] **Coupon periods in v2:** reservation/consumption prevents reuse of a period across Coupon and final-coupon Redemption. FR-46; AT-24.
+- [ ] **Legacy coupon-period continuity:** legacy Coupon has no period identifier; a new authorized action can repeat the economic coupon. Legacy-to-v2 continuity requires historical reconciliation.
+- [x] **Full Redemption:** Clock maturity, persistent transfer/issuance/conflict restrictions, separate principal/final coupon, holder-signed atomic burn/payment and final zero active supply. FR-17–18,28–32,45–46; AT-22–24.
+- [x] **Voting:** fixed snapshot power, unique holder-signed votes within the window, abstentions in quorum, quorum plus YES > NO, no funding stage or automatic terms change. FR-19,33–37,47; AT-25.
+- [x] **Authorized lifecycle and recovery:** on-chain authority, kind/account isolation, Scheduled-only cancellation, chain-backed partial resume and uncertain-broadcast reconciliation. FR-43–44,48; TC-19,29; AT-01–02,07–08,12,16,21.
+- [x] **Receipts and public audit:** action-bound inputs/outcomes, independent formula/commitment checks, wallet-free audit and recovery without browser cache. FR-38–42,48,58; AT-18,26,35.
+- [ ] **Complete independent historical proof:** audit still depends on trusted RPC and available history; consistent fabricated RPC responses and pruned transaction history remain NFR-05 limits.
+- [ ] **Browser/Memo reference authenticity:** a fully rewritten/rehashed cache is not authenticated historical ownership. Use the protocol flow for authoritative business acceptance.
+- [x] **Post-MVP distributions:** authenticated/reconciled archive, retained manifests/proofs, bound once-only claims and authorized post-deadline reclaim with unpaid obligations disclosed. FR-49–52; AT-27–30.
+- [x] **Post-MVP governance and servicing:** exact-intent multisig/role thresholds, eligibility and historical-term preservation, atomic integer partial retirement and deduplicated external proposals without feed execution authority. FR-53–57; AT-31–34.
+- [ ] **Live MVP acceptance:** retain a complete human Phantom Coupon → Voting → Full Redemption Devnet run, three final outcomes and zero supply; complete role/simulation-disclosure acceptance and demo video. TZ §§7,21,24; [remaining gates](docs/ROADMAP.md#remaining-acceptance-and-release-work).
+
 ## Troubleshooting
 
 | Symptom | Next step |
@@ -319,6 +351,7 @@ For retained proofs, `npm run distribution:index -- journal.json parameters.json
 | [Roadmap](docs/ROADMAP.md) | Delivered milestones and remaining acceptance/release work |
 | [Architecture](docs/ARCHITECTURE.md) | Runtime, accounts/contracts, operations, trust and provenance |
 | [Security audit](docs/SECURITY-AUDIT.md) | Attack matrix, findings and evidence rules |
+| [Business invariants](docs/BUSINESS-INVARIANTS.md) | Domain checklist derived from TZ, executable coverage and explicit gaps |
 | [Devnet demo](docs/DEVNET-DEMO.md) | Presenter workflow, expected outcomes and retained proof |
 | [Changelog](docs/CHANGELOG.md) | Dated change/result history |
 

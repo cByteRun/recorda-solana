@@ -76,7 +76,7 @@ Frontend role selection changes presentation, not authority. Phantom holds real 
 
 Clients validate canonical PDAs, ownership, custody and supply. Independent audits recompute commitments, formulas and outcomes. Current balances alone do not prove historical payments. RPC/archive responses remain trust boundaries; client hashes do not authenticate fabricated provider data. History uses stable address/signature cursors and reports pruned transaction bodies. Closed/reassigned destinations require retained historical evidence.
 
-`/reference` is a separately labelled browser/Memo calculation reference: Memo attests bytes without enforcing rights or once-only settlement. The human Devnet runner creates fresh instruments without automatic resume. Demonstration and full feature/attack verification are separate [README paths](../README.md#feature-and-attack-audit).
+`/reference` is a separately labelled browser/Memo calculation reference: Memo attests bytes without enforcing rights or once-only settlement. The human Devnet runner creates fresh instruments by default; explicit `--resume` is restricted to a reconciled pre-payment Coupon with zero processed/paid rights and no vault. It never automatically retries payments. Demonstration and full feature/attack verification are separate [README paths](../README.md#feature-and-attack-audit).
 
 ### Operations and supported scope
 

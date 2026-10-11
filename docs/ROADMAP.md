@@ -19,9 +19,9 @@ Two entrypoints: `test:e2e:actions:devnet` for human MVP demonstration and `test
 | TZ React/Next runtime | Shared FSD screens in Vite and production Next App Router | build, build:next, next-ui-tests/runtime.spec.ts |
 | NFR-16–19 | Explicit pinned archive trust, proof retention/recovery, measured envelope and dependency/license inventory | ARCHITECTURE.md, post-mvp.test.mjs, benchmark:distribution, measure-protocol.mjs |
 
-The historical complete local run on 2026-10-10 recorded 197 tests and ten successful commands with stable hashes. Subsequent source changes require a fresh `target/security-audit/run.json`; old counts and checked source milestones are not current acceptance. The three partial mapped NFRs are NFR-05 (RPC/history trust), NFR-10 (human replay) and NFR-12 (bounded secret scan).
+The current stable-source full audit on 2026-10-11 passed ten commands and 216 tests; `target/security-audit/run.json` records unchanged input hashes. Traceability covers 121/121 IDs, with 118 implemented and three partial NFRs: NFR-05 (RPC/history trust), NFR-10 (human replay) and NFR-12 (bounded secret scan).
 
-The historical human Coupon golden passed on 2026-10-06. A later v2 Devnet upload has been reported; independently retain deployed-binary identity and `passed: true` from the current three-action runner. Remote CI, hosted preview and demo video remain open. Historical attempts/results are kept once in [CHANGELOG](CHANGELOG.md).
+Current Devnet Coupon is finalized with verified payment deltas 50000/25000/10000. Voting was reconciled to finalized with actual tally 10/0/0 through agent-assisted real Phantom; the runner remains failed after holder-B timeout. Devnet Redemption was not started because public RPC 429 blocked further execution. A separate live Chromium/real Phantom run on a Devnet-cloned local validator completed Redemption on a fresh instrument: paid 1785000, supply 17→7→2→0, all rights processed, empty vault, finalized receipt and wallet-free verified audit (`target/live-redemption-evidence/result.json`). This scoped local evidence does not close human three-action Devnet acceptance. Deployed SBF identity matches the audited local binary (`target/devnet-debug/deployment.json`). Remote CI, hosted preview and video remain open; details are in [CHANGELOG](CHANGELOG.md).
 
 ## Reference-driven delivery order
 
@@ -62,9 +62,9 @@ These are implemented CLI/library/program capabilities, not claims of hosted ind
 
 ## Remaining acceptance and release work
 
-- [ ] Run the full current feature/attack audit and retain matching source/IDL/SBF hashes.
+- [x] Run the full current feature/attack audit and retain matching source/IDL/SBF hashes.
 - [ ] Complete human Phantom Coupon → Voting → Full Redemption on Devnet; retain signatures, payment deltas, receipts and zero final supply.
-- [ ] Independently verify deployed program identity against the intended local binary.
+- [x] Independently verify deployed program identity against the intended local binary.
 - [ ] Finish the live [hackathon DoD](REQUIREMENTS.md#24-definition-of-done--hackathon-mvp), including clean role journeys and no known P0/P1 issues.
 - [ ] Verify remote CI and publish a current preview with configured deployment credentials.
 - [ ] Record the full E2E demo video.
