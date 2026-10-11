@@ -1,6 +1,8 @@
 # Recorda 🧾
 
-**Corporate actions for tokenized bonds on Solana.**
+### Corporate actions for tokenized bonds on Solana
+
+**Solana · Token-2022 · Phantom · Coupon / Voting / Redemption**
 
 > Turn ownership at a record date into an approved payment, a holder decision or a completed redemption — with proof of who was entitled, who approved it and what happened.
 
@@ -20,9 +22,34 @@
 
 The implemented source covers **Coupon, Voting and maturity Redemption**, plus the specified [Post-MVP FR-49–58](docs/REQUIREMENTS.md#16-functional-requirements-fr). Recorda is a B2B servicing layer for market operators, issuers/paying agents and depository infrastructure; [roadmap](docs/ROADMAP.md) separates implementation from acceptance evidence.
 
-**🚀 Start:** [Devnet demo](#devnet-demo--coupon--voting--redemption) · **🔎 Inspect:** [screens and roles](#product-screens-and-manual-acceptance) · **🛡️ Verify:** [features and attacks](#feature-and-attack-audit)
+| 🚀 Run the demo | 🔎 Explore the product | 🛡️ Verify the implementation |
+|---|---|---|
+| [Devnet walkthrough](#devnet-demo--coupon--voting--redemption) | [Screens and roles](#product-screens-and-manual-acceptance) | [Feature and attack audit](#feature-and-attack-audit) |
 
 Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting → Full Redemption on one instrument. Use `test:audit` separately to verify requirements, business features and bypass attempts, including Post-MVP.
+
+---
+
+## Table of contents
+
+- [🚀 Devnet demo — Coupon → Voting → Redemption](#devnet-demo--coupon--voting--redemption)
+  - [Install and prepare the program](#1-install-and-prepare-the-program)
+  - [Prepare Phantom accounts and configuration](#2-prepare-four-phantom-accounts-and-envlocal)
+  - [Start three terminals](#3-start-three-terminals)
+  - [Expected result and evidence](#4-expected-result-and-evidence)
+- [🏗️ Architecture at a glance](#architecture-at-a-glance)
+- [✨ Features and business domains](#features-and-business-domains)
+- [🖥️ Product screens and manual acceptance](#product-screens-and-manual-acceptance)
+  - [Manual acceptance](#manual-acceptance)
+- [⚙️ Technical setup](#technical-setup)
+  - [Install tools and browser](#install-tools-and-browser)
+  - [Deploy or update the program](#deploy-a-new-program-or-update-the-existing-one)
+- [🛡️ Feature and attack audit](#feature-and-attack-audit)
+- [🔧 Troubleshooting](#troubleshooting)
+- [📦 CI and website deployment](#ci-and-website-deployment)
+- [📚 Documentation](#documentation)
+
+---
 
 ## Devnet demo — Coupon → Voting → Redemption
 
@@ -113,7 +140,7 @@ Success prints `PASS` and saves **`passed: true`** in `target/devnet-evidence/ac
 
 The full runner has **no automatic resume**. On failure inspect `run.json`, `failure.png`, current Action URL and submitted signatures. A new invocation creates a new instrument; reconcile partial progress before retrying payments. A successful run proves this MVP Devnet scenario, not all Post-MVP operations or production readiness. The full human three-action PASS is still pending recorded evidence.
 
-## 🏗️ Architecture at a glance
+## Architecture at a glance
 
 - [x] **React UI:** Operator manages actions, Investor signs for their rights, Auditor reads and exports proof. Vite serves development; Next shares the screens.
 - [x] **Phantom → RPC → Solana:** the client prepares instructions; the wallet signs; the deployed Rust/Anchor program enforces permissions and transitions.
@@ -122,7 +149,7 @@ The full runner has **no automatic resume**. On failure inspect `run.json`, `fai
 
 Frameworks, the single project structure map and key decisions: [Architecture][architecture]. Action lifecycle: [v2 contracts][contracts]. Archive/RPC assumptions: [Operations][operations].
 
-## ✨ Features and business domains
+## Features and business domains
 
 The [TZ][spec] central axis is **Instrument → Holder → Record-date Right → Authorized Action → Receipt**. The table maps implemented source features to their normative FR groups; live acceptance remains a separate [roadmap][roadmap] gate.
 
