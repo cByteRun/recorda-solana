@@ -10,19 +10,24 @@ import {
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
 import { encode as base58Encode } from "@coral-xyz/anchor/dist/esm/utils/bytes/bs58.js";
-import { connection, MEMO_PROGRAM_ID } from "@/shared/solana/config";
+import { connection } from "@/shared/solana/config";
 import type { PhantomProvider } from "@/shared/solana/phantom";
 
 export function transactionFromInstructions(instructions: TransactionInstruction[]) {
   const tx = new Transaction();
-  // Signed JSON Memo attestations can exceed the default per-instruction budget.
-  // Keep the complete payload, including snapshot holders and receipt references.
-  const hasMemo = instructions.some((instruction) => instruction.programId.equals(MEMO_PROGRAM_ID));
+  // Pin budget and fee before simulation/co-signing. Phantom otherwise may add
+  // priority-fee instructions while signing, changing the simulated message.
   const hasBudget = instructions.some((instruction) =>
     instruction.programId.equals(ComputeBudgetProgram.programId) && instruction.data[0] === 2
   );
-  if (hasMemo && !hasBudget) {
+  if (!hasBudget) {
     tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }));
+  }
+  const hasPrice = instructions.some((instruction) =>
+    instruction.programId.equals(ComputeBudgetProgram.programId) && instruction.data[0] === 3
+  );
+  if (!hasPrice) {
+    tx.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 0 }));
   }
   instructions.forEach((instruction) => tx.add(instruction));
   return tx;
@@ -130,9 +135,19 @@ export async function phantomSignAndSend({
         throw new Error("Phantom account changed or disconnected before broadcast. Reconnect the operator wallet.");
       }
       const sameBytes = (left: Uint8Array, right: Uint8Array) => left.length === right.length && left.every((byte, index) => byte === right[index]);
-      if (!(signed instanceof VersionedTransaction) || !sameBytes(signed.message.serialize(), expectedMessage)) {
-        throw new Error("Wallet changed the simulated transaction. No transaction was submitted.");
+      // Extension providers can return objects from their own web3.js copy.
+      // Validate canonical wire bytes rather than JavaScript constructor identity.
+      let normalized: VersionedTransaction;
+      try {
+        normalized = VersionedTransaction.deserialize(Uint8Array.from(signed.serialize()));
+      } catch {
+        throw new Error("Wallet returned an invalid transaction. No transaction was submitted.");
       }
+      if (!sameBytes(normalized.message.serialize(), expectedMessage)) {
+        const changed = `expected message ${expectedMessage.length} bytes, returned ${normalized.message.serialize().length} bytes; returned instructions ${normalized.message.compiledInstructions.length}`;
+        throw new Error(`Wallet changed the simulated transaction. No transaction was submitted. (${changed})`);
+      }
+      signed = normalized;
       if (signed.signatures.length !== expectedSignatures.length || signed.signatures.some(signature => !signature.some(byte => byte !== 0))) {
         throw new Error("Wallet returned an unsigned transaction. No transaction was submitted.");
       }

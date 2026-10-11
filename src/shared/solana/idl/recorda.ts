@@ -8,6 +8,3320 @@ export type Recorda = {
   },
   "instructions": [
     {
+      "name": "createActionV2",
+      "discriminator": [
+        101,
+        194,
+        206,
+        41,
+        107,
+        230,
+        178,
+        80
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": "u64"
+        },
+        {
+          "name": "parameters",
+          "type": {
+            "defined": {
+              "name": "actionParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reservePeriodV2",
+      "discriminator": [
+        27,
+        180,
+        186,
+        205,
+        152,
+        249,
+        98,
+        177
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "period",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  105,
+                  111,
+                  100,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.parameters.period",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelV2",
+      "discriminator": [
+        160,
+        58,
+        112,
+        172,
+        233,
+        228,
+        38,
+        140
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "releasePeriodV2",
+      "discriminator": [
+        9,
+        69,
+        10,
+        64,
+        203,
+        110,
+        74,
+        187
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action",
+            "period"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "period",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  105,
+                  111,
+                  100,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.parameters.period",
+                "account": "actionV2"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "beginV2",
+      "discriminator": [
+        241,
+        188,
+        208,
+        225,
+        254,
+        43,
+        38,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "captureV2",
+      "discriminator": [
+        51,
+        185,
+        212,
+        68,
+        232,
+        11,
+        101,
+        30
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action",
+            "position"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "position.holder",
+                "account": "holderPosition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bondAccount"
+        },
+        {
+          "name": "right",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  105,
+                  103,
+                  104,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "position.holder",
+                "account": "holderPosition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "finishSnapshotV2",
+      "discriminator": [
+        128,
+        189,
+        13,
+        234,
+        84,
+        142,
+        56,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "calculateV2",
+      "discriminator": [
+        193,
+        140,
+        17,
+        125,
+        104,
+        91,
+        220,
+        55
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          },
+          "relations": [
+            "right"
+          ]
+        },
+        {
+          "name": "right",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  105,
+                  103,
+                  104,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "right.holder",
+                "account": "rightV2"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "approveV2",
+      "discriminator": [
+        25,
+        109,
+        235,
+        212,
+        242,
+        64,
+        202,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "period"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "createVaultV2",
+      "discriminator": [
+        149,
+        224,
+        90,
+        50,
+        87,
+        159,
+        31,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "paymentMint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "fundedV2",
+      "discriminator": [
+        251,
+        34,
+        89,
+        97,
+        40,
+        251,
+        58,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleV2",
+      "discriminator": [
+        5,
+        41,
+        238,
+        141,
+        219,
+        81,
+        39,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action",
+            "position"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          },
+          "relations": [
+            "right"
+          ]
+        },
+        {
+          "name": "right",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  105,
+                  103,
+                  104,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "right.holder",
+                "account": "rightV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "position",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "right.holder",
+                "account": "rightV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bondAccount",
+          "writable": true
+        },
+        {
+          "name": "paymentMint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "voteV2",
+      "discriminator": [
+        171,
+        120,
+        89,
+        19,
+        17,
+        147,
+        121,
+        197
+      ],
+      "accounts": [
+        {
+          "name": "holder",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "right"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          },
+          "relations": [
+            "right"
+          ]
+        },
+        {
+          "name": "right",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  105,
+                  103,
+                  104,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "right.holder",
+                "account": "rightV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vote",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "holder"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "choice",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "finishVoteV2",
+      "discriminator": [
+        88,
+        176,
+        253,
+        246,
+        66,
+        12,
+        251,
+        111
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "consumePeriodV2",
+      "discriminator": [
+        225,
+        26,
+        7,
+        71,
+        140,
+        146,
+        196,
+        169
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action",
+            "period"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "period",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  105,
+                  111,
+                  100,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.parameters.period",
+                "account": "actionV2"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "finalizeV2",
+      "discriminator": [
+        101,
+        248,
+        68,
+        53,
+        48,
+        110,
+        126,
+        211
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "period"
+        },
+        {
+          "name": "receipt",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  101,
+                  105,
+                  112,
+                  116,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "createDistribution",
+      "discriminator": [
+        237,
+        83,
+        162,
+        50,
+        49,
+        6,
+        28,
+        115
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument"
+          ]
+        },
+        {
+          "name": "instrument",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "distribution",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "paymentMint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": "u64"
+        },
+        {
+          "name": "parameters",
+          "type": {
+            "defined": {
+              "name": "distributionParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "approveDistribution",
+      "discriminator": [
+        84,
+        207,
+        24,
+        205,
+        1,
+        250,
+        145,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "distribution"
+          ]
+        },
+        {
+          "name": "distribution",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution.instrument",
+                "account": "distribution"
+              },
+              {
+                "kind": "account",
+                "path": "distribution.id",
+                "account": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "fundDistribution",
+      "discriminator": [
+        28,
+        106,
+        182,
+        72,
+        106,
+        5,
+        66,
+        163
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "distribution"
+          ]
+        },
+        {
+          "name": "distribution",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution.instrument",
+                "account": "distribution"
+              },
+              {
+                "kind": "account",
+                "path": "distribution.id",
+                "account": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claimDistribution",
+      "discriminator": [
+        204,
+        156,
+        94,
+        85,
+        2,
+        125,
+        232,
+        180
+      ],
+      "accounts": [
+        {
+          "name": "holder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "distribution",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution.instrument",
+                "account": "distribution"
+              },
+              {
+                "kind": "account",
+                "path": "distribution.id",
+                "account": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "claim",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "paymentMint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reclaimDistribution",
+      "discriminator": [
+        27,
+        225,
+        29,
+        88,
+        248,
+        121,
+        134,
+        47
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "distribution"
+          ]
+        },
+        {
+          "name": "distribution",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution.instrument",
+                "account": "distribution"
+              },
+              {
+                "kind": "account",
+                "path": "distribution.id",
+                "account": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "paymentMint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distribution"
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "configureGovernance",
+      "discriminator": [
+        46,
+        219,
+        164,
+        132,
+        222,
+        7,
+        9,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  97,
+                  110,
+                  99,
+                  101,
+                  45,
+                  115,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "governance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "roles",
+          "type": {
+            "array": [
+              {
+                "defined": {
+                  "name": "roleSet"
+                }
+              },
+              4
+            ]
+          }
+        },
+        {
+          "name": "metadataUri",
+          "type": {
+            "array": [
+              "u8",
+              128
+            ]
+          }
+        },
+        {
+          "name": "metadataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "termsHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "proposeIntent",
+      "discriminator": [
+        235,
+        187,
+        3,
+        3,
+        160,
+        187,
+        162,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "governance",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "governance.instrument",
+                "account": "governance"
+              }
+            ]
+          }
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "governance"
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": "u64"
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "name": "expiresAt",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "approveIntent",
+      "discriminator": [
+        213,
+        94,
+        174,
+        15,
+        36,
+        50,
+        145,
+        18
+      ],
+      "accounts": [
+        {
+          "name": "member",
+          "signer": true
+        },
+        {
+          "name": "governance",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "governance.instrument",
+                "account": "governance"
+              }
+            ]
+          },
+          "relations": [
+            "intent"
+          ]
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "governance"
+              },
+              {
+                "kind": "account",
+                "path": "intent.id",
+                "account": "governanceIntent"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "executeIntent",
+      "discriminator": [
+        53,
+        130,
+        47,
+        154,
+        227,
+        220,
+        122,
+        212
+      ],
+      "accounts": [
+        {
+          "name": "recordaProgram",
+          "address": "CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF"
+        },
+        {
+          "name": "governance",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "governance.instrument",
+                "account": "governance"
+              }
+            ]
+          },
+          "relations": [
+            "intent"
+          ]
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "governance"
+              },
+              {
+                "kind": "account",
+                "path": "intent.id",
+                "account": "governanceIntent"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "modifyTermsV2",
+      "discriminator": [
+        253,
+        147,
+        188,
+        219,
+        194,
+        46,
+        124,
+        144
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "instrument"
+          ]
+        },
+        {
+          "name": "instrument",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "governance"
+          ]
+        },
+        {
+          "name": "governance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "metadataUri",
+          "type": {
+            "array": [
+              "u8",
+              128
+            ]
+          }
+        },
+        {
+          "name": "metadataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "termsHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "face",
+          "type": "u64"
+        },
+        {
+          "name": "rate",
+          "type": "u16"
+        },
+        {
+          "name": "frequency",
+          "type": "u16"
+        },
+        {
+          "name": "maturity",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "setEligibilityV2",
+      "discriminator": [
+        221,
+        205,
+        89,
+        223,
+        139,
+        13,
+        202,
+        198
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument"
+          ]
+        },
+        {
+          "name": "instrument",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "position",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "position.holder",
+                "account": "holderPosition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "eligibility",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  108,
+                  105,
+                  103,
+                  105,
+                  98,
+                  105,
+                  108,
+                  105,
+                  116,
+                  121,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "position.holder",
+                "account": "holderPosition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "version",
+          "type": "u32"
+        },
+        {
+          "name": "expiresAt",
+          "type": "i64"
+        },
+        {
+          "name": "frozen",
+          "type": "bool"
+        },
+        {
+          "name": "group",
+          "type": "u16"
+        },
+        {
+          "name": "jurisdiction",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "proposeExternalV2",
+      "discriminator": [
+        253,
+        190,
+        32,
+        172,
+        197,
+        18,
+        205,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "instrument",
+            "action"
+          ]
+        },
+        {
+          "name": "instrument",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          },
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "account",
+                "path": "action.id",
+                "account": "actionV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "event",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  116,
+                  101,
+                  114,
+                  110,
+                  97,
+                  108,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              },
+              {
+                "kind": "arg",
+                "path": "source"
+              },
+              {
+                "kind": "arg",
+                "path": "eventId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "source",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "eventId",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "payloadHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "evidenceHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "createInstrument",
       "discriminator": [
         45,
@@ -1668,6 +4982,149 @@ export type Recorda = {
         155,
         145
       ]
+    },
+    {
+      "name": "claimRecord",
+      "discriminator": [
+        57,
+        229,
+        0,
+        9,
+        65,
+        62,
+        96,
+        7
+      ]
+    },
+    {
+      "name": "distribution",
+      "discriminator": [
+        176,
+        85,
+        17,
+        11,
+        13,
+        194,
+        18,
+        1
+      ]
+    },
+    {
+      "name": "actionV2",
+      "discriminator": [
+        4,
+        54,
+        13,
+        121,
+        181,
+        187,
+        15,
+        229
+      ]
+    },
+    {
+      "name": "periodV2",
+      "discriminator": [
+        24,
+        205,
+        255,
+        131,
+        19,
+        177,
+        50,
+        109
+      ]
+    },
+    {
+      "name": "receiptV2",
+      "discriminator": [
+        152,
+        105,
+        157,
+        144,
+        200,
+        156,
+        97,
+        249
+      ]
+    },
+    {
+      "name": "rightV2",
+      "discriminator": [
+        186,
+        111,
+        126,
+        215,
+        145,
+        221,
+        104,
+        89
+      ]
+    },
+    {
+      "name": "voteV2",
+      "discriminator": [
+        165,
+        61,
+        220,
+        109,
+        13,
+        51,
+        100,
+        43
+      ]
+    },
+    {
+      "name": "externalEventV2",
+      "discriminator": [
+        78,
+        242,
+        59,
+        75,
+        254,
+        60,
+        181,
+        20
+      ]
+    },
+    {
+      "name": "eligibilityV2",
+      "discriminator": [
+        124,
+        230,
+        77,
+        203,
+        34,
+        180,
+        127,
+        57
+      ]
+    },
+    {
+      "name": "governance",
+      "discriminator": [
+        18,
+        143,
+        88,
+        13,
+        73,
+        217,
+        47,
+        49
+      ]
+    },
+    {
+      "name": "governanceIntent",
+      "discriminator": [
+        88,
+        69,
+        39,
+        105,
+        20,
+        232,
+        94,
+        60
+      ]
     }
   ],
   "types": [
@@ -1874,6 +5331,806 @@ export type Recorda = {
       }
     },
     {
+      "name": "claimRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "distribution",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "destination",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "distribution",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "paymentMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "recordSlot",
+            "type": "u64"
+          },
+          {
+            "name": "policyVersion",
+            "type": "u32"
+          },
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "manifestHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "provenanceHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "total",
+            "type": "u64"
+          },
+          {
+            "name": "leaves",
+            "type": "u32"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "approved",
+            "type": "bool"
+          },
+          {
+            "name": "funded",
+            "type": "bool"
+          },
+          {
+            "name": "claimed",
+            "type": "u64"
+          },
+          {
+            "name": "claimedLeaves",
+            "type": "u32"
+          },
+          {
+            "name": "fundedAmount",
+            "type": "u64"
+          },
+          {
+            "name": "reclaimed",
+            "type": "u64"
+          },
+          {
+            "name": "closed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "distributionEvent",
+      "type": {
+        "fields": [
+          {
+            "name": "distribution",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "claimed",
+            "type": "u64"
+          },
+          {
+            "name": "reclaimed",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "distributionParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "recordSlot",
+            "type": "u64"
+          },
+          {
+            "name": "policyVersion",
+            "type": "u32"
+          },
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "manifestHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "provenanceHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "total",
+            "type": "u64"
+          },
+          {
+            "name": "leaves",
+            "type": "u32"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "actionKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "coupon"
+          },
+          {
+            "name": "redemption"
+          },
+          {
+            "name": "voting"
+          },
+          {
+            "name": "partialRedemption"
+          }
+        ]
+      }
+    },
+    {
+      "name": "actionParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "kind",
+            "type": {
+              "defined": {
+                "name": "actionKind"
+              }
+            }
+          },
+          {
+            "name": "recordAt",
+            "type": "i64"
+          },
+          {
+            "name": "period",
+            "type": "u64"
+          },
+          {
+            "name": "includeCoupon",
+            "type": "bool"
+          },
+          {
+            "name": "retireBps",
+            "type": "u16"
+          },
+          {
+            "name": "opensAt",
+            "type": "i64"
+          },
+          {
+            "name": "closesAt",
+            "type": "i64"
+          },
+          {
+            "name": "quorumBps",
+            "type": "u16"
+          },
+          {
+            "name": "proposalHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "actionV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "parameters",
+            "type": {
+              "defined": {
+                "name": "actionParameters"
+              }
+            }
+          },
+          {
+            "name": "face",
+            "type": "u64"
+          },
+          {
+            "name": "rateBps",
+            "type": "u16"
+          },
+          {
+            "name": "frequency",
+            "type": "u16"
+          },
+          {
+            "name": "maturity",
+            "type": "i64"
+          },
+          {
+            "name": "currency",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "termsVersion",
+            "type": "u32"
+          },
+          {
+            "name": "metadataUri",
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
+          },
+          {
+            "name": "metadataHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "termsHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "source",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "sourceEvent",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "sourcePayload",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "sourceEvidence",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "stage"
+              }
+            }
+          },
+          {
+            "name": "recordSlot",
+            "type": "u64"
+          },
+          {
+            "name": "capturedAt",
+            "type": "i64"
+          },
+          {
+            "name": "snapshotHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "expectedHolders",
+            "type": "u32"
+          },
+          {
+            "name": "expectedSupply",
+            "type": "u64"
+          },
+          {
+            "name": "capturedHolders",
+            "type": "u32"
+          },
+          {
+            "name": "capturedSupply",
+            "type": "u64"
+          },
+          {
+            "name": "calculatedHolders",
+            "type": "u32"
+          },
+          {
+            "name": "processedHolders",
+            "type": "u32"
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "coupon",
+            "type": "u64"
+          },
+          {
+            "name": "total",
+            "type": "u64"
+          },
+          {
+            "name": "paid",
+            "type": "u64"
+          },
+          {
+            "name": "retireUnits",
+            "type": "u64"
+          },
+          {
+            "name": "retired",
+            "type": "u64"
+          },
+          {
+            "name": "yes",
+            "type": "u64"
+          },
+          {
+            "name": "no",
+            "type": "u64"
+          },
+          {
+            "name": "abstain",
+            "type": "u64"
+          },
+          {
+            "name": "quorumMet",
+            "type": "bool"
+          },
+          {
+            "name": "passed",
+            "type": "bool"
+          },
+          {
+            "name": "approvedBy",
+            "type": "pubkey"
+          },
+          {
+            "name": "finalizedSlot",
+            "type": "u64"
+          },
+          {
+            "name": "finalizedAt",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "periodV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "period",
+            "type": "u64"
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "consumed",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "receiptV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": {
+                "name": "actionKind"
+              }
+            }
+          },
+          {
+            "name": "commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "snapshotHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "coupon",
+            "type": "u64"
+          },
+          {
+            "name": "paid",
+            "type": "u64"
+          },
+          {
+            "name": "retired",
+            "type": "u64"
+          },
+          {
+            "name": "remainingSupply",
+            "type": "u64"
+          },
+          {
+            "name": "processedHolders",
+            "type": "u32"
+          },
+          {
+            "name": "yes",
+            "type": "u64"
+          },
+          {
+            "name": "no",
+            "type": "u64"
+          },
+          {
+            "name": "abstain",
+            "type": "u64"
+          },
+          {
+            "name": "quorumMet",
+            "type": "bool"
+          },
+          {
+            "name": "passed",
+            "type": "bool"
+          },
+          {
+            "name": "finalizedSlot",
+            "type": "u64"
+          },
+          {
+            "name": "finalizedAt",
+            "type": "i64"
+          },
+          {
+            "name": "summaryHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "rightV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "units",
+            "type": "u64"
+          },
+          {
+            "name": "retireUnits",
+            "type": "u64"
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "coupon",
+            "type": "u64"
+          },
+          {
+            "name": "total",
+            "type": "u64"
+          },
+          {
+            "name": "calculated",
+            "type": "bool"
+          },
+          {
+            "name": "processed",
+            "type": "bool"
+          },
+          {
+            "name": "destination",
+            "type": "pubkey"
+          },
+          {
+            "name": "settledSlot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "transitionV2",
+      "type": {
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": {
+                "name": "actionKind"
+              }
+            }
+          },
+          {
+            "name": "from",
+            "type": {
+              "defined": {
+                "name": "stage"
+              }
+            }
+          },
+          {
+            "name": "to",
+            "type": {
+              "defined": {
+                "name": "stage"
+              }
+            }
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "voteV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "choice",
+            "type": "u8"
+          },
+          {
+            "name": "power",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "entitlementPosition",
       "type": {
         "kind": "struct",
@@ -1931,6 +6188,399 @@ export type Recorda = {
             "type": "u64"
           }
         ]
+      }
+    },
+    {
+      "name": "externalEventV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "source",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "eventId",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "payloadHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidenceHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proposedBy",
+            "type": "pubkey"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "externalProposed",
+      "type": {
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "source",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "eventId",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidenceHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "eligibilityChanged",
+      "type": {
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "expiresAt",
+            "type": "i64"
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "eligibilityV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "expiresAt",
+            "type": "i64"
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          },
+          {
+            "name": "group",
+            "type": "u16"
+          },
+          {
+            "name": "jurisdiction",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "governance",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "signerBump",
+            "type": "u8"
+          },
+          {
+            "name": "face",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u16"
+          },
+          {
+            "name": "frequency",
+            "type": "u16"
+          },
+          {
+            "name": "maturity",
+            "type": "i64"
+          },
+          {
+            "name": "roles",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "roleSet"
+                  }
+                },
+                4
+              ]
+            }
+          },
+          {
+            "name": "termsVersion",
+            "type": "u32"
+          },
+          {
+            "name": "metadataUri",
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
+          },
+          {
+            "name": "metadataHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "termsHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "governanceIntent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "role",
+            "type": "u8"
+          },
+          {
+            "name": "digest",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "approvals",
+            "type": "u8"
+          },
+          {
+            "name": "executed",
+            "type": "bool"
+          },
+          {
+            "name": "expiresAt",
+            "type": "i64"
+          },
+          {
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "name": "accounts",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "intentMeta"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "intentMeta",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
+            "name": "writable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "roleSet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owners",
+            "type": {
+              "array": [
+                "pubkey",
+                5
+              ]
+            }
+          },
+          {
+            "name": "threshold",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "termsChanged",
+      "type": {
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "metadataHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "termsHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
       }
     },
     {
@@ -2290,6 +6940,71 @@ export type Recorda = {
         127
       ],
       "name": "rightCalculated"
+    },
+    {
+      "discriminator": [
+        15,
+        143,
+        204,
+        204,
+        42,
+        49,
+        139,
+        252
+      ],
+      "name": "distributionEvent"
+    },
+    {
+      "discriminator": [
+        57,
+        44,
+        25,
+        176,
+        122,
+        23,
+        56,
+        200
+      ],
+      "name": "transitionV2"
+    },
+    {
+      "discriminator": [
+        56,
+        121,
+        100,
+        32,
+        221,
+        221,
+        33,
+        117
+      ],
+      "name": "externalProposed"
+    },
+    {
+      "discriminator": [
+        130,
+        136,
+        199,
+        48,
+        99,
+        55,
+        185,
+        1
+      ],
+      "name": "eligibilityChanged"
+    },
+    {
+      "discriminator": [
+        95,
+        25,
+        171,
+        199,
+        209,
+        114,
+        42,
+        97
+      ],
+      "name": "termsChanged"
     }
   ],
   "errors": [

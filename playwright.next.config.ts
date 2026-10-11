@@ -1,0 +1,2 @@
+import {defineConfig,devices} from '@playwright/test';
+export default defineConfig({testDir:'./next-ui-tests',workers:1,retries:0,timeout:60000,outputDir:'test-results/next',reporter:[['list'],['html',{outputFolder:'playwright-report/next',open:'never'}]],use:{baseURL:'http://127.0.0.1:4446',...devices['Desktop Chrome'],trace:'retain-on-failure'},webServer:{command:'npm run start:next -- -p 4446',url:'http://127.0.0.1:4446',reuseExistingServer:false,env:{NEXT_TELEMETRY_DISABLED:'1'}}});

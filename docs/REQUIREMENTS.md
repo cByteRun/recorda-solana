@@ -2,7 +2,7 @@
 
 This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained; new IDs are appended. Delivery status belongs in [ROADMAP](ROADMAP.md); evidence is maintained in [ROADMAP](ROADMAP.md#verification-and-gaps).
 
-Phase 1 Devnet reproduction for **UC-CP-01 / NFR-10** is described in [README](../README.md#phase-1-golden-on-devnet--real-phantom). Airdrop supplies test SOL for fees/rent; it is a setup aid, not coupon funding or a new business requirement. Human Devnet golden evidence supplements the local acceptance matrix; it does not replace TC-04/15–19 negative tests or extend delivery to redemption/voting. The connected human demo wallet is R1 Operator; R3 demo holder identities remain disposable.
+Phase 1 Devnet reproduction for **UC-CP-01 / NFR-10** is described in [README](../README.md#phase-1-golden-on-devnet--real-phantom). Airdrop supplies test SOL for fees/rent; it is a setup aid, not coupon funding or a new business requirement. Human Devnet golden evidence supplements the local acceptance matrix; it does not replace TC-04/15–19 negative tests and remains historical v1 evidence; current v2 source delivery includes redemption/voting. The connected human demo wallet is R1 Operator; R3 demo holder identities remain disposable.
 
 ## Scope of the reference-driven extension
 
@@ -346,7 +346,7 @@ An adapter receives source evidence → normalizes a versioned action payload �
 
 The MVP is complete only if the live demo can show the following in sequence:
 
-Checked foundation/Coupon items were demonstrated by the human-signed Devnet golden on 2026-10-06 (action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`). Redemption, Voting and full three-action acceptance remain open.
+Checked foundation/Coupon items were demonstrated by the human-signed Devnet golden on 2026-10-06 (action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`). Redemption/Voting and Post-MVP FR-49–58 are now implemented in source and exercised by local suites; full human-signed three-action Devnet acceptance remains open. Local implementation checklists are in ROADMAP; this live-demo DoD is not closed by local tests.
 
 - [x] A Token-2022 test bond exists on-chain.
 - [x] There are 3+ registered holders.

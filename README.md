@@ -8,7 +8,7 @@ Recorda connects them in one reproducible process: **Record Date → Right → C
 
 Investor A held **10 bonds** on the record date, then sold 4. A now holds **6**, but the coupon remains **10 × 1,000 × 10% ÷ 2 = 500**. Recorda preserves that right through the transfer and links the payment to its receipt. This reduces reconciliation between ownership, calculations and payments, and makes the result independently explainable.
 
-The target product uses the same lifecycle for **coupons, redemption and voting**. Coupon is implemented and locally verified; redemption and voting remain open. [Product context](docs/PRODUCT.md) explains the domain and positioning; [ROADMAP](docs/ROADMAP.md) tracks delivery.
+The source now implements **coupons, maturity redemption and voting**, plus the specified Post-MVP FR-49–58. V2 uses distinct typed accounts while retaining the historical Coupon decoder. Current local acceptance and deployment/live-demo gates are tracked separately. [Product context](docs/PRODUCT.md) explains the domain and positioning; [ROADMAP](docs/ROADMAP.md) tracks delivery.
 
 ## Quick start
 
@@ -272,3 +272,54 @@ npm run preview
 [TZ](docs/TZ.md) → [REQUIREMENTS](docs/REQUIREMENTS.md) defines scope and acceptance; [ROADMAP](docs/ROADMAP.md) maps features to evidence; [ARCHITECTURE](docs/ARCHITECTURE.md), [PRODUCT](docs/PRODUCT.md) and [CHANGELOG](docs/CHANGELOG.md) cover implementation, business context and changes. TZ takes precedence; roadmap checkmarks do not amend requirements.
 
 All rights reserved: [LICENSE](LICENSE). Third-party licenses remain applicable.
+
+
+## Full requirements implementation and local acceptance
+
+The implemented source covers [FR-01–58](docs/implementation/fr-checklist.md). Read [v2 contracts](docs/implementation/action-engine-v2.md), [operations/trust/migration and measured envelope](docs/implementation/operations-v2.md), [requirement mapping](docs/audit-coverage.json) and [attack matrix](docs/SECURITY-AUDIT.md). No new Devnet binary is published by these local changes.
+
+```bash
+npm ci
+npx playwright install chromium
+npm run test:audit
+```
+
+The full audit requires the pinned Solana/SBF toolchain on PATH and Rust. It builds SBF, rejects unsafe stack diagnostics even when the compiler exits zero, checks generated IDL parity, starts a fresh local validator and verifies legacy Coupon plus Coupon → Voting → Full Redemption on one instrument. Actual holder signatures authorize retirement/payment. It also tests partial retirement, Merkle claims/reclaim, separated threshold roles, eligibility/terms/source attacks, UI recovery, independent forged-report rejection and the production Next runtime. Evidence stays in `target/security-audit`, `target/protocol-evidence`, `target/benchmarks`, `test-results` and Playwright reports. A success is current only when the input hashes remain unchanged.
+
+For the production frontend:
+
+```bash
+NEXT_PUBLIC_SOLANA_RPC_URL=http://127.0.0.1:18899 npm run build:next
+npm run start:next -- --port 3000
+```
+
+Vite remains available for development. `/protocol` creates the instrument/registry and supports historical Coupon. `/actions?instrument=<PDA>` creates typed Coupon, Voting, Full Redemption or Partial Redemption; `/actions?action=<PDA>` recovers an action without browser storage. Local datetime inputs use your browser timezone. For a human three-action demo, set optional A/B/C public addresses to real holder wallets during setup (10/5/2 units); leave zero-unit D disposable. Keep all nonzero holder keys available in their wallets for redemption. Choose a maturity/record schedule that has arrived on Solana Clock for full redemption. Final coupon is explicit and uses a distinct instrument/period reservation; reserve it before approval. Once consumed, a period cannot be paid again.
+
+Operator flow: schedule → snapshot/capture → calculate → review/approve. For payments, fund the vault from the specified existing payment account or use the controlled demo mint. For Coupon, the operator settles each right. For retirement, each connected registered holder opens Investor, checks principal/final coupon and signs atomic burn/payment. Zero retirement allocations permit operator completion. Partial failures resume from chain; a started snapshot cannot be cancelled. Finish all rights, then finalize the receipt. Full redemption ends the instrument's active supply.
+
+Voting flow: operator enters proposal text/window/quorum, captures and approves; holders open Investor and verify the proposal document against the approved hash before YES/NO/ABSTAIN. The operator tallies after the exclusive closing boundary and finalizes without a payment vault. Snapshot power survives later transfers. Abstentions count toward quorum; YES must strictly exceed NO. Proposal acceptance does not itself modify terms.
+
+Wallet-free Auditor can read rights/outcomes, verify commitments/formulas and export decimal inputs, receipts and signature pages. Pruned transaction bodies are disclosed. A frontend role selection grants no signing authority. For a governed instrument, privileged operations create exact on-chain intents; threshold members reopen `?instrument=<PDA>&intent=<PDA>` to approve/execute from stored instruction bytes. Configure governance before the first snapshot; sealed legacy instruments require an explicit migration strategy.
+
+For retained claim proofs, `npm run distribution:index -- journal.json parameters.json public/distributions` validates the externally pinned archive-provider signature and historical bank/registry reconciliation, then persists content-addressed manifests/proofs. The shared public directory is served by Vite/Next. Back it up and include generated directories in deployment storage explicitly. `/claims?distribution=<PDA>&manifest=<public-url>` verifies the manifest and allows only the bound holder's signed claim. An archive signature authenticates its provider's assertion; proof membership is not independent proof of historical ownership.
+
+Individual checks: `test:post-mvp`, `benchmark:distribution`, `protocol:test:rust`, `protocol:test:post-mvp`, `protocol:test:ui`. The native full runner also writes compute/fee/live-program-rent measurements. Offline 10,000-holder indexing is not 10,000-holder on-chain acceptance: the native supported test envelope is four holders. Human Phantom/Devnet replay of the current three-action source, remote CI results, deployment and demo video remain release gates.
+
+### Human Devnet Coupon → Voting → Full Redemption
+
+`test:e2e:golden:devnet` remains the historical Coupon-only golden. The new `test:e2e:actions:devnet` drives all three v2 actions on one fresh instrument through the Vite UI and real Phantom. First deploy the current Rust binary, start `npm run dev` with Devnet `.env.local`, and open Chromium with CDP on port 9222 and Phantom installed/unlocked. Prepare a separate Operator and three distinct holder accounts in Phantom, each funded with Devnet SOL. No holder private keys are supplied to the runner.
+
+In the runner terminal, export the same public RPC/program configuration as the browser, then the holder public addresses:
+
+```bash
+export RECORDA_DEVNET_RPC=https://api.devnet.solana.com
+export VITE_RECORDA_PROGRAM_ID=CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF
+export RECORDA_HOLDER_A=YOUR_HOLDER_A_PUBLIC_ADDRESS
+export RECORDA_HOLDER_B=YOUR_HOLDER_B_PUBLIC_ADDRESS
+export RECORDA_HOLDER_C=YOUR_HOLDER_C_PUBLIC_ADDRESS
+npm run test:e2e:actions:devnet
+```
+
+Begin with Operator selected. Follow terminal prompts to switch Phantom to A/B/C for voting and atomic burn/payment, then back to Operator; confirm every transaction. The runner waits for exact wallet addresses, does not inject providers or auto-sign, and refuses non-Devnet genesis. A/B/C/D start at 10/5/2/0; this scenario does not perform post-record transfers. It checks Coupon payments 500/250/100 Mock USD, YES/NO/ABSTAIN weights 10/5/2 and a passed 50% quorum vote, then full redemption payments 10500/5250/2100 Mock USD (principal plus period-2 coupon), supply 17→7→2→0, receipts, independent client hash/formula audit and wallet-free page recovery. Node independently reads SPL payment balance deltas and retirement mint supply. Maturity is set to chain time +180 seconds; the voting window defaults to 15 minutes. Budget roughly 20–40 minutes including human confirmations; `RECORDA_VOTE_SECONDS` allows 300..3600 seconds, but slow approvals may consume the voting window.
+
+Evidence and screenshots are written to `target/devnet-evidence/actions-<run-id>/`. Only `passed: true` after all checks is acceptance. On failure the file retains the instrument, current action URL and completed results. Automatic resume is not implemented: reconcile that action before retrying; every new invocation creates a new instrument. This script does not accept Post-MVP flows or prove production readiness. Adding the runner alone is not a successful human Devnet replay.

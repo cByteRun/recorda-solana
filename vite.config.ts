@@ -16,6 +16,6 @@ export default defineConfig({
     port: 4444,
     // Reports/proofs and documentation are not application inputs. Watching
     // them can reload an active wallet journey while another test writes evidence.
-    watch: { ignored: ["**/test-results/**", "**/playwright-report/**", "**/target/**", "**/docs/**"] }
+    watch: { ignored: ["**/test-results/**", "**/playwright-report/**", "**/target/**", "**/docs/**", "**/.next/**", "**/next-app/**"] }
   }
 });

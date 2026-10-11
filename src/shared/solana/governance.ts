@@ -1,0 +1,23 @@
+import { PublicKey, SystemProgram, type Connection, TransactionInstruction } from '@solana/web3.js';
+import { createProtocol, u64, type ProtocolAccounts } from './protocol';
+export function createGovernance(rpc:Connection){
+ const {program,pdas}=createProtocol(rpc);const pda=(...seeds:Uint8Array[])=>PublicKey.findProgramAddressSync(seeds,program.programId)[0];
+ const governance=(instrument:PublicKey)=>pda(Buffer.from('governance'),instrument.toBytes());
+ const signer=(instrument:PublicKey)=>pda(Buffer.from('governance-signer'),instrument.toBytes());
+ const intent=(g:PublicKey,id:bigint)=>pda(Buffer.from('intent'),g.toBytes(),u64(id).toArrayLike(Buffer,'le',8));
+ async function read(instrument:PublicKey){const address=governance(instrument),info=await rpc.getAccountInfo(address);if(!info)return null;if(!info.owner.equals(program.programId))throw Error('Governance owner mismatch');const data=program.coder.accounts.decode<ProtocolAccounts['governance']>('governance',info.data);if(!data.instrument.equals(instrument)||!data.signer.equals(signer(instrument)))throw Error('Governance custody mismatch');return {address,data};}
+ async function readIntent(address:PublicKey){const info=await rpc.getAccountInfo(address);if(!info||!info.owner.equals(program.programId))throw Error('Intent owner mismatch');const data=program.coder.accounts.decode<ProtocolAccounts['governanceIntent']>('governanceIntent',info.data);if(!intent(data.governance,BigInt(data.id.toString())).equals(address))throw Error('Intent PDA mismatch');return data;}
+ return {program,readIntent,pdas:{governance,signer,intent},read,
+  async configure(authority:PublicKey,instrument:PublicKey,roles:Parameters<typeof program.methods.configureGovernance>[0],uri:string,metadataHash:number[],termsHash:number[]){const bytes=Buffer.from(uri);if(bytes.length>128)throw Error('Metadata URI exceeds 128 UTF-8 bytes');return program.methods.configureGovernance(roles,[...bytes,...Array(128-bytes.length).fill(0)],metadataHash,termsHash).accountsStrict({authority,instrument,governance:governance(instrument),signer:signer(instrument),systemProgram:SystemProgram.programId}).instruction();},
+  async propose(instrument:PublicKey,member:PublicKey,target:TransactionInstruction,id:bigint,expires:bigint){
+   const g=await read(instrument);if(!g)throw Error('Governance is not configured');if(!target.programId.equals(program.programId))throw Error('Intent must target Recorda');
+   const remaining=target.keys.map(k=>({...k,isSigner:k.isSigner&&!k.pubkey.equals(g.data.signer)}));
+   if(!remaining.some(k=>k.pubkey.equals(instrument)))remaining.push({pubkey:instrument,isSigner:false,isWritable:false});
+   const address=intent(g.address,id);return {address,instruction:await program.methods.proposeIntent(u64(id),target.data,u64(expires)).accountsStrict({member,governance:g.address,intent:address,systemProgram:SystemProgram.programId}).remainingAccounts(remaining).instruction(),remaining};
+  },
+  async approve(instrument:PublicKey,member:PublicKey,address:PublicKey){return program.methods.approveIntent().accountsStrict({member,governance:governance(instrument),intent:address}).instruction();},
+  async execute(instrument:PublicKey,address:PublicKey,target?:TransactionInstruction){const g=await read(instrument);if(!g)throw Error('Governance missing');if(!target){const stored=await readIntent(address);if(!stored.governance.equals(g.address))throw Error('Cross-governance intent');target=new TransactionInstruction({programId:program.programId,data:Buffer.from(stored.data),keys:stored.accounts.map(a=>({pubkey:a.key,isWritable:a.writable,isSigner:false}))});}const remaining=target.keys.map(k=>({...k,isSigner:k.isSigner&&!k.pubkey.equals(g.data.signer)}));if(!remaining.some(k=>k.pubkey.equals(instrument)))remaining.push({pubkey:instrument,isSigner:false,isWritable:false});return program.methods.executeIntent(target.data).accountsStrict({governance:g.address,intent:address,recordaProgram:program.programId}).remainingAccounts(remaining).instruction();},
+  async eligibility(instrument:PublicKey,holder:PublicKey,version:number,expires:bigint,frozen:boolean,group:number,jurisdiction:number){const g=await read(instrument);if(!g)throw Error('Governance missing');return program.methods.setEligibilityV2(version,u64(expires),frozen,group,jurisdiction).accountsStrict({authority:g.data.signer,instrument,position:pdas.holder(instrument,holder),eligibility:pda(Buffer.from('eligibility-v2'),instrument.toBytes(),holder.toBytes()),systemProgram:SystemProgram.programId}).instruction();},
+  policy(instrument:PublicKey,holder:PublicKey){return pda(Buffer.from('eligibility-v2'),instrument.toBytes(),holder.toBytes());}
+ };
+}

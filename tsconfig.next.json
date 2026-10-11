@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.next.tsbuildinfo"
+  },
+  "include": [
+    "next-app/next-env.d.ts",
+    "next-app/app/**/*.ts",
+    "next-app/app/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "next-app/.next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "tests",
+    "protocol-ui-tests"
+  ]
+}

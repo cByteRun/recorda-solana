@@ -63,7 +63,7 @@ Implemented successful stages follow TZ §11. PARTIALLY_SETTLED is represented b
 - Mock payment mint is plain two-decimal Token-2022; extensions that alter credits are rejected. Amounts are u64 minor units, checked u128 products, floor once per holder; aggregate is the sum of rounded amounts. R1 uses checked BigInt and safe integer conversion.
 - Authority approves after calculation; vault funding is checked. Payment CPI and paid-state update are atomic; failed calls roll back. Restart reads unpaid entitlements; repeats are rejected. Finalization requires every holder, including zero holders, and exact settled/obligation totals.
 - Audit checks account owner/canonical PDAs, formula, snapshot order/hash, units/counts/totals, historical paid amounts/destinations and final receipt identity/hash. Current payment balance can change after payment and is not treated as its historical amount.
-- Action history currently queries up to 100 signatures; archival/paginated history is not implemented. Principal/final-coupon/voting-power fields do not execute Redemption or Voting.
+- Legacy reads keep their bounded signature list; the v2 history/export adds stable action and native signature cursors with pruning disclosure. Typed Redemption/Voting execute through new accounts; see implementation/action-engine-v2.md.
 
 ## R1 recovery and RPC
 
@@ -71,13 +71,13 @@ The shared adapter simulates before signing, validates connected account before 
 
 ## Requirements deviations and verification boundary
 
-TZ §19 requires **Next.js + TypeScript**; implementation is **React + Vite**. Keep this open until implementation conforms or TZ is explicitly revised. Issuer/operator is one authority (allowed by MVP role rules); a separate issuer identity and full role-specific journeys are unfinished.
+TZ §19 is addressed by the production Next App Router shell in next-app, using the same FSD React screens as Vite development. V2 copies issuer/terms identity into immutable contracts; governed instruments separate four role sets and threshold intents. See implementation/operations-v2.md for trust, recovery and new-account migration.
 
 Local-validator tests execute actual Anchor/Token-2022 state transitions with a controlled signer; client tests mock wallet/RPC. Neither proves Phantom extension compatibility, Devnet deployment, remote CI success or a complete security review. See [verification and gaps](ROADMAP.md#verification-and-gaps) and [README acceptance](../README.md#manual-acceptance).
 
 ## Test evidence
 
-The 2026-10-10 [adversarial audit](SECURITY-AUDIT.md) adds all-ID traceability, wallet/RPC/cache attacks, an enforced Coupon transition table, actual failed-runtime rollback evidence and snapshot/calculation/payment browser reload recovery. [Machine-readable mapping](audit-coverage.json) keeps future requirements open. `test:audit` records exit codes and stable source/test/IDL/binary hashes; final results are in CHANGELOG. Earlier counts below are historical, not a claim about the current revision.
+The 2026-10-10 [adversarial audit](SECURITY-AUDIT.md) adds all-ID traceability, wallet/RPC/cache attacks, an enforced Coupon transition table, actual failed-runtime rollback evidence and snapshot/calculation/payment browser reload recovery. [Machine-readable mapping](audit-coverage.json) maps the complete FR-01–58 source scope and explicit external acceptance gates. `test:audit` records exit codes and stable source/test/IDL/binary hashes; final results are in CHANGELOG. Earlier counts below are historical, not a claim about the current revision.
 
 Coupon UX/role follow-up (2026-10-06): build and IDL check pass; Rust 4/4, golden/client/runner 45/45, validator 16/16, protocol browser/audit/usability 6/6 and Devnet setup 6/6. The browser lifecycle checks role switching on one action, connected/unknown investors, unauthorized approval, exact golden rights, wallet-free reopening, partial-payment recovery and corrupted proof. Usability checks cover form gating, keyboard focus and no page-wide overflow at 320/390 px. Mobile screenshots are retained as `target/protocol-evidence/coupon-mobile.png` and `coupon-entry-mobile.png`; counts below describe earlier runs.
 
@@ -90,6 +90,8 @@ Follow-up on 2026-10-06 rechecked saved local evidence against current Rust sour
 Human Phantom-signed Coupon golden passed on 2026-10-06: action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`, receipt `8gYnbCDU6buFyL7mKyxi5szCuivvEuP6DDp1FCJMMjbR`, snapshot 10/5/2/0, current units 6/9/2/0, payment deltas 500/250/100/0, total 850. Public evidence: `target/devnet-evidence/coupon.json` and `coupon.png` (local ignored artifacts). This supersedes earlier pending Coupon acceptance notes; negative cases remain covered by local suites, and on-chain/local binary comparison remains separate.
 
 ## Reference assessment and adaptation
+
+The gap table below records the 2026-10-06 pre-implementation review. Current v2 delivery supersedes its missing-feature entries; see ROADMAP and implementation/operations-v2.md. No upstream engine files were copied.
 
 Review date: **2026-10-06**. Local source inspected: `programs/recorda/src/lib.rs`, shared Solana client/auditor and protocol acceptance structure. Upstream primary repository pages/README/specification were checked for the capabilities below. Upstream tests, deployed contracts, security audits and complete source were **not independently executed or audited**. Some direct raw-file requests were unavailable; exact implementation imports remain an explicit roadmap gate. Stars and Reddit discussion are not acceptance evidence. Centrifuge/AFRX lack a specific component/source in the supplied research and are not selected implementation dependencies.
 

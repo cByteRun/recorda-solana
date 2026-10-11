@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-11 — Human Devnet three-action acceptance runner
+
+- Add `test:e2e:actions:devnet`: real Phantom UI Coupon → Voting → Full Redemption on one fresh 10/5/2/0-holder instrument, explicit wallet switching, Devnet genesis guard, payment deltas, per-holder mint retirement, audited receipts and wallet-free recovery. Persist per-run public evidence/failure checkpoints; no automatic payment resume or Post-MVP acceptance claim. Human execution remains pending.
+- Normalize Phantom signed transactions through canonical wire decoding instead of constructor identity; retain message and partial-signature substitution checks. Explicitly pin compute limit and priority price before simulation/co-signing for non-Memo operations too, avoiding Phantom fee-instruction insertion. Transaction suite: 24 passed; TypeScript passed. Human confirmation of this compatibility fix remains pending.
+
+## 2026-10-10 — Complete FR-01–58 source implementation
+
+- [x] Add distinct v2 action/right/vote/receipt accounts, immutable contract/metadata commitments and action-specific transitions while preserving legacy Coupon layouts/decoder.
+- [x] Implement maturity redemption with persistent conflict/transfer lock, principal/separate optional coupon, consumed coupon periods, holder-signed atomic burn/payment and reconciled supply. Implement voting with proposal document hash verification, record power, exclusive Clock window, unique YES/NO/ABSTAIN receipts, abstention-inclusive quorum and strict majority; no vault.
+- [x] Implement floor partial redemption, authenticated finalized-slot journal replay, deterministic retained Merkle manifests/proofs, approved/funded bound claims, deadline/dust/reclaim accounting and vault closure.
+- [x] Add separated administration/registry/approval/funding threshold roles and exact chain-stored recoverable intents, mandatory versioned eligibility and distinct approved terms modification with immutable historical rights. External feeds only produce canonical deduplicated proposals; source/evidence binding cannot approve execution.
+- [x] Add FSD action/claim pages, actual holder signing and zero-allocation operator completion, loss-of-storage recovery, stable history cursors and verified decimal exports with pruning disclosure. Instrument setup accepts real holder public addresses. Production Next App Router shares existing React screens; Vite development remains supported.
+- [x] Extend requirement mapping to all121 normative IDs (all58 FR implemented in source;118 implemented/3 partial across all IDs), add AT-21–36 to the attack matrix and document archive/RPC trust, public proof retention, migration and source/license inventory.
+- [x] Add Rust/native/browser adversarial suites, actual failed CPI transactions, independent forged v2 reports, chain-only multisig recovery, proof archive restart and production runtime checks. The full runner records stable hashes; SBF acceptance rejects unsafe stack diagnostics even with exit zero. Offline1..10000 and native4-holder compute/fee/rent measurements make no production scale claim.
+- [x] Final complete `npm run test:audit` passed against stable sources: client/wallet84, setup6, offline Post-MVP7, Rust15, native validator25, protocol browser55 and production Next5 —197 tests including native parent tests/Rust test_id. All10 runner commands exit0, generated IDL/compiler parity passes and changedInputs is empty. Current signed native/UI artifacts, input/IDL/SBF hashes and measurements are retained under target/; no new human Devnet acceptance claimed.
+- [ ] Fresh human Phantom/Devnet acceptance of all current three actions, v2 deployment, remote CI, hosted proof backup/availability and demo video remain release gates. Unscoped dividends/tender, fiat/custody and operational/legal rollout remain future work.
+
+
 ## 2026-10-10 — Requirements traceability and adversarial Coupon audit
 
 - [x] Audit TZ/REQUIREMENTS → implemented roadmap milestones → Rust/React/Solana evidence. Map all 121 UC/FR/NFR/TC IDs: 48 implemented, 12 partial, 35 planned and 26 Post-MVP; classifications are not completed full-TZ acceptance.
@@ -13,7 +31,7 @@
 - [x] Extend real browser acceptance with signature rejection and reload/resume during capture, calculation and payment; DOM/direct-client authorization bypass and signed-message substitution must fail before unsafe submission. Verify unchanged TZ golden payouts and public receipt recovery.
 - [x] Separate Playwright artifact/report directories and exclude proof/report/docs writes from Vite's dev watcher to preserve connected wallet journeys. Record source/test/config/IDL/binary hashes and invalidate an audit if its code inputs change while running.
 - [x] Final complete `npm run test:audit` passed: React/client/wallet 84/84, Rust 8/8, validator 17/17, protocol browser/audit/usability 27/27, setup 6/6; production build, fresh SBF and compiler-generated IDL parity pass. Total 142 tests includes generated Rust `test_id` and the integration parent, not 142 requirements. `target/security-audit/run.json` records all eight successful commands and unchanged inputs; runtime failures retain real transaction signatures in `coupon.json`.
-- [ ] Redemption/Voting and full normative DoD remain unfinished; typed actions, period deduplication, versioned migration and complete archival audit are not delivered by these tests.
+- [ ] At this earlier Coupon-only revision, Redemption/Voting were unfinished. Source scope is superseded by the complete FR-01–58 entry above; human full-TZ DoD remains a separate gate.
 - [ ] Fresh human Phantom/Devnet replay of this revision and remote CI execution were not performed; 2026-10-06 human evidence remains historical.
 
 

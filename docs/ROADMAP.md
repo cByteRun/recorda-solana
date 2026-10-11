@@ -1,28 +1,29 @@
 # Roadmap
 
-**Current focus:** Phase 1 Coupon human Devnet golden passed; Coupon UX and role views are implemented in M1.7. Next: M2.0 action contracts/compatibility, then Redemption and Voting on the existing engine.
+**Current focus:** implement and verify the complete FR-01–58 source scope: MVP Coupon/Redemption/Voting plus Post-MVP index, claims, governance, eligibility, terms, partial redemption, external proposals and export. V1 Coupon remains supported; v2 uses distinct accounts. Deployment/live acceptance is separate.
 
 [Specification](TZ.md) · [Requirements](REQUIREMENTS.md) · [Verification](#verification-and-gaps)
 
 ## Verification and gaps
 
-Audit: **2026-10-10**. [Test results and artifacts](ARCHITECTURE.md#test-evidence). [Adversarial matrix and findings](SECURITY-AUDIT.md); [all 121 normative IDs](audit-coverage.json) are classified by delivery status with evidence sources and explicit gaps. `npm run test:audit` reproduces the local cross-layer audit; mapping a requirement does not mark it accepted.
+Audit revision: **2026-10-10**. [58/58 FR checklist](implementation/fr-checklist.md), [121-ID traceability](audit-coverage.json), [attack matrix](SECURITY-AUDIT.md), [v2 contract](implementation/action-engine-v2.md), [operations/provenance/envelope](implementation/operations-v2.md). Checkboxes below describe implemented source scope. Acceptance for a revision requires successful `npm run test:audit` with unchanged input hashes in `target/security-audit/run.json`; a mapping or source checkbox alone is not passing evidence.
 
-Final local audit passed: build/SBF/IDL; React/client/wallet 84/84; Rust 8/8; validator 17/17; protocol browser/audit/usability 27/27; setup 6/6. The complete runner records successful exit codes and stable source/test hashes in `target/security-audit/run.json`. This is current local Coupon evidence, not a fresh human Phantom/Devnet replay or acceptance of the missing MVP scenarios.
+| Requirement / feature | Implementation | Executable evidence |
+| --- | --- | --- |
+| FR-01–16,20–27,38–42; UC-CP-01 | Legacy Coupon plus typed Coupon, frozen controlled registry, immutable snapshot, approval/funding/payment | coupon.test.mjs, actions-v2.test.mjs, coupon.spec.ts, actions.spec.ts |
+| FR-17–18,28–32,43–46; UC-BR-01 | Clock maturity, principal/separate final coupon, persistent lock, holder-signed atomic burn/payment, period deduplication | engine.rs unit tests, actions-v2.test.mjs, holder-flows.spec.ts |
+| FR-19,33–37,47–48; UC-VOTE-01 | Immutable proposal/window/quorum, YES/NO/ABSTAIN, unique holder receipts, no payment vault, on-chain tally and typed audit | engine.rs unit tests, actions-v2.test.mjs, actions.spec.ts, actions-audit.spec.ts |
+| FR-49–52; UC-MD-01 | Authenticated finalized archive replay, deterministic retained manifest/proofs, approved/funded claims and expiry/reclaim | post-mvp.test.mjs (offline/native), holder-flows.spec.ts, distributor.rs |
+| FR-53–55 | Separate multisig roles/exact intents, eligibility, immutable copied metadata/terms and approved modification | post-mvp.test.mjs native, governance.ts, actions-audit.spec.ts |
+| FR-56; UC-PR-01 | Floor allocation/atomic partial retirement, reduced supply and overlap prevention | actions-v2.test.mjs and engine.rs |
+| FR-57; UC-EV-01 | Canonical durable event deduplication, evidence binding, proposal/approval boundary | post-mvp.test.mjs offline and actions-v2.test.mjs native |
+| FR-58; NFR-14 | Stable account/signature cursors, loss-of-storage recovery, verified decimal export, pruning disclosure and legacy decoder | actions-audit.spec.ts, actions.spec.ts, coupon.spec.ts |
+| TZ React/Next runtime | Shared FSD screens in Vite and production Next App Router | build, build:next, next-ui-tests/runtime.spec.ts |
+| NFR-16–19 | Explicit pinned archive trust, proof retention/recovery, measured envelope and dependency/license inventory | operations-v2.md, post-mvp.test.mjs, benchmark:distribution, measure-protocol.mjs |
 
-| Requirement / feature | Implementation | Test evidence | Result / scope |
-| --- | --- | --- | --- |
-| Current Coupon attack/recovery audit; FR-07–16,20–27,38–42; NFR-01–09,11; Coupon portion of TC-20/29 | Program transitions/Clock, canonical registry reads, independent audit and immutable wallet payload | `test:audit`: Rust, controlled React/RPC/wallet, actual failed validator transactions and protocol browser | See SECURITY-AUDIT for run evidence; full MVP, typed actions, period deduplication and fresh human Devnet acceptance remain open |
-| UC-CP-01; FR-01–04,06–15,38–39 | `programs/recorda/src/lib.rs`: instrument/registry/transfer/snapshot | `protocol-tests/coupon.test.mjs` | Actual PDAs/token accounts; authority, eligibility, late record barrier, snapshot completeness/hash and mutation negatives |
-| FR-16,20–22; TC-01–03,05 | `coupon_minor`, `calculate_entitlement` | Rust tests + integration golden/rounding/overflow | A/B/C/D: snapshot 10/5/2/0 → current 6/9/2/0 → coupon 500/250/100/0; total 850 |
-| FR-23–27; TC-04,15,17–19 | approve/fund/settle/finalize instructions | Integration + `protocol-ui-tests/coupon.spec.ts` | Actual transfers, funded-vault checks, CPI rollback, duplicate protection and partial reload/resume |
-| FR-38–42; TC-16 | receipt/events; `protocol.ts`, `protocol-audit.ts`, protocol page | Integration + `protocol-ui-tests/audit.spec.ts` and browser lifecycle | Independent formula/hash/destination checks; forged rights/receipt and wrong owner fail closed; read-only reopen after clearing storage |
-| R1 client boundary / Devnet runner synchronization | Browser/Memo controller; `coupon.ts`, `transactions.ts`, `rpc-fetch.ts`; `scripts/protocol-stage.mjs`, `chain-clock.mjs` | Eight files in `tests/` selected by `test:e2e:golden` | 45 tests: original 36 plus stage waits/progression/errors, program Clock readiness/fail-closed timeout and readiness-slot propagation and disclosure-aware runner controls; controlled RPC/DOM only |
-| UC-CP-01; TC-01–03,05; FR-24–25,40–42; NFR-10 | Existing `/protocol` controls + `scripts/devnet-golden.mjs` | `test:e2e:golden:devnet`; saved artifact `target/devnet-evidence/coupon.json` | PASS: human Phantom + independent PDA/payment verification; Coupon happy path accepted, complete NFR-10 scope remains open |
-| NFR-01–08,11,12 | Checked program math, constraints, immutable rights, per-holder progress; Phantom operator key | Rust/integration/browser suites + source inspection | Coupon guarantees exercised locally; no comprehensive security review or exhaustive authorization matrix claimed |
-| NFR-09–10; TZ §19/21; R1/R3/R4 | React/Vite Coupon role views, guidance and proof at `/` and `/protocol` | Build + `protocol-ui-tests/coupon.spec.ts`, `usability.spec.ts` | Coupon roles, wallet boundaries, recovery and mobile overflow verified locally; Next.js mismatch and multi-action role journeys remain open |
-| UC-BR-01; FR-17–18,28–32; TC-06–10 | Only preparatory principal/final-coupon fields | No redemption E2E | Open; field assertions do not satisfy the scenario |
-| UC-VOTE-01; FR-19,33–37; TC-11–14 | Only preparatory voting-power field | No voting E2E | Open |
+Final complete local run:197 tests passed (client84, setup6, offline Post-MVP7, Rust15, native25, protocol browser55, Next production5), all10 commands exit0 and unchanged input hashes. Counts include native parents and Rust test_id, not197 requirements. Evidence: target/security-audit/run.json and linked artifacts.
+
+Local tests use real Token-2022 accounts and a fresh validator, with Node-held disposable signers behind a Phantom-compatible browser boundary. They do not replace a new human Phantom/Devnet replay. Historical Devnet v1 evidence remains historical; the v2 ABI has not been deployed by this task. Remote CI, preview publication and demo video remain open. Unscoped dividends/tender, fiat/custody/legal work have no approved FR in this specification and remain future work.
 
 ## Reference-driven delivery order
 
@@ -124,79 +125,79 @@ Optional setup utility: `solana:airdrop` is implemented with unit-tested network
 
 ### M2.0 — Action contracts and compatibility
 
-- [ ] Specify action kind/version, immutable parameter commitment and action-specific transition tables (FR-43–44; NFR-13).
-- [ ] Define instrument conflict rules and coupon-period deduplication; a generic status enum alone does not enforce them (NFR-15).
-- [ ] Choose versioned/new accounts or explicit migration before altering deployed layouts; retain the old Coupon decoder/receipt verification (NFR-14).
-- [ ] Review pinned upstream files/tests/licenses before any code reuse; start from the reference locations in ARCHITECTURE rather than porting whole runtimes.
-- [ ] Exit: approved implementation contracts in docs, generated IDL/client plan, cross-kind/compatibility acceptance specified in TC-20,28; Coupon stays reproducible.
+- [x] Specify action kind/version, immutable parameter commitment and action-specific transition tables (FR-43–44; NFR-13).
+- [x] Define instrument conflict rules and coupon-period deduplication; a generic status enum alone does not enforce them (NFR-15).
+- [x] Choose versioned/new accounts or explicit migration before altering deployed layouts; retain the old Coupon decoder/receipt verification (NFR-14).
+- [x] Review pinned upstream files/tests/licenses before any code reuse; start from the reference locations in ARCHITECTURE rather than porting whole runtimes.
+- [x] Exit: approved implementation contracts in docs, generated IDL/client plan, cross-kind/compatibility acceptance specified in TC-20,28; Coupon stays reproducible.
 
 ### M2.1 — Redemption
 
-- [ ] Maturity action using the shared snapshot.
-- [ ] Principal and separate final coupon.
-- [ ] Explicit approval and settlement.
-- [ ] Burn, retirement or lock of redeemed units.
-- [ ] Double-redemption protection.
-- [ ] Supply/status update and final receipt.
-- [ ] Enforce maturity with Solana Clock; persist the redemption lock beyond `finalize_snapshot`, including partial settlement (FR-45; TC-21).
-- [ ] Add holder-signed atomic thaw/burn/payment/counter update; existing freeze authority is not burn authority (FR-46; TC-22–23).
-- [ ] Freeze/include the final-coupon policy and period; reject a period already paid by Coupon (TC-24).
-- [ ] Add redemption math, instructions/accounts/events in `programs/recorda/src/`; regenerate IDL and add `protocol-tests/redemption.test.mjs` and independent principal/burn fixtures.
-- [ ] Exit: TC-06–10,21–24 pass with actual token balances/supply, CPI rollback, zero rights and resume; preparatory fields alone do not pass.
+- [x] Maturity action using the shared snapshot.
+- [x] Principal and separate final coupon.
+- [x] Explicit approval and settlement.
+- [x] Burn, retirement or lock of redeemed units.
+- [x] Double-redemption protection.
+- [x] Supply/status update and final receipt.
+- [x] Enforce maturity with Solana Clock; persist the redemption lock beyond `finalize_snapshot`, including partial settlement (FR-45; TC-21).
+- [x] Add holder-signed atomic thaw/burn/payment/counter update; existing freeze authority is not burn authority (FR-46; TC-22–23).
+- [x] Freeze/include the final-coupon policy and period; reject a period already paid by Coupon (TC-24).
+- [x] Add redemption math, instructions/accounts/events in `programs/recorda/src/`; regenerate IDL and add `protocol-tests/actions-v2.test.mjs` and independent principal/burn fixtures.
+- [x] Exit: TC-06–10,21–24 pass with actual token balances/supply, CPI rollback, zero rights and resume; preparatory fields alone do not pass.
 
 ### M2.2 — Voting
 
-- [ ] Proposal, record date, voting window and quorum.
-- [ ] Voting power from finalized snapshot holdings.
-- [ ] YES/NO/ABSTAIN and VoteReceipt.
-- [ ] Deadline and double-vote protection.
-- [ ] On-chain tally, quorum and final result.
-- [ ] Enforce holder signature, unique `(proposal, holder)` receipt, immutable proposal hash/window/rules and exact Clock boundaries (FR-47; TC-25–26).
-- [ ] Use the specified abstention/quorum/tie rule; approve/open/finalize without funding a payment vault (TC-27).
-- [ ] Add Proposal/VoteReceipt accounts and events in `programs/recorda/src/`; regenerate IDL and add `protocol-tests/voting.test.mjs` plus independent tally fixtures.
-- [ ] Exit: TC-11–14,25–27 pass; post-record transfers leave voting power unchanged, proposal acceptance does not automatically modify bond terms.
+- [x] Proposal, record date, voting window and quorum.
+- [x] Voting power from finalized snapshot holdings.
+- [x] YES/NO/ABSTAIN and VoteReceipt.
+- [x] Deadline and double-vote protection.
+- [x] On-chain tally, quorum and final result.
+- [x] Enforce holder signature, unique `(proposal, holder)` receipt, immutable proposal hash/window/rules and exact Clock boundaries (FR-47; TC-25–26).
+- [x] Use the specified abstention/quorum/tie rule; approve/open/finalize without funding a payment vault (TC-27).
+- [x] Add Proposal/VoteReceipt accounts and events in `programs/recorda/src/`; regenerate IDL and add `protocol-tests/actions-v2.test.mjs` plus independent tally fixtures.
+- [x] Exit: TC-11–14,25–27 pass; post-record transfers leave voting power unchanged, proposal acceptance does not automatically modify bond terms.
 
 ### M2.3 — Shared engine
 
-- [ ] Shared registry, snapshot and authority rules for all actions.
-- [ ] Shared history/receipt with action-specific calculation and execution.
-- [ ] Clear Coupon/Redemption/Voting distinction in the UI.
-- [ ] Extend existing registry/snapshot/entitlement primitives with typed dispatch; retain per-action snapshots rather than reusing a mutable balance across record dates (FR-43).
-- [ ] Bind receipt kind/version/parameter commitment to payment/burn/tally outcomes (FR-48); reject wrong-kind/cross-action accounts and forged results (TC-20,28).
-- [ ] Keep Scheduled-only cancellation; document resuming an incomplete snapshot from chain, without implying a post-begin abort exists (TC-29).
-- [ ] Exit: Coupon regression remains green, all action-specific transitions/account substitutions are checked and historical receipts decode.
+- [x] Shared registry, snapshot and authority rules for all actions.
+- [x] Shared history/receipt with action-specific calculation and execution.
+- [x] Clear Coupon/Redemption/Voting distinction in the UI.
+- [x] Extend existing registry/snapshot/entitlement primitives with typed dispatch; retain per-action snapshots rather than reusing a mutable balance across record dates (FR-43).
+- [x] Bind receipt kind/version/parameter commitment to payment/burn/tally outcomes (FR-48); reject wrong-kind/cross-action accounts and forged results (TC-20,28).
+- [x] Keep Scheduled-only cancellation; document resuming an incomplete snapshot from chain, without implying a post-begin abort exists (TC-29).
+- [x] Exit: Coupon regression remains green, all action-specific transitions/account substitutions are checked and historical receipts decode.
 
 ## Phase 3 — MVP: Product journeys
 
 ### M3.1 — Protocol-backed client
 
 - [x] Coupon reads and recovery from authoritative chain state.
-- [ ] Redemption/Voting reads and recovery.
-- [ ] Resolve the Next.js requirement versus React/Vite implementation.
+- [x] Redemption/Voting reads and recovery.
+- [x] Resolve the Next.js requirement versus React/Vite implementation.
 
 ### M3.2 — Operator, Investor and Auditor
 
-- [ ] Reuse the Coupon role views and identity boundaries implemented in [M1.7](#m17--coupon-uxui-and-role-views) for Redemption and Voting.
-- [ ] Add action-specific Investor rights/outcomes and Operator/Auditor controls and proof for Redemption/Voting, backed by their own fixtures and role E2E.
-- [ ] Complete Instrument, Registry and Action Detail views for all actions.
-- [ ] Complete Operator/Investor/Auditor journeys and role restrictions.
-- [ ] Consistent IMPLEMENTED/SIMULATED labels.
-- [ ] Explain the lifecycle in 30–60 seconds.
-- [ ] Extend `src/shared/solana/protocol.ts`, `protocol-audit.ts`, protocol controller and `src/pages/protocol/` in the existing FSD direction; no backend is required for MVP.
-- [ ] Show holder-signature requirement for redemption, principal/final coupon separately, retired/remaining supply and vote window/quorum/result.
-- [ ] Add action-specific browser/role recovery tests and artifacts under `protocol-ui-tests/`; retain wallet-free Auditor access and exact Coupon golden.
-- [ ] Exit: each role completes/reopens its applicable journey on the same instrument; no current balance is presented as historical entitlement.
+- [x] Reuse the Coupon role views and identity boundaries implemented in [M1.7](#m17--coupon-uxui-and-role-views) for Redemption and Voting.
+- [x] Add action-specific Investor rights/outcomes and Operator/Auditor controls and proof for Redemption/Voting, backed by their own fixtures and role E2E.
+- [x] Complete Instrument, Registry and Action Detail views for all actions.
+- [x] Complete Operator/Investor/Auditor journeys and role restrictions.
+- [x] Consistent IMPLEMENTED/SIMULATED labels.
+- [x] Explain the lifecycle in 30–60 seconds.
+- [x] Extend `src/shared/solana/protocol.ts`, `protocol-audit.ts`, protocol controller and `src/pages/protocol/` in the existing FSD direction; no backend is required for MVP.
+- [x] Show holder-signature requirement for redemption, principal/final coupon separately, retired/remaining supply and vote window/quorum/result.
+- [x] Add action-specific browser/role recovery tests and artifacts under `protocol-ui-tests/`; retain wallet-free Auditor access and exact Coupon golden.
+- [x] Exit: each role completes/reopens its applicable journey on the same instrument; no current balance is presented as historical entitlement.
 
 ## Phase 4 — MVP: Acceptance and submission
 
 ### M4.1 — Correctness and Devnet
 
-- [ ] TC-01–29 across all three actions, including the reference-driven MVP extension (TC-30–38 are Post-MVP).
-- [ ] Authorization, precision, immutability and atomicity across all actions.
-- [ ] Safe recovery and no repeated settle/redeem/vote.
+- [x] TC-01–29 across all three actions, including the reference-driven MVP extension (TC-30–38 are Post-MVP).
+- [x] Authorization, precision, immutability and atomicity across all actions.
+- [x] Safe recovery and no repeated settle/redeem/vote.
 - [ ] Human Phantom/Devnet replay with signatures and balance deltas.
 - [ ] Clean Devnet run with no known P0/P1 issues.
-- [ ] Verify no operator secret in source/frontend.
+- [x] Verify no operator secret in source/frontend.
 
 ### M4.2 — Demo and release
 
@@ -204,40 +205,40 @@ Optional setup utility: `solana:airdrop` is implemented with unit-tested network
 - [ ] Remote CI verification.
 - [ ] Deployment secrets, first merge deployment and current preview.
 - [ ] Full TZ DoD and retained proof for 3/3 actions.
-- [ ] Run Coupon → Voting → Full Redemption on one instrument; show before/after rights, tally and retired supply, with independently checked final receipts.
-- [ ] Record upstream pin/file/license inventory for incorporated code and label unimplemented Post-MVP features in the release notes.
+- [x] Run Coupon → Voting → Full Redemption on one instrument; show before/after rights, tally and retired supply, with independently checked final receipts.
+- [x] Record upstream pin/file/license inventory for incorporated code and label unimplemented Post-MVP features in the release notes.
 - [ ] Demo video showing complete E2E.
 
 ## Post-MVP
 
 ### P1 — Scale and operations
 
-- [ ] Merkle snapshots/indexer.
-- [ ] Role separation and multisig.
-- [ ] Richer transfer controls.
-- [ ] Reports and extended timeline.
-- [ ] P1.1: define finalized-slot data-source/eligibility trust model, index replay/checkpoints and supply reconciliation (FR-49; NFR-16; TC-30).
-- [ ] P1.2: specify domain-bound leaf encoding, deterministic manifest/root/totals and retrievable proof storage (FR-50; NFR-17; TC-32).
-- [ ] P1.3: adapt the Upside distributor pattern to UC-MD-01, with explicit approval/funding, claim replay/destination protection and deadline/reclaim accounting (FR-51–52; TC-31,33).
-- [ ] P1.4: specify transfer policy/expiry/freeze and role/multisig boundaries; bind metadata/terms versions and export paginated history (FR-53–55,58; TC-35,37).
-- [ ] P1.5: benchmark compute/rent/transaction/proof costs and publish the supported holder envelope; no unmeasured scale promise (NFR-18; TC-38).
-- [ ] Exit: prove historical inputs and distribution reconciliation, proof availability and negative claims before replacing the controlled MVP snapshot. Root membership alone does not verify ownership/formula.
+- [x] Merkle snapshots/indexer.
+- [x] Role separation and multisig.
+- [x] Richer transfer controls.
+- [x] Reports and extended timeline.
+- [x] P1.1: define finalized-slot data-source/eligibility trust model, index replay/checkpoints and supply reconciliation (FR-49; NFR-16; TC-30).
+- [x] P1.2: specify domain-bound leaf encoding, deterministic manifest/root/totals and retrievable proof storage (FR-50; NFR-17; TC-32).
+- [x] P1.3: implement the domain-bound distributor pattern to UC-MD-01, with explicit approval/funding, claim replay/destination protection and deadline/reclaim accounting (FR-51–52; TC-31,33).
+- [x] P1.4: specify transfer policy/expiry/freeze and role/multisig boundaries; bind metadata/terms versions and export paginated history (FR-53–55,58; TC-35,37).
+- [x] P1.5: benchmark compute/rent/transaction/proof costs and publish the supported holder envelope; no unmeasured scale promise (NFR-18; TC-38).
+- [x] Exit: prove historical inputs and distribution reconciliation, proof availability and negative claims before replacing the controlled MVP snapshot. Root membership alone does not verify ownership/formula.
 
 ### P2 — Additional actions
 
-- [ ] Early/partial redemption: implement UC-PR-01/FR-56 after M2.1, preserving atomic settlement and persistent unit restrictions (TC-34).
+- [x] Early/partial redemption: implement UC-PR-01/FR-56 after M2.1, preserving atomic settlement and persistent unit restrictions (TC-34).
 - [ ] Dividends and tender/buyback.
-- [ ] Modification workflow.
+- [x] Modification workflow.
 - [ ] Approved UC/FR and golden acceptance for each new action.
-- [ ] Publish per-holder integer rounding/remainder policy; verify 100/300/600 at 20% retires 20/60/120 and leaves supply 800.
-- [ ] Reject overlapping retirement, reconcile partial supply/status and distinguish early-full completion from active partial redemption.
-- [ ] Exit: independent partial-redemption fixture and negative/rollback/recovery evidence; Voting remains the third hackathon action.
+- [x] Publish per-holder integer rounding/remainder policy; verify 100/300/600 at 20% retires 20/60/120 and leaves supply 800.
+- [x] Reject overlapping retirement, reconcile partial supply/status and distinguish early-full completion from active partial redemption.
+- [x] Exit: independent partial-redemption fixture and negative/rollback/recovery evidence; Voting remains the third hackathon action.
 
 ### P3 — External integrations
 
 - [ ] KYC/AML and custody/recovery.
 - [ ] Fiat rails and depository adapters.
 - [ ] Production security and operational/legal review.
-- [ ] Add canonical event adapter and provenance/attestation boundary inspired by CorpShift/CorpAction; deduplicate source delivery and bind evidence/parameters to proposals (UC-EV-01; FR-57; TC-36).
-- [ ] Keep KYC PII off-chain; map provider results into versioned eligibility and explicit authority changes rather than copying EVM identity contracts.
-- [ ] Exit: adapter retries/tampering/revocation tests pass, source trust is documented and external signals cannot execute unapproved actions.
+- [x] Add canonical event adapter and provenance/attestation boundary inspired by CorpShift/CorpAction; deduplicate source delivery and bind evidence/parameters to proposals (UC-EV-01; FR-57; TC-36).
+- [x] Keep KYC PII off-chain; map provider results into versioned eligibility and explicit authority changes rather than copying EVM identity contracts.
+- [x] Exit: adapter retries/tampering/revocation tests pass, source trust is documented and external signals cannot execute unapproved actions.

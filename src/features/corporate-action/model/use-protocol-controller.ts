@@ -49,6 +49,8 @@ export function useProtocolController() {
   const [chainClock, setChainClock] = useState<ChainClock | null>(null);
   const [clockError, setClockError] = useState("");
   const [holderWallet, setHolderWallet] = useState(""), [holderUnits, setHolderUnits] = useState("0");
+  const [setupMaturity,setSetupMaturity]=useState("");
+  const [setupHolders,setSetupHolders]=useState(["","","",""]);
   const [setupId, setSetupId] = useState(references.id || String(Date.now()));
   const lock = useRef(false);
   const state = stage(report);
@@ -100,13 +102,16 @@ export function useProtocolController() {
   }
   async function setup() {
     if (!operator) throw new Error("Connect Phantom");
+    const fallback = demoHolders();
+    const holderKeys = setupHolders.map((value,index)=>value.trim()?new PublicKey(value.trim()):fallback[index].publicKey);
+    if(new Set(holderKeys.map(key=>key.toBase58())).size!==4)throw new Error("A/B/C/D must be distinct holder addresses");
     const executable = await connection.getAccountInfo(protocol.program.programId);
     if (!executable?.executable) throw new Error(`Recorda program ${protocol.program.programId.toBase58()} is not deployed on this RPC. Start the local validator with recorda.so or configure the deployed Devnet program address.`);
     const id = BigInt(setupId), mint = protocol.pdas.mint(operator, id), address = protocol.pdas.instrument(mint);
     // PDAs restore partially completed setup; no existing position is reissued.
     if (!(await connection.getAccountInfo(address))) {
       const payment = Keypair.generate();
-      const create = await protocol.createInstrument(operator, payment.publicKey, id, BigInt(Math.floor(Date.now() / 1000) + 86400 * 180));
+      const create = await protocol.createInstrument(operator, payment.publicKey, id, setupMaturity?BigInt(Math.floor(Date.parse(setupMaturity)/1000)):(await readChainClock(connection)).timestamp+86400n*180n);
       await send([
         SystemProgram.createAccount({ fromPubkey: operator, newAccountPubkey: payment.publicKey, space: MINT_SIZE,
           lamports: await connection.getMinimumBalanceForRentExemption(MINT_SIZE), programId: TOKEN_2022_PROGRAM_ID }),
@@ -114,9 +119,8 @@ export function useProtocolController() {
       ], [payment]);
     }
     setInstrument(address.toBase58()); save({ instrument: address.toBase58(), id: setupId });
-    const holders = demoHolders();
-    for (let index = 0; index < holders.length; index++) {
-      const holder = holders[index].publicKey;
+    for (let index = 0; index < holderKeys.length; index++) {
+      const holder = holderKeys[index];
       if (!(await connection.getAccountInfo(protocol.pdas.holder(address, holder)))) await send([await protocol.registerHolder(operator, address, holder, expectedUnits[index])]);
     }
   }
@@ -221,6 +225,6 @@ export function useProtocolController() {
 
   return { progress, signature, authorized, demoAddresses, protocol, operator, instrument, setInstrument, action, setAction, report, setReport,
     busy, error, audit, recordDate, setRecordDate, holderWallet, setHolderWallet, holderUnits, setHolderUnits,
-    setupId, setSetupId, state, pending, run, send, connect, setup, createAction, refresh,
+    setupHolders,setSetupHolders,setupMaturity,setSetupMaturity,setupId, setSetupId, state, pending, run, send, connect, setup, createAction, refresh,
     snapshot, snapshotReady, chainClock, clockError, calculate, fund, settle, transferDemo };
 }

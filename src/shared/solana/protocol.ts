@@ -81,10 +81,13 @@ export function createProtocol(rpc: Connection, programId = RECORDA_PROGRAM_ID) 
       return program.methods.calculateEntitlement().accountsStrict({ authority, instrument, action, entitlement: pdas.entitlement(action, holder) }).instruction();
     },
     async transfer(instrument: PublicKey, holder: PublicKey, recipient: PublicKey, units: bigint) {
-      const { mint } = await ownedAccount("instrument", instrument);
-      return program.methods.transferBonds(u64(units)).accountsStrict({ holder, instrument, mint,
+      const terms = await ownedAccount("instrument", instrument), mint=terms.mint;
+      const builder=program.methods.transferBonds(u64(units)).accountsStrict({ holder, instrument, mint,
         fromPosition: pdas.holder(instrument, holder), toPosition: pdas.holder(instrument, recipient),
-        fromAccount: pdas.bondAccount(instrument, holder), toAccount: pdas.bondAccount(instrument, recipient), tokenProgram }).instruction();
+        fromAccount: pdas.bondAccount(instrument, holder), toAccount: pdas.bondAccount(instrument, recipient), tokenProgram });
+      const signer=PublicKey.findProgramAddressSync([Buffer.from('governance-signer'),instrument.toBuffer()],programId)[0];
+      if(terms.authority.equals(signer))builder.remainingAccounts([holder,recipient].map(h=>({pubkey:PublicKey.findProgramAddressSync([Buffer.from('eligibility-v2'),instrument.toBuffer(),h.toBuffer()],programId)[0],isWritable:false,isSigner:false})));
+      return builder.instruction();
     },
     async markFunded(action: PublicKey, authority: PublicKey) {
       const { accounts: { instrument } } = await actionContext(action, authority);

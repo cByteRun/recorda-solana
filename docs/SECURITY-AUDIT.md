@@ -1,6 +1,6 @@
 # Requirements and adversarial audit — 2026-10-10
 
-Authority: [TZ](TZ.md) and its normative [REQUIREMENTS annex](REQUIREMENTS.md). [ROADMAP](ROADMAP.md) records delivery; it does not waive requirements. This audit covers current Coupon M1.0–M1.7 and the separately labelled Browser/Memo reference. It does not implement the missing Redemption, Voting or Post-MVP work.
+Authority: [TZ](TZ.md) and its normative [REQUIREMENTS annex](REQUIREMENTS.md). [ROADMAP](ROADMAP.md) records delivery; it does not waive requirements. This revision covers the complete FR-01–58 source scope, retaining Coupon and the separately labelled Browser/Memo reference. New typed MVP and Post-MVP acceptance sources are linked below; deployment/human Devnet acceptance stays separate.
 
 Story: React Operator opens an instrument/action → the client reads canonical PDAs and Token-2022 accounts → the wallet signs the simulated instruction → Anchor validates authority, record date, immutable rights and lifecycle → atomic payment records progress → an independent read reopens and reconciles the final receipt. Investor/demo/Auditor role selection is presentation, never signing authority.
 
@@ -10,15 +10,11 @@ Story: React Operator opens an instrument/action → the client reads canonical 
 
 | Scope | Status and acceptance boundary |
 | --- | --- |
-| UC-CP-01; FR-01,03–04,06–16,20–27,38–42; TC-01–05,15–19,29 | Implemented Coupon. Unit, controlled client, actual validator and browser acceptance are separate evidence layers. |
-| FR-02,05 | Partial: no separate issuer identity; complete redeemed-supply/status UI waits for Redemption. MVP allows one issuer/operator authority. |
-| FR-17–19; UC-BR-01, UC-VOTE-01; TC-06–14 | Stored principal/final-coupon/voting-power fields exist. They do not burn bonds, pay principal, cast votes or tally proposals. Use cases remain open. |
-| FR-43–48; NFR-13–15; TC-20–28 | Coupon transitions and same-kind account isolation are exercised. Typed actions, coupon-period deduplication, persistent redemption lock, voting authorization and versioned receipt migration remain open. |
-| NFR-05,10,12,14 | Partial: trusted-RPC audit/history limits, historical human Devnet proof, bounded source secret-pattern scan and unchanged-layout/IDL regression are insufficient for full future acceptance. |
-| TZ §19; M3.1 | Next.js is required; current React/Vite stack is a documented deviation. |
-| UC-MD-01, UC-PR-01, UC-EV-01; FR-49–58; NFR-16–19; TC-30–38 | Explicit Post-MVP; no fake tests or successful security claim for unimplemented instructions. |
+| FR-01–48 / MVP | Legacy Coupon and typed Coupon/Redemption/Voting implemented. Native tests verify actual balances/burn/tally; role/browser tests sign through a Phantom-compatible boundary with Node-held disposable keys. |
+| FR-49–58 / Post-MVP | Authenticated historical index, retained Merkle manifests/claims/reclaim, multisig roles, eligibility/terms, partial redemption, external proposals and paginated exports implemented. See implementation/operations-v2.md for trust and measured envelope. |
+| NFR-05,10,12 | Explicit limitations: trusted RPC/pruned history, fresh human three-action Devnet acceptance and bounded embedded-key source scan. No exhaustive independent security/secret-history review claim. |
+| TZ §19 | Next production App Router serves shared FSD screens; Vite remains development runtime. |
 
-The manifest currently accounts for 121 IDs: 48 implemented, 12 partial, 35 planned, 26 Post-MVP. These are classification counts, not tests, line coverage or completed full-MVP acceptance. Normative DoD is still incomplete.
 
 ## Threat model and trust boundaries
 
@@ -90,3 +86,29 @@ Local artifacts: `target/security-audit/{run,traceability}.json`, `target/protoc
 Final run results are recorded in [CHANGELOG](CHANGELOG.md) and [ROADMAP verification](ROADMAP.md#verification-and-gaps). Historical 2026-10-06 human Phantom/Devnet proof remains historical evidence. No live Devnet transaction, deployment, admin-key export or externally published result is required by this local audit. The defined attack matrix is bounded; new features and untested attack classes need their own acceptance before release.
 
 Verified final run: **PASS**, 2026-10-10. All eight runner commands returned 0 and `changedInputs` is empty. React/client/wallet 84/84, Rust 8/8, actual validator 17/17, protocol browser/audit/usability 27/27 and setup 6/6 (142 reported tests). The three deliberately failed runtime transactions retain signatures; protected account comparisons passed. Production build, SBF and IDL parity passed. No remote CI or new human Devnet acceptance is inferred.
+
+
+## V2 / Post-MVP attack matrix
+
+| Attack | Requirement | Expected rejection / invariant | Evidence source |
+| --- | --- | --- | --- |
+| AT-21 Cross-kind payment/vote or legacy accounts substituted into v2 | FR-43–44,48; TC-20,27–28 | Canonical versioned PDAs, kind dispatch and outcome commitments fail closed | actions-v2.test.mjs; actions-audit.spec.ts |
+| AT-22 Early maturity, overlapping actions, transfer/issuance after retirement starts | FR-28,45; TC-21 | Clock and persistent instrument reservation remain through finalization | actions-v2.test.mjs; engine.rs |
+| AT-23 Operator attempts holder burn, unsigned/foreign holder, payment CPI fails after burn | FR-46; TC-22–23 | Actual holder signer; failed transaction leaves tokens/supply/right counters unchanged | actions-v2.test.mjs; holder-flows.spec.ts |
+| AT-24 Replay final coupon period across action kinds; disable coupon but pay it | FR-18,46; TC-24 | Permanent consumed period reservation, immutable policy and independent integer components | actions-v2.test.mjs; actions-audit.spec.ts |
+| AT-25 Vote before open/at close, zero power, wrong holder or duplicate receipt | FR-35–37,47; TC-25–27 | Exact Clock interval, snapshot power, holder signature and unique PDA; ties fail, abstentions count quorum | actions-v2.test.mjs; engine.rs; actions.spec.ts |
+| AT-26 Forge copied contract/snapshot/principal/coupon/retirement/tally/result/source/receipt | FR-42,48; NFR-05 | Independent recomputation rejects internally inconsistent or rehashed substituted fields | actions-audit.spec.ts (19 mutations plus historical formula test) |
+| AT-27 Unsigned/untrusted archive, gaps, reordered/post-record inputs, omitted/ineligible supply | FR-49; NFR-16; TC-30 | Pinned Ed25519 provider, declared finalized bank and full sequence/registry/supply reconciliation | scripts/post-mvp.test.mjs |
+| AT-28 Manifest tamper or proof loss after restart | FR-50; NFR-17; TC-32 | Content-addressed durable archive and independent formula/proof/root checks; retrieval failure blocks client | scripts/post-mvp.test.mjs; holder-flows.spec.ts |
+| AT-29 Claim altered amount/holder/destination/proof, duplicate or frozen destination | FR-51; TC-31 | Domain-bound leaf, holder signer, destination owner/mint and unique index; actual failed CPI rolls back claim mark | protocol-tests/post-mvp.test.mjs; holder-flows.spec.ts |
+| AT-30 Early/wrong-authority reclaim, expired claim, late dust donation or reclaim replay | FR-52; TC-33 | Exclusive deadline, correct authority, observed paid/reclaimed funds and closed vault | protocol-tests/post-mvp.test.mjs; distributor.rs |
+| AT-31 Wrong role, missing threshold, substituted intent bytes/metas, executed replay | FR-53; TC-35 | Allowlisted exact role commitment and chain-stored approval bitmap; recover intent without cache | governance.rs; protocol-tests/post-mvp.test.mjs |
+| AT-32 Omit/expire/freeze/mismatch eligibility or modify historical terms/rights | FR-54–55; TC-35,37 | Canonical mandatory policies and record timestamp; approved terms update cannot rewrite copied contract/receipt | protocol-tests/post-mvp.test.mjs; actions-audit.spec.ts |
+| AT-33 Partial retirement rounding/overlap/duplicate/rollback | FR-56; TC-34 | Floor each holder, atomic payment and persistent restrictions;100/300/600→20/60/120, remaining800 | engine.rs; actions-v2.test.mjs |
+| AT-34 External retry/conflicting evidence/payload, unauthorized source attachment or execute flag | FR-57; TC-36 | Canonical durable source/event deduplication; approved operator proposal binding; feed cannot execute | scripts/post-mvp.test.mjs; actions-v2.test.mjs |
+| AT-35 Pruned RPC history or corrupted export/lost browser cache | FR-58; TC-37 | Explicit unavailable evidence, advancing stable cursors, decimal export and chain-only reopen | actions-audit.spec.ts; actions.spec.ts; holder-flows.spec.ts |
+| AT-36 SBF stack error with compiler exit zero; unsupported scale claims | NFR-18–19; TC-38 | Build wrapper rejects stack diagnostics; native compute/rent and offline proof measurements publish their scope | build-sbf.mjs; measure-protocol.mjs; benchmark-distribution.mjs |
+
+Sources above must pass against a fresh binary/validator before release. Static traceability marks source delivery, not exhaustive attack coverage or cryptographic proof that an RPC/archive provider is truthful. Historical v1 evidence and counts in earlier sections remain historical.
+
+Current complete acceptance:197 tests passed across client84, setup6, offline Post-MVP7, Rust15, native25, protocol browser55 and production Next5. All10 runner commands exited0 with unchanged input hashes; target/security-audit/run.json is the current evidence record. Counts include native parent tests and Rust test_id. Source scope is FR-01–58; the full human/Devnet release DoD remains separate.

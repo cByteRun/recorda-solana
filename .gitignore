@@ -20,3 +20,6 @@ Thumbs.db
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+.next/
+public/distributions/*/

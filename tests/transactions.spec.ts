@@ -41,15 +41,48 @@ function harness() {
   return { calls, rpc, provider, send };
 }
 
+test("wallet objects from another web3.js copy are accepted by canonical wire bytes", async () => {
+  const h = harness();
+  const sign = h.provider.signTransaction;
+  h.provider.signTransaction = async tx => {
+    const signed = await sign(tx);
+    return { serialize: () => signed.serialize() } as VersionedTransaction;
+  };
+  await expect(h.send()).resolves.toBe("submitted-signature");
+  expect(h.calls).toEqual({ simulate: 1, sign: 1, send: 1 });
+});
+
 test("signed JSON Memo receives an explicit compute budget without losing payload", () => {
   const tx = transactionFromInstructions([memo]);
   expect(tx.instructions[0].programId.equals(ComputeBudgetProgram.programId)).toBe(true);
   expect(tx.instructions[0].data.readUInt32LE(1)).toBe(600_000);
-  expect(tx.instructions[1]).toBe(memo);
+  expect(tx.instructions[1].data[0]).toBe(3);
+  expect(tx.instructions[1].data.readBigUInt64LE(1)).toBe(0n);
+  expect(tx.instructions[2]).toBe(memo);
   const budget = ComputeBudgetProgram.setComputeUnitLimit({ units: 700_000 });
-  expect(transactionFromInstructions([budget, memo]).instructions).toEqual([budget, memo]);
+  expect(transactionFromInstructions([budget, memo]).instructions.slice(1)).toEqual([budget, memo]);
   const price = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 });
   expect(transactionFromInstructions([price, memo]).instructions).toHaveLength(3);
+});
+
+test("non-Memo operations pin compute limit and price before a wallet can add fees", async () => {
+  const instruction = new TransactionInstruction({ programId: Keypair.generate().publicKey, keys: [], data: Buffer.from([1]) });
+  const tx = transactionFromInstructions([instruction]);
+  expect(tx.instructions.map(ix => ix.data[0])).toEqual([2, 3, 1]);
+  expect(tx.instructions[1].data.readBigUInt64LE(1)).toBe(0n);
+  const h = harness();
+  const sign = h.provider.signTransaction;
+  h.provider.signTransaction = async tx => {
+    const versioned = tx as VersionedTransaction;
+    const budgets = versioned.message.compiledInstructions.filter(ix => versioned.message.staticAccountKeys[ix.programIdIndex].equals(ComputeBudgetProgram.programId));
+    expect(budgets.map(ix => ix.data[0])).toEqual([2, 3]);
+    return sign(tx);
+  };
+  await expect(phantomSignAndSend({ provider: h.provider, operator: operator.publicKey, instructions: [instruction], rpc: h.rpc })).resolves.toBe('submitted-signature');
+  expect(h.calls.send).toBe(1);
+  const limit = ComputeBudgetProgram.setComputeUnitLimit({ units: 200000 });
+  const price = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 123 });
+  expect(transactionFromInstructions([limit, price, instruction]).instructions).toEqual([limit, price, instruction]);
 });
 
 test("RPC simulation failure exposes program logs without opening Phantom or submitting", async () => {

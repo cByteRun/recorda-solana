@@ -8,11 +8,162 @@ use anchor_spl::token_2022::{
 use anchor_spl::token_interface::{Mint, TokenAccount};
 use solana_sha256_hasher::hashv;
 
+pub mod external;
+pub use external::*;
+pub mod governance;
+pub use governance::*;
+pub mod distributor;
+pub use distributor::*;
+pub mod engine;
+pub use engine::*;
+
 declare_id!("CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF");
 
 #[program]
 pub mod recorda {
     use super::*;
+    pub fn create_action_v2(
+        ctx: Context<CreateV2>,
+        id: u64,
+        parameters: ActionParameters,
+    ) -> Result<()> {
+        engine::create(ctx, id, parameters)
+    }
+    pub fn reserve_period_v2(ctx: Context<ReservePeriodV2>) -> Result<()> {
+        engine::reserve_period(ctx)
+    }
+    pub fn cancel_v2(ctx: Context<ManageV2>) -> Result<()> {
+        engine::cancel(ctx)
+    }
+    pub fn release_period_v2(ctx: Context<ReleasePeriodV2>) -> Result<()> {
+        engine::release_period(ctx)
+    }
+    pub fn begin_v2(ctx: Context<ManageV2>) -> Result<()> {
+        engine::begin(ctx)
+    }
+    pub fn capture_v2(ctx: Context<CaptureV2>) -> Result<()> {
+        engine::capture(ctx)
+    }
+    pub fn finish_snapshot_v2(ctx: Context<ManageV2>) -> Result<()> {
+        engine::finish_snapshot(ctx)
+    }
+    pub fn calculate_v2(ctx: Context<CalculateV2>) -> Result<()> {
+        engine::calculate(ctx)
+    }
+    pub fn approve_v2(ctx: Context<ApproveV2>) -> Result<()> {
+        engine::approve(ctx)
+    }
+    pub fn create_vault_v2(ctx: Context<CreateVaultV2>) -> Result<()> {
+        engine::create_vault(ctx)
+    }
+    pub fn funded_v2(ctx: Context<FundV2>) -> Result<()> {
+        engine::funded(ctx)
+    }
+    pub fn settle_v2(ctx: Context<SettleV2>) -> Result<()> {
+        engine::settle(ctx)
+    }
+    pub fn vote_v2(ctx: Context<CastVoteV2>, choice: u8) -> Result<()> {
+        engine::vote(ctx, choice)
+    }
+    pub fn finish_vote_v2(ctx: Context<ManageV2>) -> Result<()> {
+        engine::finish_vote(ctx)
+    }
+    pub fn consume_period_v2(ctx: Context<ConsumePeriodV2>) -> Result<()> {
+        engine::consume_period(ctx)
+    }
+    pub fn finalize_v2(ctx: Context<FinalizeV2>) -> Result<()> {
+        engine::finalize(ctx)
+    }
+    pub fn create_distribution(
+        ctx: Context<CreateDistribution>,
+        id: u64,
+        parameters: DistributionParameters,
+    ) -> Result<()> {
+        distributor::create_distribution_engine(ctx, id, parameters)
+    }
+    pub fn approve_distribution(ctx: Context<ManageDistribution>) -> Result<()> {
+        distributor::approve_distribution_engine(ctx)
+    }
+    pub fn fund_distribution(ctx: Context<ManageDistribution>) -> Result<()> {
+        distributor::fund(ctx)
+    }
+    pub fn claim_distribution(
+        ctx: Context<ClaimDistribution>,
+        index: u32,
+        amount: u64,
+        proof: Vec<[u8; 32]>,
+    ) -> Result<()> {
+        distributor::claim(ctx, index, amount, proof)
+    }
+    pub fn reclaim_distribution(ctx: Context<ReclaimDistribution>) -> Result<()> {
+        distributor::reclaim(ctx)
+    }
+    pub fn configure_governance(
+        ctx: Context<ConfigureGovernance>,
+        roles: [RoleSet; 4],
+        metadata_uri: [u8; 128],
+        metadata_hash: [u8; 32],
+        terms_hash: [u8; 32],
+    ) -> Result<()> {
+        governance::configure(ctx, roles, metadata_uri, metadata_hash, terms_hash)
+    }
+    pub fn propose_intent(
+        ctx: Context<ProposeIntent>,
+        id: u64,
+        data: Vec<u8>,
+        expires_at: i64,
+    ) -> Result<()> {
+        governance::propose(ctx, id, data, expires_at)
+    }
+    pub fn approve_intent(ctx: Context<ApproveIntent>) -> Result<()> {
+        governance::approve_governance_engine(ctx)
+    }
+    pub fn execute_intent<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteIntent<'info>>,
+        data: Vec<u8>,
+    ) -> Result<()> {
+        governance::execute(ctx, data)
+    }
+    pub fn modify_terms_v2(
+        ctx: Context<ModifyTermsV2>,
+        metadata_uri: [u8; 128],
+        metadata_hash: [u8; 32],
+        terms_hash: [u8; 32],
+        face: u64,
+        rate: u16,
+        frequency: u16,
+        maturity: i64,
+    ) -> Result<()> {
+        governance::modify(
+            ctx,
+            metadata_uri,
+            metadata_hash,
+            terms_hash,
+            face,
+            rate,
+            frequency,
+            maturity,
+        )
+    }
+    pub fn set_eligibility_v2(
+        ctx: Context<SetEligibilityV2>,
+        version: u32,
+        expires_at: i64,
+        frozen: bool,
+        group: u16,
+        jurisdiction: u16,
+    ) -> Result<()> {
+        governance::set_eligibility(ctx, version, expires_at, frozen, group, jurisdiction)
+    }
+    pub fn propose_external_v2(
+        ctx: Context<ProposeExternalV2>,
+        source: [u8; 32],
+        event_id: [u8; 32],
+        payload_hash: [u8; 32],
+        evidence_hash: [u8; 32],
+    ) -> Result<()> {
+        external::propose_external_engine(ctx, source, event_id, payload_hash, evidence_hash)
+    }
     pub fn create_instrument(
         ctx: Context<CreateInstrument>,
         id: u64,
@@ -90,14 +241,26 @@ pub mod recorda {
         // Prevent a zero-balance holder from closing its registered account and
         // making every future snapshot impossible. Assign custody before freezing.
         for (kind, authority) in [
-            (token_2022::spl_token_2022::instruction::AuthorityType::CloseAccount, i.key()),
-            (token_2022::spl_token_2022::instruction::AuthorityType::AccountOwner, p.holder),
+            (
+                token_2022::spl_token_2022::instruction::AuthorityType::CloseAccount,
+                i.key(),
+            ),
+            (
+                token_2022::spl_token_2022::instruction::AuthorityType::AccountOwner,
+                p.holder,
+            ),
         ] {
             token_2022::set_authority(
-                CpiContext::new_with_signer(ctx.accounts.token_program.to_account_info(), SetAuthority {
-                    current_authority: i.to_account_info(),
-                    account_or_mint: ctx.accounts.bond_account.to_account_info(),
-                }, &[seeds]), kind, Some(authority)
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    SetAuthority {
+                        current_authority: i.to_account_info(),
+                        account_or_mint: ctx.accounts.bond_account.to_account_info(),
+                    },
+                    &[seeds],
+                ),
+                kind,
+                Some(authority),
             )?;
         }
         token_2022::freeze_account(CpiContext::new_with_signer(
@@ -118,7 +281,10 @@ pub mod recorda {
     }
     pub fn set_holder_approved(ctx: Context<SetHolderApproved>, approved: bool) -> Result<()> {
         let i = &mut ctx.accounts.instrument;
-        require!(!i.snapshot_pending, Fault::Locked);
+        require!(
+            !i.snapshot_pending && i.active_snapshot == Pubkey::default(),
+            Fault::Locked
+        );
         require_before_record(i)?;
         require!(ctx.accounts.position.approved != approved, Fault::State);
         // A revoked balance cannot vanish from eligible supply. Transfer out through the controlled path first.
@@ -138,6 +304,13 @@ pub mod recorda {
     }
     pub fn transfer_bonds(ctx: Context<TransferBonds>, units: u64) -> Result<()> {
         let i = &ctx.accounts.instrument;
+        governance::check_transfer(
+            i,
+            i.key(),
+            ctx.accounts.from_position.holder,
+            ctx.accounts.to_position.holder,
+            ctx.remaining_accounts,
+        )?;
         require!(!i.snapshot_pending && !i.redeemed, Fault::Locked);
         require_before_record(i)?;
         require!(
@@ -204,7 +377,12 @@ pub mod recorda {
             Fault::RecordDate
         );
         let i = &mut ctx.accounts.instrument;
-        require!(!i.snapshot_pending && i.pending_record_timestamp == 0, Fault::Locked);
+        require!(
+            !i.snapshot_pending
+                && i.pending_record_timestamp == 0
+                && i.active_snapshot == Pubkey::default(),
+            Fault::Locked
+        );
         // A scheduled record date is a protocol barrier, even if the operator is late.
         i.pending_record_timestamp = record_timestamp;
         let a = &mut ctx.accounts.action;
@@ -446,7 +624,10 @@ pub mod recorda {
 }
 
 fn require_before_record(i: &Instrument) -> Result<()> {
-    require!(before_record(i.pending_record_timestamp, Clock::get()?.unix_timestamp), Fault::Locked);
+    require!(
+        before_record(i.pending_record_timestamp, Clock::get()?.unix_timestamp),
+        Fault::Locked
+    );
     Ok(())
 }
 fn before_record(record: i64, now: i64) -> bool {
@@ -479,17 +660,19 @@ fn transition(a: &mut Account<CorporateAction>, status: Stage) -> Result<()> {
     Ok(())
 }
 fn valid_transition(from: Stage, to: Stage) -> bool {
-    matches!((from, to),
+    matches!(
+        (from, to),
         (Stage::Draft, Stage::Scheduled)
-        | (Stage::Scheduled, Stage::SnapshotPending | Stage::Cancelled)
-        | (Stage::SnapshotPending, Stage::Snapshotted)
-        | (Stage::Snapshotted, Stage::Calculated)
-        | (Stage::Calculated, Stage::AwaitingApproval)
-        | (Stage::AwaitingApproval, Stage::Approved)
-        | (Stage::Approved, Stage::Funded)
-        | (Stage::Funded, Stage::Executing | Stage::Settled)
-        | (Stage::Executing, Stage::Settled)
-        | (Stage::Settled, Stage::Finalized))
+            | (Stage::Scheduled, Stage::SnapshotPending | Stage::Cancelled)
+            | (Stage::SnapshotPending, Stage::Snapshotted)
+            | (Stage::Snapshotted, Stage::Calculated)
+            | (Stage::Calculated, Stage::AwaitingApproval)
+            | (Stage::AwaitingApproval, Stage::Approved)
+            | (Stage::Approved, Stage::Funded)
+            | (Stage::Funded, Stage::Executing | Stage::Settled)
+            | (Stage::Executing, Stage::Settled)
+            | (Stage::Settled, Stage::Finalized)
+    )
 }
 
 #[derive(Accounts)]
@@ -849,17 +1032,43 @@ mod tests {
     }
     #[test]
     fn lifecycle_all_pairs_reject_skip_replay_and_terminal_escape() {
-        let stages = [Stage::Draft, Stage::Scheduled, Stage::SnapshotPending, Stage::Snapshotted,
-            Stage::Calculated, Stage::AwaitingApproval, Stage::Approved, Stage::Funded,
-            Stage::Executing, Stage::Settled, Stage::Finalized, Stage::Cancelled];
+        let stages = [
+            Stage::Draft,
+            Stage::Scheduled,
+            Stage::SnapshotPending,
+            Stage::Snapshotted,
+            Stage::Calculated,
+            Stage::AwaitingApproval,
+            Stage::Approved,
+            Stage::Funded,
+            Stage::Executing,
+            Stage::Settled,
+            Stage::Finalized,
+            Stage::Cancelled,
+        ];
         // Independent acceptance table: normal flow, Scheduled cancellation,
         // and single-holder settlement which skips the partial Executing stage.
-        let allowed = [(0, 1), (1, 2), (1, 11), (2, 3), (3, 4), (4, 5),
-            (5, 6), (6, 7), (7, 8), (7, 9), (8, 9), (9, 10)];
+        let allowed = [
+            (0, 1),
+            (1, 2),
+            (1, 11),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 8),
+            (7, 9),
+            (8, 9),
+            (9, 10),
+        ];
         for (from_index, from) in stages.iter().enumerate() {
             for (to_index, to) in stages.iter().enumerate() {
-                assert_eq!(valid_transition(*from, *to), allowed.contains(&(from_index, to_index)),
-                    "unexpected transition {from:?} -> {to:?}");
+                assert_eq!(
+                    valid_transition(*from, *to),
+                    allowed.contains(&(from_index, to_index)),
+                    "unexpected transition {from:?} -> {to:?}"
+                );
             }
         }
     }
@@ -879,7 +1088,9 @@ mod tests {
             for face in [1u64, 101, 100_000] {
                 for bps in [0u16, 1, 333, 1000, 10_000] {
                     for periods in [1u16, 2, 3, u16::MAX] {
-                        let expected = (units as u128 * face as u128 * bps as u128 / 10_000 / periods as u128) as u64;
+                        let expected = (units as u128 * face as u128 * bps as u128
+                            / 10_000
+                            / periods as u128) as u64;
                         assert_eq!(coupon_minor(units, face, bps, periods).unwrap(), expected);
                     }
                 }
