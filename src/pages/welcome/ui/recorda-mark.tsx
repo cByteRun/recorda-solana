@@ -1,9 +1,8 @@
-/** A folded record: an anchored spine and three rights carried forward. */
+/** Twelve recorded points form an R: a fixed spine, a loop and a forward stroke. */
 export function RecordaMark({ className = '' }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
-    <path className="record-spine" d="M13 49V15l13-7v34L13 49Z" fill="currentColor" />
-    <path className="record-fold" d="m30 8 22 12-13 7-9-5V8Z" fill="currentColor" opacity=".95" />
-    <path className="record-fold" d="m30 27 22 12-13 7-9-5V27Z" fill="currentColor" opacity=".7" />
-    <path className="record-fold" d="m30 46 17 9-13 7-4-2V46Z" fill="currentColor" opacity=".45" />
+  return <svg className={className} viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <path className="record-spine" d="M10 33V7h11a8 8 0 0 1 0 16H10m11 0 11 10" stroke="currentColor" strokeWidth="3.1" strokeLinejoin="round" />
+    <circle className="record-point" cx="10" cy="7" r="2.5" fill="currentColor" />
+    <circle className="record-point" cx="32" cy="33" r="2.5" fill="currentColor" />
   </svg>;
 }

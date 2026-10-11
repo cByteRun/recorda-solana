@@ -6,7 +6,8 @@ test('judge can understand fixed rights, change perspectives, and enter the real
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (request.method() === 'POST') rpcRequests.push(request.url()); });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /Ownership changes/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Real assets/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Why Recorda?', exact: true }).click();
   await page.getByRole('button', { name: 'Change the ownership', exact: true }).click();
   const story = page.locator('#story');
   await expect(story.locator('.holding-comparison')).toContainText('6');
@@ -18,7 +19,7 @@ test('judge can understand fixed rights, change perspectives, and enter the real
   await page.getByRole('tab', { name: 'Auditor', exact: true }).click();
   await expect(page.getByRole('tabpanel')).toContainText('without connecting a wallet');
   expect(rpcRequests).toEqual([]);
-  await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
+  await page.getByRole('dialog').getByRole('link', { name: 'Get started', exact: true }).click();
   await expect(page).toHaveURL(/\/actions$/);
   await expect(page.getByLabel('Role', { exact: true })).toHaveValue('Operator');
   await expect(page.getByLabel('Action kind', { exact: true })).toHaveValue('coupon');
@@ -32,10 +33,11 @@ test('judge can understand fixed rights, change perspectives, and enter the real
 test('Russian welcome retains the story and start route', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Switch to Russian' }).click();
-  await expect(page.getByRole('heading', { name: /Владение меняется/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Реальные активы/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Почему Recorda?', exact: true }).click();
   await page.getByRole('button', { name: 'Изменить владение', exact: true }).click();
   await expect(page.locator('.coupon-value')).toContainText('500.00');
-  await page.getByRole('link', { name: 'Начать', exact: true }).first().click();
+  await page.getByRole('dialog').getByRole('link', { name: 'Начать', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Corporate actions', exact: true })).toBeVisible();
 });
 
@@ -43,7 +45,8 @@ test('reduced motion stops automatic storytelling but preserves manual explorati
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await expect(page.locator('.welcome')).toHaveAttribute('data-motion', 'paused');
-  await expect(page.locator('.bond-unit').first()).toHaveCSS('animation-name', 'none');
+  await expect(page.getByRole('button', { name: 'Play animation', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Why Recorda?', exact: true }).click();
   await page.getByRole('button', { name: 'Change the ownership', exact: true }).click();
   await expect(page.locator('.holding-comparison')).toContainText('6');
   await page.getByRole('tab', { name: 'Operator', exact: true }).focus();
@@ -68,7 +71,7 @@ for (const width of [1440, 390, 320]) test(`welcome and workspace fit ${width}px
   await page.setViewportSize({ width, height: width === 1440 ? 1000 : 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /Ownership changes/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Real assets/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: `target/design-evidence/welcome-${width}.png`, fullPage: true });
   await page.goto('/actions?instrument=11111111111111111111111111111111');
@@ -80,19 +83,40 @@ for (const width of [1440, 390, 320]) test(`welcome and workspace fit ${width}px
   await page.screenshot({ path: `target/design-evidence/workspace-${width}.png`, fullPage: true });
 });
 
-test('rights choreography moves four bonds while keeping the entitlement readable and supports replay', async ({ page }) => {
+test('hand-drawn marks, light stages, pause, replay and explanation focus work together', async ({ page }) => {
   await page.goto('/');
-  const logos = page.locator('.kase-origin img, .solana-outcome img');
-  await expect(logos).toHaveCount(2);
-  expect(await logos.evaluateAll(images => images.every(image => (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
-  await page.getByRole('button', { name: 'Change the ownership', exact: true }).click();
+  await expect(page.locator('.light-field')).toHaveAttribute('data-renderer', 'webgl');
+  await expect(page.locator('.light-track svg[aria-label="KASE"]')).toBeVisible();
+  await expect(page.locator('.light-track svg[aria-label="Solana"]')).toBeVisible();
+  await page.getByRole('button', { name: 'SOLANA: The execution', exact: true }).click();
+  await expect(page.locator('.welcome')).toHaveAttribute('data-phase', '1');
   await expect(page.locator('.welcome')).toHaveAttribute('data-motion', 'paused');
-  await expect(page.locator('.stage-caption')).toHaveCSS('opacity', '1');
-  await expect.poll(() => page.locator('.bond-moving').first().evaluate(element => new DOMMatrix(getComputedStyle(element).transform).m41)).toBeGreaterThan(120);
-  await expect(page.locator('.coupon-value')).toContainText('500.00');
-  await page.waitForTimeout(5600);
-  await expect(page.locator('.wm-step-buttons button').nth(1)).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: 'Replay', exact: true }).click();
-  await expect(page.locator('.wm-step-buttons button').first()).toHaveAttribute('aria-pressed', 'true');
+  await page.waitForTimeout(6700);
+  await expect(page.getByRole('button', { name: 'SOLANA: The execution', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Replay animation', exact: true }).click();
+  await expect(page.locator('.welcome')).toHaveAttribute('data-phase', '0');
   await expect(page.locator('.welcome')).toHaveAttribute('data-motion', 'playing');
+  await page.getByRole('button', { name: 'Why Recorda?', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.locator('.welcome')).toHaveAttribute('data-motion', 'paused');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Why Recorda?', exact: true })).toBeFocused();
+});
+
+test('without WebGL the SVG sculpture remains visible and the welcome still opens the workspace', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...args: Parameters<typeof original>) {
+      if (String(args[0]).startsWith('webgl')) return null;
+      return original.apply(this, args);
+    } as typeof original;
+  });
+  await page.goto('/');
+  await expect(page.locator('.light-field')).toHaveAttribute('data-renderer', 'svg');
+  await expect(page.locator('.light-field-fallback')).toBeVisible();
+  await page.getByRole('button', { name: 'RECORDA: The record', exact: true }).click();
+  await expect(page.locator('.welcome')).toHaveAttribute('data-phase', '2');
+  await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/actions$/);
 });
