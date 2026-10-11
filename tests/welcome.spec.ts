@@ -134,7 +134,7 @@ test('reference light responds to the pointer, freezes on pause and survives con
   const field = page.locator('.light-field');
   const canvas = field.locator('canvas');
   await expect(field).toHaveAttribute('data-renderer', 'webgl');
-  await page.clock.runFor(1600);
+  await page.clock.runFor(2000);
   const bounds = (await field.boundingBox())!;
   await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height * .4);
   await page.clock.runFor(100);
@@ -150,7 +150,7 @@ test('reference light responds to the pointer, freezes on pause and survives con
   await canvas.evaluate(element => element.dispatchEvent(new Event('webglcontextlost', { cancelable: true })));
   await expect(field).toHaveAttribute('data-renderer', 'svg');
   await expect(field.locator('.light-field-fallback')).toBeVisible();
-  await expect(field.locator('.light-field-fallback circle')).toHaveCount(10);
+  await expect(field.locator('.light-field-fallback circle')).toHaveCount(12);
   await page.getByRole('button', { name: 'SOLANA: The execution', exact: true }).click();
   await expect(page.locator('.light-right-copy')).toContainText('Coupon. Voting. Redemption.');
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
@@ -158,23 +158,65 @@ test('reference light responds to the pointer, freezes on pause and survives con
   expect(errors).toEqual([]);
 });
 
-test('welcome fills the reference viewport and keeps its triangle across product stages', async ({ page }) => {
+test('welcome fills the reference viewport and forms each product logo', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 2590, height: 1560 });
   await page.goto('/');
   const field = page.locator('.light-field');
-  const canvas = field.locator('canvas');
-  await expect(field).toHaveAttribute('data-renderer', 'webgl');
+  await expect(field).toHaveAttribute('data-renderer', 'webgl', { timeout: 15000 });
   expect(await page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }))).toEqual({ width: 2590, height: 1560 });
-  const geometry = await field.locator('circle').evaluateAll(nodes => nodes.map(node => [node.getAttribute('cx'), node.getAttribute('cy')]));
+  const geometries: string[] = [];
   let previous: Buffer | undefined;
   for (const [index, name] of ['KASE: The instrument', 'SOLANA: The execution', 'RECORDA: The record'].entries()) {
     await page.getByRole('button', { name, exact: true }).click();
     await expect(page.locator('.welcome')).toHaveAttribute('data-phase', String(index));
-    expect(await field.locator('circle').evaluateAll(nodes => nodes.map(node => [node.getAttribute('cx'), node.getAttribute('cy')]))).toEqual(geometry);
-    const image = await canvas.screenshot();
+    await expect(field).toHaveAttribute('data-transition', 'settled');
+    const geometry = await field.locator('circle').evaluateAll(nodes => nodes.map(node => [node.getAttribute('cx'), node.getAttribute('cy')]));
+    expect(geometry).toHaveLength(12);
+    geometries.push(JSON.stringify(geometry));
+    if (index === 1) expect(new Set(geometry.map(([, y]) => y)).size).toBe(3);
+    await expect(page.getByRole('heading', { name: /Real assets/ })).toBeVisible();
+    const image = await page.screenshot({ path: `target/design-evidence/welcome-reference-stage-${index}.png` });
     if (previous) expect(image.equals(previous)).toBe(false);
     previous = image;
-    await page.screenshot({ path: `target/design-evidence/welcome-reference-stage-${index}.png` });
   }
+  expect(new Set(geometries).size).toBe(3);
+});
+
+
+test('logo spheres move through intermediate positions and rapid stage changes settle correctly without WebGL', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...args: Parameters<typeof original>) {
+      if (String(args[0]).startsWith('webgl')) return null;
+      return original.apply(this, args);
+    } as typeof original;
+  });
+  await page.clock.install({ time: new Date('2026-10-12T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-10-12T00:00:01Z'));
+  await page.goto('/');
+  const field = page.locator('.light-field');
+  await expect(field).toHaveAttribute('data-renderer', 'svg');
+  await page.clock.runFor(2000);
+  await expect(field).toHaveAttribute('data-transition', 'settled');
+  const coordinates = () => field.locator('circle').evaluateAll(nodes => nodes.map(node => [node.getAttribute('cx'), node.getAttribute('cy')]));
+  const kase = await coordinates();
+  await page.getByRole('button', { name: 'SOLANA: The execution', exact: true }).click();
+  await expect(field).toHaveAttribute('data-transition', 'morphing');
+  await page.clock.runFor(700);
+  const intermediate = await coordinates();
+  expect(intermediate).not.toEqual(kase);
+  await page.clock.runFor(1300);
+  await expect(field).toHaveAttribute('data-transition', 'settled');
+  const solana = await coordinates();
+  expect(solana).not.toEqual(intermediate);
+  expect(new Set(solana.map(([, y]) => y)).size).toBe(3);
+  await page.getByRole('button', { name: 'RECORDA: The record', exact: true }).click();
+  await page.clock.runFor(400);
+  await page.getByRole('button', { name: 'KASE: The instrument', exact: true }).click();
+  await page.clock.runFor(2000);
+  await expect(field).toHaveAttribute('data-shape', 'kase');
+  await expect(field).toHaveAttribute('data-transition', 'settled');
+  expect(await coordinates()).toEqual(kase);
+  await expect(field.locator('circle')).toHaveCount(12);
 });
