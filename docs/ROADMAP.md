@@ -1,6 +1,6 @@
 # Roadmap
 
-**Current focus:** implement and verify the complete FR-01–58 source scope: MVP Coupon/Redemption/Voting plus Post-MVP index, claims, governance, eligibility, terms, partial redemption, external proposals and export. V1 Coupon remains supported; v2 uses distinct accounts. Deployment/live acceptance is separate.
+**Current focus:** complete human Devnet acceptance and release evidence for the implemented FR-01–58 source scope: MVP Coupon/Redemption/Voting plus Post-MVP index, claims, governance, eligibility, terms, partial redemption, external proposals and export. V1 Coupon remains supported; v2 uses distinct accounts. Deployment/live acceptance is separate.
 
 [Specification](TZ.md) · [Requirements](REQUIREMENTS.md) · [Verification](#verification-and-gaps)
 
@@ -8,7 +8,7 @@
 
 ## Verification and gaps
 
-Audit revision: **2026-10-10**. [58/58 FR checklist](implementation/fr-checklist.md), [121-ID traceability](audit-coverage.json), [attack matrix](SECURITY-AUDIT.md), [v2 contract](implementation/action-engine-v2.md), [operations/provenance/envelope](implementation/operations-v2.md). Checkboxes below describe implemented source scope. Acceptance for a revision requires successful `npm run test:audit` with unchanged input hashes in `target/security-audit/run.json`; a mapping or source checkbox alone is not passing evidence.
+Historical full-audit revision: **2026-10-10**. Subsequent source changes require a new matching audit. [58/58 FR checklist](implementation/fr-checklist.md), [121-ID traceability](audit-coverage.json), [attack matrix](SECURITY-AUDIT.md), [v2 contract](implementation/action-engine-v2.md), [operations/provenance/envelope](implementation/operations-v2.md). Checkboxes below describe implemented source scope. Acceptance for a revision requires successful `npm run test:audit` with unchanged input hashes in `target/security-audit/run.json`; a mapping or source checkbox alone is not passing evidence.
 
 | Requirement / feature | Implementation | Executable evidence |
 | --- | --- | --- |
@@ -23,13 +23,13 @@ Audit revision: **2026-10-10**. [58/58 FR checklist](implementation/fr-checklist
 | TZ React/Next runtime | Shared FSD screens in Vite and production Next App Router | build, build:next, next-ui-tests/runtime.spec.ts |
 | NFR-16–19 | Explicit pinned archive trust, proof retention/recovery, measured envelope and dependency/license inventory | operations-v2.md, post-mvp.test.mjs, benchmark:distribution, measure-protocol.mjs |
 
-Final complete local run:197 tests passed (client84, setup6, offline Post-MVP7, Rust15, native25, protocol browser55, Next production5), all10 commands exit0 and unchanged input hashes. Counts include native parents and Rust test_id, not197 requirements. Evidence: target/security-audit/run.json and linked artifacts.
+Recorded local run on 2026-10-10:197 tests passed (client84, setup6, offline Post-MVP7, Rust15, native25, protocol browser55, Next production5), all10 commands exit0 and unchanged input hashes. Counts include native parents and Rust test_id, not197 requirements. These are historical results, not a pass claim for subsequent revisions. Fresh evidence belongs in target/security-audit/run.json and linked artifacts.
 
-Local tests use real Token-2022 accounts and a fresh validator, with Node-held disposable signers behind a Phantom-compatible browser boundary. They do not replace a new human Phantom/Devnet replay. Historical Devnet v1 evidence remains historical; the v2 ABI has not been deployed by this task. Remote CI, preview publication and demo video remain open. Unscoped dividends/tender, fiat/custody/legal work have no approved FR in this specification and remain future work.
+Local tests use real Token-2022 accounts and a fresh validator, with Node-held disposable signers behind a Phantom-compatible browser boundary. They do not replace a new human Phantom/Devnet replay. Historical Devnet v1 evidence remains historical. A subsequent v2 upload has been reported; retain deployed-binary verification and a successful human three-action run separately. Remote CI, preview publication and demo video remain open. Unscoped dividends/tender, fiat/custody/legal work have no approved FR in this specification and remain future work.
 
 ## Reference-driven delivery order
 
-The 2026-10-06 review preserves delivered Coupon functionality and adds explicit implementation/acceptance tasks. [Upstream assessment and local gap map](ARCHITECTURE.md#reference-assessment-and-adaptation) explains what to reuse. External repositories are references, not dependencies already integrated into Recorda.
+The 2026-10-06 review preserves delivered Coupon functionality and adds explicit implementation/acceptance tasks. [Reference scope and provenance](ARCHITECTURE.md#reference-assessment-and-adaptation) explains what to reuse. External repositories are references, not dependencies already integrated into Recorda.
 
 | Phase | Requirements / acceptance | Adaptation and exit gate |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ Execution dependencies: **M2.0 → M2.3 action contracts → M2.1/M2.2 → Phase
 
 ## Phase 1 — MVP: Coupon foundation
 
-Checked M1.0–M1.5 features are implemented and locally verified; the Coupon happy path also passed human-signed Devnet acceptance. The matching local evidence source/IDL/binary hashes were rechecked on 2026-10-06. Phase 1 Coupon human Devnet golden passed as recorded below. Full TZ acceptance also requires the unfinished Phase 2 actions.
+Checked M1.0–M1.5 features are implemented and locally verified; the Coupon happy path also passed human-signed Devnet acceptance. The matching local evidence source/IDL/binary hashes were rechecked on 2026-10-06. Phase 1 Coupon human Devnet golden passed as recorded below. The Phase 2 actions are implemented in source; full TZ acceptance still requires their human Devnet proof.
 
 ### M1.0 — Browser reference
 
@@ -103,9 +103,7 @@ Checked M1.0–M1.5 features are implemented and locally verified; the Coupon ha
 - [x] Synchronize program ID across Rust/Anchor/IDL and deploy on Devnet: `CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF`; CLI confirms deployment at slot 508134659 (on-chain binary hash comparison still separate).
 - [x] Execute human Devnet Coupon golden replay; retain signatures, token balance deltas and finalized receipt in `target/devnet-evidence/coupon.json` (2026-10-06, action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`).
 
-Partial human Devnet evidence: action `CE5ueNhvatzRjinSwDcrpbad16AzveNgEzkcNDKPiR4S` has verified FINALIZED coupon payments/receipt (850 total, four holders). A→B:4 occurred after finalization, the later action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx` passed the transfer-before-payout golden replay. Independent read-only audit is `target/devnet-evidence/action-CE5ueNhvatzRjinSwDcrpbad16AzveNgEzkcNDKPiR4S.json`; it is not `coupon.json` from a completed runner.
-
-Optional setup utility: `solana:airdrop` is implemented with unit-tested network/confirmation guards. A live faucet request returned `Internal error`; successful funding is not claimed. The golden runner does not call this utility or depend on faucet availability. Airdrop is not a TZ business feature.
+Historical Coupon Devnet proof and its earlier partial attempts are retained in [CHANGELOG](CHANGELOG.md). They do not establish current v2 acceptance. Airdrop is an optional test-SOL setup utility, not a business feature or automatic runner dependency.
 
 ### M1.7 — Coupon UX/UI and role views
 
@@ -130,7 +128,7 @@ Optional setup utility: `solana:airdrop` is implemented with unit-tested network
 - [x] Specify action kind/version, immutable parameter commitment and action-specific transition tables (FR-43–44; NFR-13).
 - [x] Define instrument conflict rules and coupon-period deduplication; a generic status enum alone does not enforce them (NFR-15).
 - [x] Choose versioned/new accounts or explicit migration before altering deployed layouts; retain the old Coupon decoder/receipt verification (NFR-14).
-- [x] Review pinned upstream files/tests/licenses before any code reuse; start from the reference locations in ARCHITECTURE rather than porting whole runtimes.
+- [x] Record source/dependency provenance: no external engine source was incorporated; runtime dependencies and licenses are listed in operations-v2.md.
 - [x] Exit: approved implementation contracts in docs, generated IDL/client plan, cross-kind/compatibility acceptance specified in TC-20,28; Coupon stays reproducible.
 
 ### M2.1 — Redemption
@@ -185,7 +183,7 @@ Optional setup utility: `solana:airdrop` is implemented with unit-tested network
 - [x] Complete Operator/Investor/Auditor journeys and role restrictions.
 - [x] Consistent IMPLEMENTED/SIMULATED labels.
 - [x] Explain the lifecycle in 30–60 seconds.
-- [x] Extend `src/shared/solana/protocol.ts`, `protocol-audit.ts`, protocol controller and `src/pages/protocol/` in the existing FSD direction; no backend is required for MVP.
+- [x] Add typed `actions-v2.ts`, action controller and `/actions` alongside the legacy protocol client/auditor; preserve existing FSD screens and chain-based recovery without an application backend.
 - [x] Show holder-signature requirement for redemption, principal/final coupon separately, retired/remaining supply and vote window/quorum/result.
 - [x] Add action-specific browser/role recovery tests and artifacts under `protocol-ui-tests/`; retain wallet-free Auditor access and exact Coupon golden.
 - [x] Exit: each role completes/reopens its applicable journey on the same instrument; no current balance is presented as historical entitlement.
@@ -207,15 +205,15 @@ Optional setup utility: `solana:airdrop` is implemented with unit-tested network
 - [ ] Remote CI verification.
 - [ ] Deployment secrets, first merge deployment and current preview.
 - [ ] Full TZ DoD and retained proof for 3/3 actions.
-- [x] Run Coupon → Voting → Full Redemption on one instrument; show before/after rights, tally and retired supply, with independently checked final receipts.
-- [x] Record upstream pin/file/license inventory for incorporated code and label unimplemented Post-MVP features in the release notes.
+- [x] Run local Coupon → Voting → Full Redemption on one instrument; show before/after rights, tally and retired supply, with independently checked final receipts.
+- [x] Record dependency/license provenance and distinguish implemented FR-49–58 from unscoped future features and operational release gates.
 - [ ] Demo video showing complete E2E.
 
 ## Post-MVP
 
 ### P1 — Scale and operations
 
-- [x] Merkle snapshots/indexer.
+- [x] Signed historical archive replay and Merkle manifest/proof generation (CLI/library; no hosted production indexer claimed).
 - [x] Role separation and multisig.
 - [x] Richer transfer controls.
 - [x] Reports and extended timeline.

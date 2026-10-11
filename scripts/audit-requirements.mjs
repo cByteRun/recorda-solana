@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 const manifest = JSON.parse(readFileSync('docs/audit-coverage.json', 'utf8'));
 const requirements = readFileSync('docs/REQUIREMENTS.md', 'utf8');
 const roadmap = readFileSync('docs/ROADMAP.md', 'utf8');
-const normative = new Set([...requirements.matchAll(/^(?:- (?:\*\*)?((?:FR|NFR|TC)-\d+)|### (UC-[A-Z]+-\d+))/gm)].map(match => match[1] || match[2]));
+const normative = new Set([...requirements.matchAll(/^(?:- (?:\[[ xX]\] )?(?:\*\*)?((?:FR|NFR|TC)-\d+)|### (UC-[A-Z]+-\d+))/gm)].map(match => match[1] || match[2]));
 const mapped = new Map();
 function expand(value) {
   const match = /^(FR|NFR|TC)-(\d+)\.\.(\d+)$/.exec(value);

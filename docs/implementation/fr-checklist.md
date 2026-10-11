@@ -1,6 +1,6 @@
 # FR implementation checklist
 
-All 58 functional requirements are implemented in source. The linked tests exercise local acceptance; this checklist does not close the separate human Devnet/deployment/video DoD. The complete run and unchanged hashes are recorded in target/security-audit/run.json. See [traceability](../audit-coverage.json), [attack matrix](../SECURITY-AUDIT.md) and [trust/migration/retention scope](operations-v2.md).
+All 58 functional requirements are implemented in source. The linked tests exercise local acceptance; this checklist does not close the separate human Devnet/deployment/video DoD. Historical full-run results are in CHANGELOG; current acceptance requires a fresh target/security-audit/run.json with matching source hashes. See [traceability](../audit-coverage.json), [attack matrix](../SECURITY-AUDIT.md) and [trust/migration/retention scope](operations-v2.md).
 
 - [x] **FR-01** Create a tokenized bond instrument. Evidence: [protocol-tests/coupon.test.mjs](../../protocol-tests/coupon.test.mjs), [protocol-ui-tests/coupon.spec.ts](../../protocol-ui-tests/coupon.spec.ts).
 - [x] **FR-02** Store face value, currency, coupon rate, frequency, maturity, issuer and mint. Evidence: [programs/recorda/src/engine.rs](../../programs/recorda/src/engine.rs), [protocol-tests/post-mvp.test.mjs](../../protocol-tests/post-mvp.test.mjs).

@@ -1,4 +1,4 @@
-# Requirements and adversarial audit — 2026-10-10
+# Requirements and adversarial audit
 
 Authority: [TZ](TZ.md) and its normative [REQUIREMENTS annex](REQUIREMENTS.md). [ROADMAP](ROADMAP.md) records delivery; it does not waive requirements. This revision covers the complete FR-01–58 source scope, retaining Coupon and the separately labelled Browser/Memo reference. New typed MVP and Post-MVP acceptance sources are linked below; deployment/human Devnet acceptance stays separate.
 
@@ -14,7 +14,6 @@ Story: React Operator opens an instrument/action → the client reads canonical 
 | FR-49–58 / Post-MVP | Authenticated historical index, retained Merkle manifests/claims/reclaim, multisig roles, eligibility/terms, partial redemption, external proposals and paginated exports implemented. See implementation/operations-v2.md for trust and measured envelope. |
 | NFR-05,10,12 | Explicit limitations: trusted RPC/pruned history, fresh human three-action Devnet acceptance and bounded embedded-key source scan. No exhaustive independent security/secret-history review claim. |
 | TZ §19 | Next production App Router serves shared FSD screens; Vite remains development runtime. |
-
 
 ## Threat model and trust boundaries
 
@@ -68,7 +67,7 @@ Current destination balances are not historical payout amounts: holders can late
 | Vite reloaded active test wallet pages while unrelated documentation/evidence files changed | Exclude docs, target proofs and Playwright outputs from the dev watcher; final complete run stays connected through every intended signature/reload recovery. |
 | Requirement/evidence statuses were only manually summarized | Add complete machine-readable mapping and a fail-fast npm runner, retaining all unfinished scope. |
 
-No account layouts, instruction signatures, seeds, existing receipt encodings or protocol ID were changed. The Rust transition guard is an additional runtime check on the current Coupon transitions; the existing historical fixture and compiler-generated IDL parity are regression gates.
+The historical Coupon hardening preserved its layouts, seeds and receipt encodings. Current v2 adds distinct action/right/vote/receipt, governance and distributor schemas/instructions while retaining legacy decoding. Generated IDL parity and historical fixtures guard compatibility; this is not a claim that the entire ABI remained unchanged.
 
 ## Reproduction and evidence
 
@@ -79,14 +78,11 @@ export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 npm run test:audit
 ```
 
-`test:audit` runs traceability → production build → Devnet setup unit tests → golden/client/wallet tests → Rust unit tests → fresh SBF build → compiled IDL parity → actual validator/browser audit. It stops on the first failing command and writes `target/security-audit/run.json` with each exit code and source/test/config/IDL/binary hashes. A new run resets the top-level success result before starting; changing audited code/tests during a run invalidates success. `npm run test:audit:client` intentionally excludes Rust/validator and labels its scope accordingly; `npm run audit:requirements` is static only.
+`test:audit` runs traceability → frontend build → environment/RPC setup regression → offline Post-MVP checks and distribution benchmark → client/wallet tests → Rust unit tests → fresh SBF build → compiled IDL parity → native-validator/browser/Next acceptance. It stops on the first failing command and writes `target/security-audit/run.json` with each exit code and source/test/config/IDL/binary hashes. A new run resets the top-level success result before starting; changing audited code/tests during a run invalidates success. `npm run test:audit:client` intentionally excludes Rust/validator and labels its scope accordingly; `npm run audit:requirements` is static only.
 
 Local artifacts: `target/security-audit/{run,traceability}.json`, `target/protocol-evidence/coupon.json` (including signatures of actually executed failed attacks), `coupon-ui.json`, screenshots, `test-results/{golden,protocol}` traces and `playwright-report/{golden,protocol}`. Artifact counts include generated `test_id` and integration parent tests; they are not requirement counts. Ignored local evidence is not committed release proof. CI runs the mapped client and protocol suites and uploads its artifacts; remote CI is not asserted by a local run.
 
 Final run results are recorded in [CHANGELOG](CHANGELOG.md) and [ROADMAP verification](ROADMAP.md#verification-and-gaps). Historical 2026-10-06 human Phantom/Devnet proof remains historical evidence. No live Devnet transaction, deployment, admin-key export or externally published result is required by this local audit. The defined attack matrix is bounded; new features and untested attack classes need their own acceptance before release.
-
-Verified final run: **PASS**, 2026-10-10. All eight runner commands returned 0 and `changedInputs` is empty. React/client/wallet 84/84, Rust 8/8, actual validator 17/17, protocol browser/audit/usability 27/27 and setup 6/6 (142 reported tests). The three deliberately failed runtime transactions retain signatures; protected account comparisons passed. Production build, SBF and IDL parity passed. No remote CI or new human Devnet acceptance is inferred.
-
 
 ## V2 / Post-MVP attack matrix
 
@@ -109,6 +105,10 @@ Verified final run: **PASS**, 2026-10-10. All eight runner commands returned 0 a
 | AT-35 Pruned RPC history or corrupted export/lost browser cache | FR-58; TC-37 | Explicit unavailable evidence, advancing stable cursors, decimal export and chain-only reopen | actions-audit.spec.ts; actions.spec.ts; holder-flows.spec.ts |
 | AT-36 SBF stack error with compiler exit zero; unsupported scale claims | NFR-18–19; TC-38 | Build wrapper rejects stack diagnostics; native compute/rent and offline proof measurements publish their scope | build-sbf.mjs; measure-protocol.mjs; benchmark-distribution.mjs |
 
-Sources above must pass against a fresh binary/validator before release. Static traceability marks source delivery, not exhaustive attack coverage or cryptographic proof that an RPC/archive provider is truthful. Historical v1 evidence and counts in earlier sections remain historical.
+Sources above must pass against a fresh binary/validator before release. Static traceability marks source delivery, not exhaustive attack coverage or cryptographic proof that an RPC/archive provider is truthful. Historical v1 evidence remains historical.
 
-Current complete acceptance:197 tests passed across client84, setup6, offline Post-MVP7, Rust15, native25, protocol browser55 and production Next5. All10 runner commands exited0 with unchanged input hashes; target/security-audit/run.json is the current evidence record. Counts include native parent tests and Rust test_id. Source scope is FR-01–58; the full human/Devnet release DoD remains separate.
+## Evidence freshness
+
+The complete 2026-10-10 local audit recorded 197 tests and ten successful runner commands with unchanged input hashes. This is a historical result; subsequent wallet compatibility, Devnet runner and environment-loading changes are not covered by that revision's full audit. Follow-up targeted checks are recorded in [CHANGELOG](CHANGELOG.md). Run `test:audit` against stable current source and require matching hashes before claiming current complete acceptance.
+
+Human Devnet evidence is separately recorded by `test:e2e:actions:devnet` in `target/devnet-evidence/actions-<id>/run.json`. A reported program upload alone is not a successful three-action run, remote CI result or deployed/local binary match. Source scope is FR-01–58; release acceptance remains governed by [ROADMAP](ROADMAP.md).

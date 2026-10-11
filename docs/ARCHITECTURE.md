@@ -1,134 +1,99 @@
 # Architecture
 
-Authority: [TZ](TZ.md) + [REQUIREMENTS](REQUIREMENTS.md). Delivery: [ROADMAP](ROADMAP.md). Evidence: [verification and gaps](ROADMAP.md#verification-and-gaps).
+Authority: [TZ](TZ.md) and [REQUIREMENTS](REQUIREMENTS.md). Implemented feature mapping: [ROADMAP](ROADMAP.md) and [FR checklist](implementation/fr-checklist.md). This document describes the current source architecture; historical delivery/test results belong in [CHANGELOG](CHANGELOG.md).
 
 ## Runtime and trust
 
 ```text
-React page → controller → generated Anchor client → signed transaction
-→ Recorda program → Token-2022 CPI → PDA/token state
-→ RPC reads → independent audit → holder rights / receipt / history
+Shared React screens (Vite / Next App Router)
+  → corporate-action controller → typed Anchor instruction
+  → Phantom signature → Solana RPC → deployed Recorda Rust program
+  → Token-2022 CPI + program accounts
+  → validated chain reads → independent audit → rights / receipt / export
 ```
 
-There is no application backend/database. Coupon Core at `/` and `/protocol` stores finalized truth in Solana accounts. Phantom holds the operator key and signs explicitly. LocalStorage caches addresses and disposable demo-holder keys, scoped by RPC/program; losing it does not erase protocol rights. Holder keys are a test custody model.
+The product's central axis is **Instrument → Holder → Record-date Right → Authorized Action → Receipt**. `/protocol` provides instrument/registry setup and legacy Coupon; `/actions` serves typed Coupon, Voting, Full/Partial Redemption; `/claims` verifies prepared distributions and allows holder-signed claims. Operator/Investor/Auditor selection changes presentation, not authority.
 
-The `/reference` Browser/Memo reference uses real Token-2022 instructions but browser-owned snapshot/entitlement/lifecycle state. Memo attests bytes; it does not enforce rights, immutability or once-only payment. Its offline oracle and mocked tests are simulation evidence.
+There is no application API server or database in this repository. The primary business state is in Solana program/token accounts. Off-chain archive replay, manifest retention and event normalization are CLI/library capabilities; they are not an already hosted production indexer or integration service. Deployment/storage responsibilities are described in [operations](implementation/operations-v2.md).
+
+Phantom keeps the real Operator/investor keys. The full Devnet demo uses three real holder accounts; legacy setup also supports disposable browser-local demo holders. Browser storage caches references/demo identities, not authoritative v2 rights. An Action PDA restores business state after storage loss. RPC/archive providers remain trust boundaries; consistent fabricated data is not independently proven authentic by client hashes.
+
+`/reference` is a separately labelled Browser/Memo reference. Its snapshot/calculation/lifecycle are browser-owned; Memo attests bytes without enforcing corporate-action rights or once-only payments. It is not the primary acceptance path.
 
 ## Stack and code map
 
-React 19/TypeScript/Vite, Tailwind v4, local shadcn-style primitives, Lucide; Anchor 0.32.1, Solana web3.js/spl-token and Token-2022. FSD import direction: app → pages → widgets → features → entities → shared.
+The current stack is React 19 + TypeScript, Vite development, a Next App Router production shell, Tailwind v4, local UI primitives and Lucide; Rust/Anchor, Solana web3.js/SPL Token and Token-2022 provide chain execution. Exact versions/integrities are in `package-lock.json` and `Cargo.lock`; [operations](implementation/operations-v2.md#measured-envelope-and-code-provenance) documents provenance. The React code uses FSD layers where present; the repository does not require every conceptual layer to have a directory.
 
 | Path | Responsibility |
-| --- | --- |
-| `programs/recorda/src/lib.rs` | Coupon instructions, authority/account constraints, math, state and events |
-| `src/shared/solana/idl/` | Compiler-generated IDL and TypeScript contract |
-| `src/shared/solana/protocol.ts` | PDAs, instructions, validated chain reads and history |
-| `src/shared/solana/protocol-audit.ts` | Independent formula, snapshot and receipt reconciliation |
-| `src/pages/protocol/`, protocol controller in `src/features/corporate-action/` | Coupon Operator/Investor/Auditor presentation, authority gating, holder rights, restore and read-only proof |
-| `src/features/corporate-action/model/` | R1 controller, checked client coupon math and offline golden model |
-| `src/shared/solana/transactions.ts`, `rpc-fetch.ts`, `persistence.ts` | Simulation/sign/send/confirm, bounded RPC retry and local resume references |
-| `golden/`, `tests/`, `protocol-tests/`, `protocol-ui-tests/` | Independent fixtures, client checks and real-validator integration/browser checks |
-| `scripts/`, `.github/workflows/` | IDL/build/validator orchestration, PR CI and merged-PR deployment |
-| `prototype/` | Historical HTML reference |
+|---|---|
+| `programs/recorda/src/lib.rs` | Entrypoints, legacy Coupon, instrument/registry and controlled transfers |
+| `programs/recorda/src/engine.rs` | Typed actions, immutable contracts, snapshots, rights, retirement, voting and receipts |
+| `programs/recorda/src/governance.rs` | Threshold role intents, eligibility and approved terms changes |
+| `programs/recorda/src/distributor.rs`, `external.rs` | Merkle claims/reclaim and source-event binding |
+| `src/shared/solana/idl/` | Compiler-generated JSON/TypeScript ABI |
+| `src/shared/solana/protocol.ts`, `protocol-audit.ts` | Legacy client and independent Coupon reconciliation |
+| `src/shared/solana/actions-v2.ts`, `governance.ts`, `distribution.ts`, `audit-history.ts` | Typed clients, canonical account reads, hash/formula/proof verification and export |
+| `src/features/corporate-action/model/`, `src/pages/` | Controllers, setup/action/claim screens and reference UI |
+| `src/shared/solana/transactions.ts`, `rpc-fetch.ts`, `persistence.ts` | Simulation, message/signature integrity, bounded read retries and cached references |
+| `next-app/`, `next-ui-tests/` | Client-loaded shared React screens and production runtime checks |
+| `scripts/lib/`, `public/distributions/` | Authenticated archive replay, durable manifests/proofs and external proposals |
+| `scripts/devnet-actions.mjs`, `security-audit.mjs` | Human Devnet MVP demonstration and feature/attack audit orchestration |
 
-Dependency overrides keep the Solana/Anchor versions pinned while using jayson 5 and toml 5. `vendor/bigint-buffer/` provides the four unsigned conversion functions in JS, avoiding the vulnerable native binding; `tests/coupon-precision.spec.ts` verifies exact endian bytes and limits in CJS/ESM.
+`vendor/bigint-buffer/` supplies unsigned JS conversions without the native binding. Dependency overrides and lockfiles are implementation details, not evidence of a current vulnerability scan.
 
-## Coupon accounts and lifecycle
+## Accounts and lifecycle
 
-A PDA is a deterministic address derived from the program ID and seeds. For example, `entitlement + action address + holder address` identifies exactly one holder's right for one action; changing the action gives a different right. A PDA has no private key. The deployed Rust program validates the account and controls permitted changes; it can authorize token CPI using its PDA seeds. This connects record-date ownership to payment and a durable receipt, reducing manual reconciliation. Merely computing the address in React creates no on-chain account or enforcement; a successful program instruction does.
+A PDA is a deterministic address derived from program ID and seeds, without a private key. The program validates ownership/seeds and signs permitted CPI through those seeds. Computing a PDA in the client does not create or authorize its state.
 
-Airdrop supplies disposable Devnet SOL for transaction fees/account rent. It does not determine entitlement or fund mock USD coupons. `scripts/devnet-golden.mjs` drives existing `/protocol` controls through a real human-signed Phantom browser and checks the required fixture through independent RPC. Client regression, local-validator execution and human Devnet acceptance are separate evidence layers; see [README verification paths](../README.md#feature-and-attack-audit). The historical runner remains retained; the main human demo is `test:e2e:actions:devnet`, described in [DEVNET-DEMO](DEVNET-DEMO.md).
+| Accounts | Stored responsibility |
+|---|---|
+| Instrument / HolderPosition | Base issuance terms, mint/payment mint, registered custody, supply and lifecycle barriers |
+| Legacy CorporateAction / EntitlementPosition / ActionReceipt | Historical Coupon lifecycle, fixed rights and receipt decoding |
+| ActionV2 / RightV2 / VoteV2 / ReceiptV2 | Copied contract/parameters, per-holder rights, unique votes and typed outcomes |
+| PeriodV2 | Instrument/coupon-period reservation and permanent consumed status |
+| Governance and intent/policy accounts | Four role sets, exact instruction approval, eligibility and versioned current terms |
+| Distributor and claim accounts | Approved root, funding/deadline/accounting and per-index replay protection |
+| External binding accounts | Unique source/event provenance bound to an action |
+| Token-2022 accounts | Bond custody, payment vaults and holder destinations |
 
-The Devnet runner does not request an airdrop; it uses the Operator's existing Devnet SOL. Its live browser/network flow is not yet accepted. Official Devnet RPC had no account at either this checkout's declared program ID or its deployment keypair public address during the 2026-10-06 follow-up; deployment IDs must be synchronized before upload.
+New actions use separate versioned seeds/layouts; legacy Coupon decoders remain supported. Signatures/history are fetched from RPC, not embedded wholesale in receipts. Historical periods cannot be inferred from legacy Coupon; migration must explicitly reconcile those payments.
 
-Later on 2026-10-06, after the user's upload, CLI `program show` confirms program `CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF`, deployment slot 508134659 and 542,864 bytes of data. Rust/Anchor/IDL are synchronized to that ID. Existence is verified; full human golden acceptance and on-chain/local binary hash comparison are separate pending checks. The runner's busy/stage/resume regressions now pass as part of client golden 40/40; these controlled DOM tests are not Devnet evidence.
+Coupon and retirement follow schedule → snapshot → calculate → approve → fund → per-holder execution → receipt. Voting follows schedule → snapshot → calculate → approve → votes → tally → receipt, with no payment vault. `executing` plus processed rights represents partial settlement. Runtime failures roll back instead of creating a persistent generic FAILED state. Cancellation is Scheduled-only; an incomplete started snapshot must be resumed, not aborted.
 
-| PDA | Stored truth |
-| --- | --- |
-| Instrument | Combined issuer/operator authority, terms, mint/payment mint, outstanding/redeemed supply and transfer/snapshot barriers |
-| HolderPosition | Instrument, wallet, registered token account and approval |
-| CorporateAction | Unique ID/instrument, scheduled/capture dates, stage, counts/totals, hash and approval |
-| EntitlementPosition | Immutable snapshot units/index, calculated coupon, preparatory principal/final coupon/voting power, paid amount/destination/slot |
-| ActionReceipt | Final status, settled total, processed count, final slot/time and summary hash |
-
-SnapshotPosition is embedded in EntitlementPosition. Snapshot commitment follows stored holder order; audit recomputes it. Signatures are fetched from RPC, not stored inside the PDA.
-
-Implemented successful stages follow TZ §11. PARTIALLY_SETTLED is represented by EXECUTING plus per-holder progress; insufficient funds/invalid calls reject and roll back rather than persisting separate FAILED/INSUFFICIENT_FUNDS states. CANCELLED is supported for scheduled coupons only. This is a representation difference to track against TZ, not additional implemented action types.
+For a payable v2 coupon, the Operator explicitly reserves the period while Scheduled, before approval. Final settlement consumes it permanently. Full redemption additionally requires maturity at creation, snapshot and execution. [The v2 contract](implementation/action-engine-v2.md) defines commitments, overlap rules and compatibility.
 
 ## Correctness and restrictions
 
-- Instrument PDA controls bond mint/freeze/registered-account close authority. Accounts stay frozen outside atomic thaw → checked transfer → freeze; transfers require holder signature and approved sender/recipient.
-- Scheduled record time blocks ownership/registry changes even if snapshot starts late. Capture accounts for every approved holder and outstanding unit; finalize makes rights immutable and releases coupon transfer restrictions.
-- One scheduled/pending snapshot per instrument. Registration/issuance seals at first snapshot; approval changes require zero units. No post-begin snapshot-abort recovery is implemented.
-- Mock payment mint is plain two-decimal Token-2022; extensions that alter credits are rejected. Amounts are u64 minor units, checked u128 products, floor once per holder; aggregate is the sum of rounded amounts. R1 uses checked BigInt and safe integer conversion.
-- Authority approves after calculation; vault funding is checked. Payment CPI and paid-state update are atomic; failed calls roll back. Restart reads unpaid entitlements; repeats are rejected. Finalization requires every holder, including zero holders, and exact settled/obligation totals.
-- Audit checks account owner/canonical PDAs, formula, snapshot order/hash, units/counts/totals, historical paid amounts/destinations and final receipt identity/hash. Current payment balance can change after payment and is not treated as its historical amount.
-- Legacy reads keep their bounded signature list; the v2 history/export adds stable action and native signature cursors with pruning disclosure. Typed Redemption/Voting execute through new accounts; see implementation/action-engine-v2.md.
+- Bond custody is frozen outside authorized atomic thaw/transfer/freeze or thaw/burn/payment operations. Transfers require holder authorization and eligible registered endpoints; governed instruments add versioned policy checks.
+- Record-date barriers prevent late snapshots from silently capturing post-record transfers. Capture checks eligible registry/supply completeness. Snapshot rights remain immutable after later transfers.
+- An active v2 action reserves the instrument through terminal completion. Coupon/Voting release transfer restrictions after capture; retirement keeps them through settlement. Issuance seals at the first snapshot.
+- Financial calculations use checked integers, floor once per holder and sum rounded allocations. Payment rails accept supported plain two-decimal Token-2022 mints; ordinary SPL/USDC or transfer-fee tokens are not implicitly supported.
+- Coupon payments require approval/funding. Retirement requires each nonzero holder's signature, with burn/payment/counters atomic; zero allocations permit Operator completion. Replays and substituted action/right accounts fail closed.
+- Votes use fixed snapshot power, unique holder receipts, `[opens, closes)`, abstention-inclusive quorum and strict YES > NO. Voting approval/results do not themselves modify terms.
+- Governance executes only committed allowlisted instructions after the configured role threshold. External events create/bind proposals without granting execution authority.
+- Distributor claims require a domain-bound proof, holder signature and bound destination before the deadline. Reclaim is authority-controlled after expiry. A Merkle proof establishes membership, not independent truth of historical ownership.
 
-## R1 recovery and RPC
+## Recovery and RPC
 
-The shared adapter simulates before signing, validates connected account before signing/broadcast, compares the returned message with immutable simulated intent, preserves partial holder signatures and adds Memo compute budget. Instructions and wire bytes are copied to isolate provider mutations across awaits/retries. Snapshot reads fail on bad accounts/RPC errors. Unknown balances display `—`; allocation/settlement fail closed. The locally derived payment signature is saved before sending to RPC; uncertain broadcast/confirmation blocks another reference submission across reload and requires manual reconciliation. It is not durable protocol idempotency. Partial R1 settlement-rail setup has no safe-resume guarantee. Reference snapshot commitment/identity checks reject inconsistent caches but do not authenticate a wholly rewritten cache against historical Memo transactions.
+The shared transaction adapter sets compute limit and priority price before simulation/signing, checks the active wallet across awaits, normalizes wallet-returned wire data and compares it with the captured message. Existing partial signatures must remain unchanged. It captures signed bytes and the signature before sending and does not automatically resubmit after an uncertain broadcast.
 
-## Requirements deviations and verification boundary
+Typed clients validate program ownership, canonical PDAs, token custody, mint/supply and rights. Independent audits recompute copied contract/snapshot/receipt commitments, formulas and outcomes. Current destination balances are not treated as proof of historical payment amounts. History/export uses stable cursors and discloses pruned transaction bodies.
 
-TZ §19 is addressed by the production Next App Router shell in next-app, using the same FSD React screens as Vite development. V2 copies issuer/terms identity into immutable contracts; governed instruments separate four role sets and threshold intents. See implementation/operations-v2.md for trust, recovery and new-account migration.
+The `/reference` cache does not gain protocol-level idempotency from these guards. Real actions recover from chain; uncertain confirmations still require signature/balance reconciliation. The full human Devnet runner creates fresh instruments and has no automatic resume.
 
-Local-validator tests execute actual Anchor/Token-2022 state transitions with a controlled signer; client tests mock wallet/RPC. Neither proves Phantom extension compatibility, Devnet deployment, remote CI success or a complete security review. See [verification and gaps](ROADMAP.md#verification-and-gaps) and [README acceptance](../README.md#manual-acceptance).
+Vite and Devnet scripts load root `.env.local`; Node scripts fall back to `.env` and preserve shell overrides. Next uses `next-app` as project directory and requires its own environment file or explicit public build-time values. Neither runtime receives private keys through public environment settings.
 
-## Test evidence
+## Verification boundary and test evidence
 
-The 2026-10-10 [adversarial audit](SECURITY-AUDIT.md) adds all-ID traceability, wallet/RPC/cache attacks, an enforced Coupon transition table, actual failed-runtime rollback evidence and snapshot/calculation/payment browser reload recovery. [Machine-readable mapping](audit-coverage.json) maps the complete FR-01–58 source scope and explicit external acceptance gates. `test:audit` records exit codes and stable source/test/IDL/binary hashes; final results are in CHANGELOG. Earlier counts below are historical, not a claim about the current revision.
+Two supported entrypoints are documented in [README](../README.md#feature-and-attack-audit):
 
-Coupon UX/role follow-up (2026-10-06): build and IDL check pass; Rust 4/4, golden/client/runner 45/45, validator 16/16, protocol browser/audit/usability 6/6 and Devnet setup 6/6. The browser lifecycle checks role switching on one action, connected/unknown investors, unauthorized approval, exact golden rights, wallet-free reopening, partial-payment recovery and corrupted proof. Usability checks cover form gating, keyboard focus and no page-wide overflow at 320/390 px. Mobile screenshots are retained as `target/protocol-evidence/coupon-mobile.png` and `coupon-entry-mobile.png`; counts below describe earlier runs.
+- `test:e2e:actions:devnet`: real human Phantom Coupon → Voting → Full Redemption; per-run `target/devnet-evidence/actions-<id>/run.json`, screenshots and signatures.
+- `test:audit`: requirement mapping plus MVP/Post-MVP feature/attack suites, Rust, actual local Token-2022 execution, browser recovery and Next runtime; source hashes/exit codes in `target/security-audit/run.json`.
 
-Local verification on **2026-10-06**: build/SBF/IDL pass; Rust 4/4; client golden 36/36; validator 16/16; protocol browser/audit 4/4. Dependency follow-up also verified clean npm ci and npm audit with 0 vulnerabilities. Agent-browser checked both pages without runtime errors or Vite overlays. Rust count includes generated `test_id`; integration count includes its parent test, so counts are not requirement counts.
-
-Evidence generated by `protocol:test:ui`: `target/protocol-evidence/coupon.json` (expected/actual, signatures, source/binary/IDL hashes), `coupon-ui.json`, `coupon-ui.png`, Playwright reports/traces. Ignored artifacts are local evidence, not checked-in release proof. `.github/workflows/e2e.yml` defines CI; remote execution was not checked in this audit.
-
-Follow-up on 2026-10-06 rechecked saved local evidence against current Rust source, IDL and SBF binary: all three hashes match. Required TZ scenario totals 85,000 minor units with four processed holders; historical regression totals 175,000 with three. This validates the saved evidence's correspondence to these files; it is not a fresh validator run or Devnet proof. Recent client golden replay passed 36/36; the optional faucet guard tests passed 3/3, but the live funding request returned `Internal error`.
-
-Human Phantom-signed Coupon golden passed on 2026-10-06: action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`, receipt `8gYnbCDU6buFyL7mKyxi5szCuivvEuP6DDp1FCJMMjbR`, snapshot 10/5/2/0, current units 6/9/2/0, payment deltas 500/250/100/0, total 850. Public evidence: `target/devnet-evidence/coupon.json` and `coupon.png` (local ignored artifacts). This supersedes earlier pending Coupon acceptance notes; negative cases remain covered by local suites, and on-chain/local binary comparison remains separate.
+Historical results are recorded in [CHANGELOG](CHANGELOG.md). Any source change requires fresh matching evidence before claiming current acceptance. Local disposable signers do not prove human Phantom compatibility, remote CI or production readiness. The user reported a Devnet upload; a successful full human run and independent deployed-binary verification remain distinct evidence gates. See [security audit](SECURITY-AUDIT.md) and [roadmap](ROADMAP.md#verification-and-gaps).
 
 ## Reference assessment and adaptation
 
-The gap table below records the 2026-10-06 pre-implementation review. Current v2 delivery supersedes its missing-feature entries; see ROADMAP and implementation/operations-v2.md. No upstream engine files were copied.
+The 2026-10-06 upstream review informed the requirement extension. Hashgraph ATS/mass payouts, ERC-3643/T-REX, CMTA CMTAT/CMTAT-Solana, Upside OS, CorpAction, CorpShift and Fractional Bond Trading were conceptual references, not frameworks installed or copied into Recorda. Their documented scope is not Recorda acceptance evidence.
 
-Review date: **2026-10-06**. Local source inspected: `programs/recorda/src/lib.rs`, shared Solana client/auditor and protocol acceptance structure. Upstream primary repository pages/README/specification were checked for the capabilities below. Upstream tests, deployed contracts, security audits and complete source were **not independently executed or audited**. Some direct raw-file requests were unavailable; exact implementation imports remain an explicit roadmap gate. Stars and Reddit discussion are not acceptance evidence. Centrifuge/AFRX lack a specific component/source in the supplied research and are not selected implementation dependencies.
-
-### Sources and reuse decisions
-
-| Reference | Verified documented scope / locations to inspect | Recorda adaptation / boundary |
-| --- | --- | --- |
-| [Hashgraph ATS](https://github.com/hashgraph/asset-tokenization-studio) | Hedera securities toolkit and mass payouts; `packages/ats/{contracts,sdk}`, `packages/mass-payout/{contracts,sdk}`, `apps/mass-payout`, `docs/ats`, `docs/mass-payout` | Domain and payout orchestration reference for M2/P1. Preserve our Solana registry/rights/receipt; do not import Hedera runtime or mass-payout backend into the working MVP. Documented toolkit breadth is not proof of Recorda acceptance. |
-| [Tokeny T-REX](https://github.com/TokenySolutions/T-REX) / [ERC-3643](https://github.com/ERC-3643/ERC-3643) | T-REX archived/deprecated, points to ERC-3643; Solidity identity/claims/compliance architecture, `contracts/`, `docs/`, `test/`. T-REX declares GPL-3.0. | Use ERC-3643 as the preferred conceptual eligibility reference for P1/P3. Map policy to HolderPosition; current boolean approval already covers MVP. No Solidity identity/proxy system or real KYC claim is implied. Check exact upstream license before incorporation into this repository's reserved-rights code. |
-| [CMTA CMTAT](https://github.com/CMTA/CMTAT) | Distinct Snapshot, HolderList, Debt and DebtEngine variants described in README; `contracts/`, documentation and tests | Compare debt/snapshot/terms responsibilities for M2/P1; algorithms and fixtures require inspection before porting. Security-token variants alone do not prove a ready payout engine. |
-| [CMTAT-Solana](https://github.com/CMTA/CMTAT-Solana) | Solana specification and Token-2022 deployment guide, including freeze, delegate and metadata semantics | Reference authority/metadata mapping for redemption/P1. It is not a ready Anchor corporate-action engine. Existing Recorda mint lacks a delegate; do not assume guide extensions are enabled locally. |
-| [Upside OS Solana RWA](https://github.com/upsideos/upsideos-solana-rwa) | `programs/`, `clients/`, `deploy/dividends/upload-merkle-tree-to-ipfs.ts`; off-chain snapshot/tree and on-chain distributor/claims. README permits SPL/Token-2022 payout and excludes transfer-fee payout configuration; declares MIT. | P1 reference for manifest/root, proof claims and operations. Keep current on-chain rights for MVP. Existing Recorda rail accepts only plain two-decimal Token-2022, so ordinary SPL/USDC is a future compatibility change. |
-| [CorpAction Engine](https://github.com/wangyangmingsss/corpaction-engine) | `packages/`, `docs/`; documented event → normalized intent → registry/executor → attestation flow on Robinhood/Arbitrum; declares MIT | Adapt typed action contracts/dispatch in M2 and external event provenance in P3. Do not port EVM oracle/executor/timelock runtime wholesale; no production-maturity claim from its README. |
-| [CorpShift](https://github.com/tang-vu/corpshift) | `packages/core`: canonical schema/hashing; `packages/contracts`: registry/policies/attestation; `apps/indexer`: normalization/reconciliation | M2 typed parameters/receipts and P3 source deduplication/provenance reference. EIP-712 signatures and stock exposure multipliers are not Solana bond execution logic. Documented test counts were not rerun. |
-| [Fractional Bond Trading](https://github.com/whanyu1212/fractional-bond-trading) | README documents TokenizedBond coupon/redemption methods and BondMarketPlace batch methods, burn/payment flow; explicitly a proof of concept | M2.1 reference for principal/final coupon and atomic retirement; inspect contracts/tests at a pinned commit before adopting formulas. Do not copy marketplace/oracles or replace record-date rights with current balances. |
-
-### Local gap map
-
-| Concept from research | Actual local evidence | Decision / missing work |
-| --- | --- | --- |
-| Holder registry, permissioned transfers | `register_holder`, `set_holder_approved`, `transfer_bonds`; thaw/transfer/freeze with approved positions | Already delivered. Not a Transfer Hook implementation; no real KYC, jurisdiction/expiry policy or separated admin roles. FR-53–54 → P1/P3. |
-| Record date and entitlement | `create_coupon`, `begin_snapshot`, `snapshot_holder`, `finalize_snapshot`, `calculate_entitlement` | Already delivered with per-holder accounts, supply completeness and ordered SHA-256 commitment. Commitment is not a Merkle root. Retain for MVP; FR-49–51 → P1. |
-| Mass payout/idempotency/recovery | `approve_action`, `mark_funded`, `settle_holder`; per-holder paid state; controller resumes | Coupon delivered. No self-service Merkle claim/deadline/reclaimer. Sequential per-holder calls provide resumable processing; no single unbounded batch transaction. |
-| Generic action registry/state machine | `CorporateAction`, `Stage`, `transition`, events | Coupon lifecycle exists, but no kind/version/date-specific payload. `transition` records changes; callers enforce guards. FR-43–44 and typed receipt → M2.0/M2.3. |
-| Bond redemption | `principal_minor`, `final_coupon_minor`, instrument supply/redeemed fields | Preparatory data only: no redeem/burn instruction, permanent delegate or persistent redemption restriction. FR-45–46 → M2.1. |
-| Additional corporate action | `voting_power` field | No Proposal/VoteReceipt/tally implementation. FR-47 → M2.2. Voting remains selected MVP action; partial redemption UC-PR-01 → P2. |
-| Audit and attestation | `ActionReceipt`, transition events, `protocol-audit.ts` | Coupon public verification exists. No typed burn/tally receipt, external event/evidence schema, source attester or complete archival history. FR-48 → M2/M3; FR-57–58 → P3/P1. |
-| Full-stack platform/API | Existing React/Vite + Anchor client, no application backend | Reuse existing FSD. Backend/indexer justified for P1/P3, not required merely because another repo has one. Next.js mismatch stays tracked. |
-
-### Implementation contract for the remaining MVP
-
-Extend the current Anchor program and FSD client; do not fork an entire reference platform. Candidate program modules are instrument/registry, action/state, snapshot/rights, coupon, redemption, voting and receipts; extract them when implementing shared dispatch while preserving constraints. Candidate client changes belong in `src/shared/solana/`, `src/features/corporate-action/` and `src/pages/protocol/`; fixtures and E2E stay in existing test directories.
-
-Action payload must bind kind, schema version, instrument, action ID, record timestamp, execution/window dates and action parameters. Store an immutable parameter hash and type/version in the final receipt. Coupon/Redemption follow approved/funded execution; Voting follows approved/open/closed/tallied completion without fake payout states. A common envelope does not require identical state transitions. No automated feed can approve a monetary operation.
-
-The existing `finalize_snapshot` clears instrument barriers for Coupon. Redemption must add a separate persistent restriction. Bond accounts are holder-owned and frozen; Instrument PDA has mint/freeze/close authority, **not holder burn authority**. M2.1 therefore uses holder-signed atomic burn/payment rather than silently adding a Permanent Delegate. A delegate alternative needs mint-extension compatibility/migration and explicit authority tests.
-
-Account layout additions can break deployed decoding and change receipt hashes. Choose a new versioned layout/address or a tested migration and maintain historical Coupon reads. Regenerate IDL/types, extend the independent auditor, retain golden regression, then add action-specific validator/browser fixtures. Source inspection alone does not mark any new checkbox complete.
-
-For P1, canonical leaves must bind schema version, program/network domain, instrument/action, mint, index, holder, destination and integer amount; define exact encoding/hash/tree ordering before implementation. Persist record-slot ownership/eligibility inputs and totals with the manifest. Approval establishes trust in a reconciled commitment; proof verification alone establishes only membership. Measure account/compute/proof costs and data availability before choosing the production scale envelope.
+No external engine source files were incorporated. The earlier missing-feature/reuse plan has been superseded by the implemented typed action, governance, distributor and external-binding modules above. Runtime dependencies/licenses, archive trust and supported measurement envelope are maintained once in [operations](implementation/operations-v2.md); current feature delivery is maintained in [ROADMAP](ROADMAP.md). Future source reuse requires a pinned component and license review.

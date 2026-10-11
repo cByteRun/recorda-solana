@@ -1,5 +1,14 @@
 # Changelog
 
+Dated entries describe their own revisions. Historical counts, deployment addresses and pending-work notes do not establish current acceptance; current architecture is in [ARCHITECTURE](ARCHITECTURE.md), and fresh evidence gates are in [ROADMAP](ROADMAP.md).
+
+## 2026-10-11 — Documentation consistency cleanup
+
+- Present UC/FR/NFR/TC as implementation/coverage checklists in REQUIREMENTS, with TZ-derived business domains and source references. Keep NFR-05/10/12 partial and live DoD separate; preserve normative wording/IDs. Static parser accepts checkbox syntax; traceability passes 121/121.
+- Replace superseded Coupon-only architecture/gap plans with the current shared Vite/Next client, typed actions, governance, claims, external proposals and trust boundaries.
+- Keep two main verification paths: human Devnet Actions and the feature/attack audit. Preserve their internal suites and historical evidence in this changelog.
+- Correct roadmap/requirements delivery wording, audit freshness and explicit coupon-period release semantics. Remove duplicated old test-count narratives from current architecture/security docs.
+
 ## 2026-10-11 — Human Devnet three-action acceptance runner
 
 - Devnet runners/airdrop now read `.env.local` then `.env` automatically, with shell overrides preserved and frontend RPC fallback. Add public Operator/holder/CDP/window settings to `.env.example`, optional exact Operator validation and a complete judge-facing installation→deployment→wallets→three-terminal demo guide. Real local addresses remain in ignored `.env.local`.
