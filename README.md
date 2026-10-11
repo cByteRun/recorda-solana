@@ -16,13 +16,13 @@
 | ⚙️ Execution | Did the payment, vote or retirement happen? | Token payments, vote tally or atomic burn/payment |
 | 🧾 Proof | Can someone independently check the outcome? | On-chain receipt, audit and export |
 
-**A concrete example:** A holds 10 bonds at the record date, then sells 4. A's coupon stays **10 × 1,000 × 10% ÷ 2 = 500**, even though the current balance is 6. The historical Coupon golden demonstrates this rule; the full MVP demo below demonstrates three actions on one instrument.
+**A concrete example:** A holds 10 bonds at the record date, then sells 4. A's coupon stays **10 × 1,000 × 10% ÷ 2 = 500**, even though the current balance is 6. The feature/attack audit checks this rule; the Devnet MVP demo below demonstrates three actions on one instrument.
 
 The implemented source covers **Coupon, Voting and maturity Redemption**, plus the specified [Post-MVP FR-49–58](docs/implementation/fr-checklist.md). [Product context](docs/PRODUCT.md) explains the positioning; [roadmap](docs/ROADMAP.md) separates implementation from acceptance evidence.
 
-**🚀 Start:** [Devnet demo](#devnet-demo--coupon--voting--redemption) · **🔎 Inspect:** [screens and roles](#product-screens-and-manual-acceptance) · **🛠️ Develop:** [local checks](#development-and-automated-local-checks)
+**🚀 Start:** [Devnet demo](#devnet-demo--coupon--voting--redemption) · **🔎 Inspect:** [screens and roles](#product-screens-and-manual-acceptance) · **🛡️ Verify:** [features and attacks](#feature-and-attack-audit)
 
-Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting → Full Redemption on one instrument. Local controlled tests are available later for development and adversarial regression; they are not a prerequisite for presenting the Devnet flow.
+Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting → Full Redemption on one instrument. Use `test:audit` separately to verify requirements, business features and bypass attempts, including Post-MVP.
 
 ## Devnet demo — Coupon → Voting → Redemption
 
@@ -107,7 +107,7 @@ The runner opens its application tab and drives the buttons. **You review/confir
 | Full Redemption | Principal plus final coupon: 10500/5250/2100/0 Mock USD; supply 17→7→2→0; REDEEMED; finalized receipt |
 | Auditor | Finalized actions reopen without connecting a wallet; Audit: Verified |
 
-`/actions` displays money in minor units: **100 = 1 Mock USD**. Payments use test Token-2022 tokens, not real USD or SOL. Voting records a decision without automatically changing terms. This fixture does not transfer bonds after the snapshot; the separate historical Coupon golden tests that rule.
+`/actions` displays money in minor units: **100 = 1 Mock USD**. Payments use test Token-2022 tokens, not real USD or SOL. Voting records a decision without automatically changing terms. This fixture does not transfer bonds after the snapshot; the feature/attack audit tests that rule.
 
 Success prints `PASS` and saves **`passed: true`** in `target/devnet-evidence/actions-<run-id>/run.json`, alongside action screenshots. It checks actual token balance deltas, mint supply and audited receipts. Retain the JSON, Action URLs and Explorer links for judges. Reopen `/actions?action=<PDA>` as Auditor and use **Export verified audit**; for a clean manual recovery demonstration, use another browser without Phantom.
 
@@ -232,61 +232,27 @@ solana program show YOUR_PROGRAM_ID --url devnet
 
 Historical read-only inspection recorded slot **508134659**, data length **542,864 bytes**; that is not evidence of the current v2 binary. A subsequent Devnet deployment has been reported. Verify the currently deployed binary separately; the human three-action PASS remains to be recorded. The `/` page's **Deploy KZTB26** creates test token assets, not the Rust program; ComputeBudget/Associated Token program IDs and token mint addresses are not Recorda's ID.
 
-## Development and automated local checks
+## Feature and attack audit
 
-Use these for repeatable development, negative scenarios and CI. They do not require human Phantom confirmations and do not replace public Devnet acceptance.
+The two verification paths serve different purposes:
 
-| Command | Scope |
+| Command | What it proves |
 |---|---|
-| `npm run test:devnet:setup` | Offline environment/RPC/faucet setup regression |
-| `npm run test:e2e:golden` | Controlled client/wallet/RPC regression |
-| `npm run protocol:test:rust` | Rust unit tests |
-| `npm run protocol:test:ui` | Actual Rust/Token-2022 on a fresh local validator, full protocol/browser checks |
-| `npm run test:post-mvp` | Offline index/archive/external-event checks |
-| `npm run protocol:test:post-mvp` | Native Post-MVP scenarios on a fresh local validator |
-| `npm run audit:requirements` | Static normative requirement → implementation/test mapping |
-| `npm run test:audit:client` | Client build and controlled checks |
-| `npm run test:audit` | Full requirements/client/Rust/SBF/IDL/native-browser audit |
+| `npm run test:e2e:actions:devnet` | Human Phantom-signed Coupon → Voting → Full Redemption on Devnet |
+| `npm run test:audit` | Requirement traceability, business features and attack scenarios across MVP and specified Post-MVP |
 
-For local browser checks, install the separate Playwright browser:
+For the audit, install Rust/Solana tools from [technical setup](#technical-setup) and the Playwright browser, then run:
 
 ```bash
 npx playwright install --with-deps chromium
 npm run test:audit
 ```
 
-Full local checks need Rust/Solana tools and free ports **4444, 4445, 4446, 18899, 19900**. The runner starts/stops its validator and retains protocol evidence, benchmarks, reports and traces in `target/`, `test-results/` and `playwright-report/`. `target/security-audit/run.json` is current only when all commands pass and source hashes match. Generated JSON/TypeScript IDL files must be committed together.
+`test:audit` orchestrates its internal suites: client/wallet/RPC attacks, Rust unit tests, real Anchor/Token-2022 execution on a fresh local validator, browser recovery, forged-report rejection and Next runtime checks. It also covers partial retirement, Merkle claims/reclaim, threshold governance and eligibility/terms/source failures. No human Phantom confirmations are required for this path.
 
-Local suites include partial retirement, Merkle claims/reclaim, governance roles/thresholds, eligibility/terms/source attacks, UI recovery, forged-report rejection and production Next checks. Static [FR checkmarks](docs/implementation/fr-checklist.md) describe source delivery; neither mapping nor old counts prove a new revision passed. Consult [the attack matrix](docs/SECURITY-AUDIT.md) and [roadmap evidence](docs/ROADMAP.md#verification-and-gaps).
+Keep ports **4444, 4445, 4446, 18899, 19900** free. The runner starts/stops its validator and retains evidence in `target/`, `test-results/` and `playwright-report/`. `target/security-audit/run.json` is valid for a revision only when every command passes and recorded source hashes match. Static FR checkmarks alone do not prove acceptance.
 
-For a manual local validator, after building:
-
-```bash
-solana-test-validator --ledger /tmp/recorda-manual-ledger \
-  --bpf-program CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF target/deploy/recorda.so
-```
-
-In another terminal, `VITE_SOLANA_RPC_URL=http://127.0.0.1:8899 npm run dev`. Use a local-RPC-compatible wallet. The Devnet runners intentionally refuse this network.
-
-## Phase 1 golden on Devnet — real Phantom
-
-This separate historical Coupon-only runner checks the record-date business rule: A owns 10 at snapshot, transfers 4 to B before payment, but still receives 500 Mock USD. Current A/B/C/D = 6/9/2/0; snapshot = 10/5/2/0; payouts = 500/250/100/0, total 850. Fixture: [TZ §22](docs/TZ.md#22-demo-dataset), [golden dataset](golden/coupon-tz-section-22.json).
-
-Use the same Devnet `.env.local`, Vite and Chromium/CDP setup as above, select Operator, then:
-
-```bash
-npm run test:e2e:golden:devnet
-```
-
-Unlike the three-action runner, this uses disposable A/B/C/D identities retained in the original browser profile and does not use the configured real `RECORDA_HOLDER_A/B/C` accounts. Keep that profile for transfers/recovery. Public evidence: `target/devnet-evidence/coupon.json` and `coupon.png`; failures: `failure.json`/`failure.png`. Historical human acceptance passed on 2026-10-06 for action `9AbwBu83PEqHtV4wy4i3kdjh1nDkyRDCBkR3SeP8jqJx`; it does not establish current v2 three-action acceptance.
-
-Before any payment starts, the legacy runner can resume the same action:
-
-```bash
-RECORDA_DEVNET_ACTION=YOUR_ACTION_PDA npm run test:e2e:golden:devnet
-```
-
-It skips completed stages and checks balances before repeating the demo transfer. Once payments start, use chain-based reconciliation instead of inventing a new balance baseline. This resume option does not apply to `test:e2e:actions:devnet`.
+Coverage and findings: [FR checklist][features] · [requirement mapping][mapping] · [attack matrix][security] · [roadmap][roadmap]. Devnet Actions does not replace negative/Post-MVP coverage; the audit does not replace the human Devnet replay.
 
 ## Troubleshooting
 

@@ -123,7 +123,7 @@ The runner loads `.env.local`, checks the Devnet genesis and funded holder accou
 | Full redemption | Confirm Operator setup; switch A → B → C for burn/payment; return to Operator | Payouts 10500/5250/2100 Mock USD; supply 17→7→2→0; REDEEMED; finalized receipt |
 | Audit | Runner opens separate pages without connecting a wallet | Audit: Verified; recorded rights and receipts recover from chain |
 
-The app shows money in minor units on `/actions`: 100 units = 1 Mock USD. All payments use the demo Token-2022 payment mint, not real USD or SOL. Voting records a decision; it does not itself modify terms. This three-action fixture does not include the historical A→B post-record transfer; the separate Coupon golden covers that rule.
+The app shows money in minor units on `/actions`: 100 units = 1 Mock USD. All payments use the demo Token-2022 payment mint, not real USD or SOL. Voting records a decision; it does not itself modify terms. This three-action fixture does not include the historical A→B post-record transfer; the feature/attack audit covers that rule.
 
 Maturity is chain time +180 seconds. The vote defaults to a 15-minute window so there is time for human signatures. Closing waits use Solana Clock; pauses at a record date or closing time are expected. `RECORDA_VOTE_SECONDS` accepts 300..3600 seconds. Finish votes before the window closes; slow confirmations may require a new/reconciled scenario.
 
@@ -139,13 +139,11 @@ target/devnet-evidence/actions-<run-id>/run.json
 
 The directory also contains screenshots for all three finalized actions. Keep the JSON, action URLs and Explorer transaction links for the presentation. Open `/actions?action=<PDA>` in Auditor and use **Export verified audit** to show recovery and export manually. A new tab in the runner has no connected React wallet state but shares the user's browser profile; it is not an isolated extension-free browser. For a stronger manual demonstration, reopen the URL in another browser without Phantom.
 
-On failure, `run.json` retains the current action and completed checkpoints, and `failure.png` captures the screen. Inspect that action and any submitted signatures before repeating payments. This full runner has no automatic resume: a rerun creates a new instrument and can leave the old one partially executed. The legacy Coupon-only runner has a narrower before-payment resume facility.
+On failure, `run.json` retains the current action and completed checkpoints, and `failure.png` captures the screen. Inspect that action and any submitted signatures before repeating payments. This full runner has no automatic resume: a rerun creates a new instrument and can leave the old one partially executed. Inspect the action through the UI to reconcile confirmed progress.
 
 | Command | Purpose |
 |---|---|
 | `npm run test:e2e:actions:devnet` | Human-signed Devnet Coupon → Voting → Full Redemption |
-| `npm run test:e2e:golden:devnet` | Historical Coupon-only golden, including A→B post-record transfer |
-| `npm run protocol:test:ui` | Local validator and controlled browser full protocol coverage |
-| `npm run test:audit` | Full local requirements/client/Rust/validator audit |
+| `npm run test:audit` | Requirements, MVP/Post-MVP features and attack matrix; includes internal client/Rust/validator/browser suites |
 
 Successful local tests do not replace this human Devnet run. A successful MVP demo does not establish all Post-MVP scenarios, remote CI, production readiness or the legality of issuing a real bond.

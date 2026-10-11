@@ -2,7 +2,7 @@
 
 This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained; new IDs are appended. Delivery status belongs in [ROADMAP](ROADMAP.md); evidence is maintained in [ROADMAP](ROADMAP.md#verification-and-gaps).
 
-Phase 1 Devnet reproduction for **UC-CP-01 / NFR-10** is described in [README](../README.md#phase-1-golden-on-devnet--real-phantom). Airdrop supplies test SOL for fees/rent; it is a setup aid, not coupon funding or a new business requirement. Human Devnet golden evidence supplements the local acceptance matrix; it does not replace TC-04/15–19 negative tests and remains historical v1 evidence; current v2 source delivery includes redemption/voting. The connected human demo wallet is R1 Operator; R3 demo holder identities remain disposable.
+Current human Devnet MVP reproduction for Coupon, Voting and Redemption is described in [the demo guide](DEVNET-DEMO.md) and [README](../README.md#devnet-demo--coupon--voting--redemption), using a real Operator and A/B/C Phantom accounts. `test:e2e:actions:devnet` supplies happy-path evidence; `test:audit` retains feature and attack coverage, including TC-04/15–19 negative scenarios and Post-MVP. Airdrop supplies test SOL for fees/rent, not coupon funding. Historical v1 evidence does not establish current v2 acceptance.
 
 ## Scope of the reference-driven extension
 
