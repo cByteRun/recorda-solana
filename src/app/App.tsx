@@ -1,6 +1,8 @@
 import { lazy, Suspense } from "react";
 import { WelcomePage } from "@/pages/welcome/ui/welcome-page";
-import { ProductShell } from "@/shared/ui/product-shell";
+import { BondOpsShell } from "@/shared/ui/bondops-shell";
+const BondOpsPage = lazy(() => import("@/pages/dashboard/ui/bondops-page").then(m => ({default:m.BondOpsPage})));
+const BondOpsPlaceholder = lazy(() => import("@/pages/dashboard/ui/bondops-page").then(m => ({default:m.BondOpsPlaceholder})));
 const DashboardPage = lazy(() => import("@/pages/dashboard/ui/dashboard-page").then(module => ({ default: module.DashboardPage })));
 const ProtocolPage = lazy(() => import("@/pages/protocol/ui/protocol-page").then(module => ({ default: module.ProtocolPage })));
 
@@ -12,6 +14,6 @@ const OverviewPage = lazy(() => import("@/pages/overview/ui/overview-page").then
 export function App() {
   if (location.pathname === "/" && !new URLSearchParams(location.search).has('action')) return <WelcomePage />;
   if (location.pathname === "/reference") return <Suspense fallback={<p className="workspace-loading">Opening reference…</p>}><DashboardPage /></Suspense>;
-  const page = ['/dashboard', '/holders'].includes(location.pathname) ? <OverviewPage /> : location.pathname === "/claims" ? <ClaimsPage /> : location.pathname === "/actions" ? <ActionsPage /> : <ProtocolPage />;
-  return <ProductShell><Suspense fallback={<p className="workspace-loading" role="status">Opening your workspace…</p>}>{page}</Suspense></ProductShell>;
+  const page = location.pathname === '/dashboard' ? <BondOpsPage /> : ['/bonds','/settlements','/audit','/infrastructure','/settings'].includes(location.pathname) ? <BondOpsPlaceholder /> : location.pathname === '/holders' ? <OverviewPage /> : location.pathname === "/claims" ? <ClaimsPage /> : location.pathname === "/actions" ? <ActionsPage /> : <ProtocolPage />;
+  return <BondOpsShell><Suspense fallback={<p className="workspace-loading" role="status">Opening your workspace…</p>}>{page}</Suspense></BondOpsShell>;
 }

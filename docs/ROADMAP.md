@@ -98,3 +98,17 @@ The [product experience](PRODUCT-EXPERIENCE.md) makes the existing business beha
 - [x] Readable Mock USD and percentage inputs; raw units and commitments in technical disclosures.
 - [x] Investor card comparing current and record-date positions, entitlement and formula; finalized-action result and onward navigation.
 - [x] Desktop/mobile welcome and working-route checks. Local chain/browser checks remain scoped evidence; historical full-audit hashes above do not certify this UI revision.
+
+## BondOps reference dashboard delivery (2026-10-12)
+
+- [x] Adapt the supplied HTML's light/dark surfaces, two-column navigation, overview metric cards, attention queue, settlement progress, snapshot distribution, lifecycle and example activity into React; retain welcome and operational routes.
+- [x] Adapt the scenario to TZ's 17 units / $850 coupon obligation; label all overview confirmations and events illustrative, provide a source-labelled JSON export and frontend placeholders for missing services.
+- [ ] BO-01: build instrument/action portfolio index and authoritative record-date/payment/maturity calendar; verify overdue/timezone behavior.
+- [ ] BO-02: build finalized-evidence reconciliation service; verify totals and missing/unknown/partial states, independent of current holdings.
+- [ ] BO-03: implement deduplicated exception cases, assignment and evidence-backed recovery; demonstrate repeat-safe resolution without duplicate payment.
+- [ ] BO-04: add authenticated team/workspace authorization; verify unauthorized requests cannot access or change another instrument.
+- [ ] BO-05: implement durable portfolio audit index and verified exports; test restart/recovery and explicit unavailable evidence.
+- [ ] BO-06: add delivery-tracked deadline alerts and escalation after calendar/case ownership is available.
+- [ ] BO-07: implement authenticated external settlement connectors only after confirmation contracts and replay protection are specified.
+
+Frontend placeholders are reviewable product scope, not evidence of backend delivery. BO requirements supplement FR-01–58; they do not change MVP protocol acceptance gates.

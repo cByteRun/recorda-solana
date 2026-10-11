@@ -466,3 +466,19 @@ Checked foundation/Coupon items were demonstrated by the human-signed Devnet gol
 - [ ] The UI clearly distinguishes IMPLEMENTED and SIMULATED.
 - [x] README enables judges to reproduce the demo.
 - [ ] The demo video shows complete E2E beyond the interface.
+
+## BondOps operator dashboard — reference adaptation (2026-10-12)
+
+Reference: `tmp_assets/dashboard/recorda_bondops.html`. Product message: «Recorda помогает оператору контролировать весь процесс — от фиксации прав инвесторов до исполнения и проверки выплат». The React overview preserves the reference composition, surfaces, navigation and responsive breakpoints. Its fixture uses TZ's 10/5/2/0 units and 500/250/100/0 coupon rights; illustrative confirmation of B/C creates a $500 attention case. This fixture is not protocol evidence. Existing FR-01–58 are unchanged; the following appended product requirements require backend implementation and acceptance.
+
+| ID | Business domain / feature | Requirement and acceptance |
+|---|---|---|
+| BO-01 | Instrument servicing / portfolio and calendar | Discover authorized instruments and scheduled Coupon, Voting, Full/Partial Redemption actions. Show record date, payment due date and maturity with timezone, overdue state and authoritative source. No schedule inferred from fixture dates. |
+| BO-02 | Settlement control / obligation reconciliation | Aggregate Expected / Confirmed / Unsettled per action, instrument and holder using immutable rights and integer minor units. Count confirmed amounts only from verified execution evidence at configured finality; represent missing/unavailable evidence as unknown, not success. Totals must reconcile and exclude Voting from payment obligations. |
+| BO-03 | Operations / exception cases | Create stable, deduplicated cases for missing, partial, failed or uncertain payments; retain owner, due date, reason, evidence and resolution history. A manual case closure must not mark a payment settled. Repeated recovery must not pay twice. |
+| BO-04 | Security / operator authorization | Authenticate team identity and enforce instrument-scoped roles server-side, including approval/execution separation where configured. A role selector is not authorization. Preserve program checks and explicit transaction approval. |
+| BO-05 | Audit / portfolio proof and export | Index action-linked finalized events with durable cursors and expose signature/account/slot and verification state. Export source, network, cutoff and exact decimal amounts; never present demo records as on-chain proof. |
+| BO-06 | Timeliness / notifications | Send deduplicated deadline and exception notifications to configured responsible operators, with delivery status and escalation. Unavailable evidence produces a review task rather than automatic execution. |
+| BO-07 | Integration / external confirmation | Verify bank/payment-provider callbacks, bind confirmations to exact action/holder/asset/amount, prevent replay and reconcile against rights. External confirmations must remain distinct from Solana transaction evidence. |
+
+Frontend boundary: `/dashboard` is an explicitly labelled illustrative overview with JSON export and exception disclosure. `/bonds`, `/settlements`, `/audit`, `/infrastructure`, `/settings` are frontend placeholders; they do not mutate settlement or simulate successful backend operations. `/protocol`, `/actions`, `/holders`, `/claims` retain existing working flows. Theme switching is presentation only. Portfolio aggregation, deadline monitoring, case management, team authorization and connectors are not delivered by this dashboard.

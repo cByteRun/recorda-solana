@@ -6,7 +6,8 @@ test('welcome opens the dashboard and registry interactions use explicitly label
   await page.goto('/');
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole('heading', { name: 'Every asset. Every right.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Operations overview.' })).toBeVisible();
+  await page.goto('/holders');
   await expect(page.getByText('Illustrative scenario · no live transactions')).toBeVisible();
   await expect(page.locator('.registry-table tbody tr')).toHaveCount(4);
   await page.getByLabel('Search holders').fill('Holder A');
@@ -37,12 +38,7 @@ for (const width of [1440, 390, 320]) test(`dashboard and operational screens fi
     await page.screenshot({path:`target/design-evidence/dashboard-${route.slice(1)}-${width}.png`,fullPage:true});
   }
   await page.goto('/dashboard');
-  const rail = page.locator('.dashboard-rail');
-  await rail.hover();
-  expect((await rail.boundingBox())!.width).toBeGreaterThan(200);
-  await page.getByRole('button', {name:'Expand navigation',exact:true}).click();
-  await expect(rail).toHaveClass(/rail-pinned/);
-  await page.getByRole('link', {name:'Holders',exact:true}).click();
+  await page.locator('.rail').getByRole('link', {name:'Holder registry',exact:true}).click();
   await expect(page).toHaveURL(/\/holders$/);
   await expect(page.getByRole('heading', {name:'Your holder registry.'})).toBeVisible();
 });
@@ -50,7 +46,7 @@ for (const width of [1440, 390, 320]) test(`dashboard and operational screens fi
 test('failed chain reads show an error and never display demo balances as live data', async ({page}) => {
   await page.route('**/api.devnet.solana.com/**', route => route.fulfill({status:503,body:'RPC unavailable'}));
   await page.route('https://api.devnet.solana.com', route => route.fulfill({status:503,body:'RPC unavailable'}));
-  await page.goto('/dashboard');
+  await page.goto('/holders');
   await page.getByRole('button', {name:'Chain data',exact:true}).click();
   await page.getByRole('textbox', {name:'Coupon action address'}).fill('11111111111111111111111111111111');
   await page.getByRole('button', {name:'Read chain',exact:true}).click();
