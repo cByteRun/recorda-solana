@@ -1,7 +1,8 @@
 import {spawn} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
-const child=spawn('cargo-build-sbf',['--manifest-path','programs/recorda/Cargo.toml','--','--locked']);
+import {solanaTool} from './solana-tools.mjs';
+const child=spawn(solanaTool('cargo-build-sbf'),['--manifest-path','programs/recorda/Cargo.toml','--','--locked']);
 let output='';for(const stream of [child.stdout,child.stderr])stream.on('data',data=>{output+=data;process.stdout.write(data);});
 const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve);});
 // Some SBF toolchains print stack-overflow diagnostics while returning success.

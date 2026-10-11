@@ -1,69 +1,75 @@
-# BondOps operational layer
+# BondOps program workspace
 
-Recorda helps an operator control the whole process: fixed investor rights → financial obligation → authorized execution → confirmation → exception resolution with evidence. The normative additions are BO-01–07 in [REQUIREMENTS](REQUIREMENTS.md); protocol FR-01–58 and the three MVP scenarios remain unchanged.
+Recorda helps the operator control fixed investor rights → obligations → authorized execution → confirmation → evidence-backed resolution. [TZ](TZ.md) and existing FR-01–58 remain the protocol source of truth; appended BO requirements cover the operating workspace.
 
-## Delivered scope and boundaries
+## Storage boundary
 
-| Business feature | Frontend | Backend / source | Remaining acceptance |
+| Selected workspace | Source of financial facts | Source of operational state | Writes |
 |---|---|---|---|
-| Timeliness | `/calendar`: month calendar, upcoming/overdue/unscheduled queue, timezone display and coupon deadline editor | Durable operator-set coupon due date; voting close and redemption maturity from contract; minute scheduler | Operator validation on a configured live portfolio; SLA/holiday policy |
-| Live reconciliation | Dashboard and `/settlements`: Expected / Confirmed / Unsettled / Unknown, separate asset groups | Finalized program reads plus existing independent auditors; never infer execution from current wallet balance | Public Devnet smoke was blocked by RPC 429; configure a reliable RPC and perform live acceptance |
-| Exception investigation | Fixed units, cutoff, formula, principal/coupon, approval/funding, right/signature/receipt and permitted next step | Action/right binding; retained broadcast references; exact settle instruction binding | Live Phantom recovery demonstration |
-| Confirmation states | Due / Pending / Failed / Unknown / Confirmed filters | Finalized processed right confirms execution; retained transaction failure or unfinalized broadcast yields Failed/Pending; missing/pruned/RPC failure is Unknown | Provider/finality operational SLA |
-| Case management | Assignment, comments, investigation status and resolution history | SQLite transactions, stable action+holder case key, proof-gated closure and automatic verified resolution/reopening on evidence loss | Real team acceptance; no manual status can change entitlement or pay assets |
-| Portfolio | `/bonds`: terms, outstanding/retired supply, action kinds and links to operational workflows | Discovery of configured instrument scopes from Recorda accounts; v1 Coupon and v2 actions | Scoped live indexing capacity and larger portfolio measurements |
-| Portfolio audit | `/audit`: searchable retained events, paging, cases/actions, receipt links and source-labelled JSON export | Durable observation/decision journal; existing action audit exposes chain proofs and historical availability | Full archival coverage/production retention; observation journal is not a claim of complete chain history |
-| Team operations | `/settings`: roles/scopes, wallet membership management, reminder/escalation rules; `/notifications`: inbox | Ed25519 nonce sign-in; server membership and scope checks; HttpOnly/SameSite session plus CSRF/origin validation; in-app outbox | Organization identity/SSO and external delivery providers |
-| Settlement connectors | `/infrastructure`: active source and integration boundary | Solana finalized reader implemented | Bank/paying-agent provider explicitly deferred by user; no bank confirmation is fabricated |
+| Test Workspace | Explicit illustrative dataset, 17 units and 850 Mock USD | SQLite, only the `demo` row | Local sandbox API; predefined demo roles |
+| Solana program / Devnet RPC | Existing finalized Recorda action/right/receipt accounts | Rust PDA accounts in the same Recorda program | Wallet-signed instructions; authorization checked by Rust |
+| Solana program / Local validator | The same compiled Rust program on a separate local ledger | The same PDA schemas | The same wallet-signed instructions |
 
-Demo is a separate, labelled server workspace: 10/5/2/0 rights, coupon 500/250/100/0, illustrative confirmed 350 and unknown 500 Mock USD. Case, deadline and inbox changes persist on the server, but demo financial confirmations are fixtures. Switching to Devnet clears the preview and requires an authorized wallet session; failed live requests do not fall back to fixtures.
+Live mode performs no Test Workspace API requests and stores no live data in SQLite. A Node server started with `BONDOPS_MODE=live` opens no database. SQLite is initialized lazily only when the illustrative workspace is enabled. Existing old `live` or `team-live` database rows are not read or migrated as authority; importing real metadata would require explicit wallet-signed program instructions.
+
+The source selector and RPC selector are independent. RPC choice is stored in the browser and reinitializes the application; dashboard, protocol, corporate actions, holder claims and explorer links share it. Local validator is a separate network, not a workaround endpoint for the Devnet ledger. Default URLs are `https://api.devnet.solana.com` and `http://127.0.0.1:8899`. Custom endpoints come from `VITE_SOLANA_RPC_URL` / `VITE_LOCAL_SOLANA_RPC_URL`, or corresponding Next public variables. Public RPC rate limits and network errors never activate fixtures.
+
+## Rust account and instruction contract
+
+`programs/recorda/src/bondops.rs` adds accounts without changing legacy financial account layouts:
+
+| Account | PDA domain / purpose |
+|---|---|
+| OpsWorkspace | `ops-workspace`, instrument: admin, reminder/escalation hours, next audit sequence |
+| OpsMember | `ops-member`, workspace, wallet: per-instrument role and revocation |
+| OpsDeadline | `ops-deadline`, workspace, action: explicit coupon deadline; voting/maturity remain native action terms |
+| OpsCase | `ops-case`, workspace, action, holder: assignment, investigation/resolution, last note, retained signature |
+| OpsAudit | `ops-audit`, workspace, sequence: immutable decision records, actor, action/subject, Clock time/slot and note |
+| OpsNotice | `ops-notice`, workspace, action, recipient, kind, stamp, subject: deduplicated inbox record and read acknowledgement |
+
+Instructions: `initialize_ops`, `configure_ops`, `set_ops_member`, `set_ops_deadline`, `update_ops_case`, `retain_ops_reference`, `create_ops_notice`, `read_ops_notice`. The IDL is compiler-generated via `npm run protocol:idl`.
+
+Only instrument authority or the configured governance issuer can initialize its workspace. The workspace admin manages membership/rules; active Operator/Reviewer members can investigate and schedule. Auditor reads public chain data. Recipient signature is required to acknowledge a notice. These operational roles do not grant financial approval/burn/payment authority; existing protocol/governance checks remain authoritative.
+
+Every metadata write includes the expected audit sequence and atomically creates an immutable audit PDA. Concurrent stale updates fail and must reload before another signature. Wrong instrument/action/right/holder binding is rejected by program ownership, discriminators and canonical PDA checks. Closing a case requires a calculated positive matching right whose processed/settled flag is set by the financial engine. Comments and stored signatures never establish payout.
+
+Retained references are metadata. The browser verifies the transaction's exact settle instruction and action/right before proposing the reference instruction. Rust does not inspect historical RPC transactions and does not trust a provided status as financial confirmation. Replacement of an unresolved reference is conservatively blocked; a dedicated authenticated failure-recovery protocol remains future scope. Confirmation amounts always come from finalized rights. Historical transaction pruning remains visible as Unknown. If RPC fails after a successful read, last known obligations remain in browser memory with confirmation reset to Unknown; this is disclosed stale state, never SQLite persistence or freshly confirmed execution.
+
+Names and decision notes written on-chain are public. Names are bounded to 80 UTF-8 bytes, notes to 240; history is held in separate append-only accounts. Solana rent/fees apply to operational writes. No backend signing key is used.
+
+## Notifications and timeliness
+
+The calendar distinguishes cutoff, coupon payment deadline, native voting close and redemption maturity. `create_ops_notice` checks Solana Clock, authoritative deadline or open case, recipient and reminder/escalation rules. Notice PDAs deduplicate by subject, deadline/case timestamp, type and recipient. A changed schedule supersedes old reminders in the displayed inbox; old records remain auditable.
+
+A program does not autonomously run when the clock advances. **Check deadlines** submits signed notice transactions for authorized instruments. A reliable keeper/automation signer, autonomous generation and email/messenger delivery remain roadmap tasks. The Test Workspace alone has a local minute scheduler. UI polling is read-only.
+
+## Filled Test Workspace
+
+The example contains the TZ positions 10/5/2/0, a post-cutoff transfer of four units (current positions 6/9/2/0, unchanged entitlements), coupon calculation 500/250/100/0, approval/funding, illustrative confirmations totalling 350, failed/pending attempts and a current Unknown 500, assigned investigation/history, upcoming voting and maturity, calendar and inbox. All transaction identifiers are `TEST-TX-*` examples, never explorer proof. Old demo databases receive example history without discarding saved decisions.
 
 ## Run and configure
 
-Node **22.18+** is required; this implementation uses built-in `node:sqlite`. `npm run dev` builds a server copy of the shared protocol readers/auditors and mounts `/api/bondops` in Vite. Restart an already-running dev server after adding the API plugin; client hot reload alone does not install a middleware in an old server. `npm run dev:next` uses the same API through a Node Route Handler. Both share the browser screens.
-
-For Devnet, configure these **server-only** values in root `.env.local` for Vite or `next-app/.env.local` for Next; shell environment takes precedence:
-
-```dotenv
-BONDOPS_MODE=demo
-BONDOPS_DB_PATH=target/bondops/workspace.sqlite
-BONDOPS_ORIGINS=http://127.0.0.1:4444,http://localhost:4444
-BONDOPS_RPC_URL=https://api.devnet.solana.com
-# Match the browser's program and RPC; this is a public program address.
-BONDOPS_PROGRAM_ID=CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF
-# Replace the wallet/scopes with your actual public addresses. No private keys.
-BONDOPS_MEMBERS=[{"id":"operator-1","name":"Operator","wallet":"YOUR_PUBLIC_WALLET","role":"operator","scopes":["*"]}]
+```bash
+npm run protocol:build
+npm run bondops:local
+# Keep the local validator running; in another terminal:
+npm run dev
 ```
 
-`BONDOPS_MEMBERS` bootstraps a **new or still empty team only**. Subsequent membership additions/updates/revocations are retained in the database and managed by a full-scope Operator in Settings. A role change does not grant program signing authority. Wallet identity changes/revocation invalidate an old session. Auditors can read scoped evidence and mark their own inbox items read; they cannot update cases, schedules or team settings. Reviewers reconcile and investigate; only a full-scope Operator administers team/rules. Demo login is a loopback-only sandbox convenience and is disabled in production.
+Choose **Solana program**, then **Local validator**. `bondops:local` loads `target/deploy/recorda.so` at the configured program address, creates an isolated ledger under ignored `target/`, seeds real example transactions and stays running on port 8899. Set `RECORDA_LOCAL_WALLET=/path/to/a/local-test-key.json` to use a local fixture authority matching your Phantom public key; otherwise the fixture uses a disposable local signer. It never resets another ledger or funds Devnet. Ports must be free.
 
-Production uses `BONDOPS_MODE=live`, an explicit **persistent** database path, exact HTTPS `BONDOPS_ORIGINS`, HTTPS and configured wallet membership. No ephemeral database fallback is allowed. The delivery envelope is one long-running Node service and a persistent SQLite volume; this is not a horizontally scaled or serverless storage architecture. Use `npm run bondops:serve` with a same-origin reverse proxy, or a persistent Node Next host. The minute scheduler requires a running service. No deployment/provisioning, production backup/retention validation, SSO, bank provider, email or messenger delivery has been performed. Vite static build/preview by itself does not serve the API; run the operational backend alongside the served frontend. A serverless deployment needs a durable database and an independently scheduled worker before production acceptance.
+To use public Devnet, deploy/upgrade the new program binary with its existing authority, use a Devnet wallet and choose Devnet RPC. No public Devnet deployment or upgrade has been performed by this revision. A successful local test does not certify the currently deployed Devnet binary or human Phantom acceptance.
 
-`BONDOPS_BACKGROUND=false` disables the minute worker for deterministic tests; authenticated `/sweep` evaluates notifications without paying anything. `/refresh` re-reads the configured portfolio; it does not sign transactions. SQLite and generated runtime files are under ignored `target/`; no operator private key is stored.
-
-## API and evidence contract
-
-Every workspace endpoint accepts `?source=demo|live`. Live reads require a wallet session; mutations additionally require a permitted role, exact Origin and `X-BondOps-CSRF`. API responses never expose RPC credentials. Live indexing verifies the pinned Devnet genesis and uses the configured public program ID. Monetary amounts are decimal strings in integer minor units, grouped by settlement mint and precision; Voting contributes no payment obligation. Known-calculated obligations are shown; an incomplete/unavailable snapshot must not be interpreted as a zero obligation.
-
-| Endpoint | Behavior |
-|---|---|
-| `GET /session` | Available sources, authenticated member and session CSRF token |
-| `POST /auth/challenge`, `/auth/verify` | Origin-bound, expiring, single-use Ed25519 wallet login |
-| `POST /auth/demo`, `/auth/logout` | Explicit local sandbox login / session logout |
-| `GET /workspace`, `/export` | Scoped portfolio, deadlines, rights, cases, retained evidence, settings and own inbox / source-labelled export |
-| `POST /refresh` | Reuse protocol audits and reconcile finalized portfolio; persist unknown evidence on failure |
-| `POST /schedule` | Set an explicit timezone-qualified coupon payment deadline after its record date; no contract rewrite |
-| `POST /cases` | Assign an eligible operator/reviewer, retain decision note; prohibit closure without matching verified execution |
-| `POST /reference` | Retain and verify an already-submitted signature against exact action/right/settle instruction; never broadcast a payment |
-| `POST /members` | Full-scope operator membership change/revocation; retain audit atomically; no self-revocation |
-| `POST /settings` | Full-scope operator reminder/escalation intervals |
-| `POST /sweep`, `/notifications/read` | Deduplicated in-app reminders/escalations / recipient-only read acknowledgement |
-
-A Pending/Unknown broadcast prevents replacement with another signature until reconciled. A processed finalized program right is authoritative execution evidence under the documented RPC trust assumption; unavailable historical transaction data remains disclosed. A balance alone, an external proposal, a case comment or a manual closure never establishes payout. Confirmation loss reopens a previously resolved case for investigation. Actual corrective execution remains in `/protocol` or `/actions` with the existing lifecycle, wallet signer and replay checks. Recorda's Node service stores no signing authority and introduces no new automatic payment path.
+For the illustrative workspace only, Node 22.18+ and `BONDOPS_MODE=demo`, `BONDOPS_DB_PATH=target/bondops/test-workspace.sqlite`, exact `BONDOPS_ORIGINS` configure the local API. Vite reads root `.env.local`; Next reads `next-app/.env.local`. `BONDOPS_BACKGROUND=false` disables only the demo minute worker. No BONDOPS_MEMBERS / server live RPC configuration is needed. Production defaults to Solana-only mode; a static browser host can serve live mode without a BondOps database/API. The current Test Workspace is enabled only in development; a public demo hosting mode is separate future scope.
 
 ## Verification
 
-- `npm run test:bondops`: backend financial grouping, real Ed25519 login, origin/CSRF/replay, scope/revocation, durable restart, proof-gated case closure, unknown recovery, pending reference protection, source binding, deadline and notification deduplication tests.
-- `npx playwright test --config playwright.bondops.config.ts`: isolated port 4446 and SQLite workspace; browser → API → durable cases/deadlines → response, source-labelled exports, role restrictions, inbox, Devnet sign-in boundary and 1440/390/320px layouts; includes existing dashboard/holder checks.
-- `npm run build` and `npm run build:next`: shared browser and Node route compilation.
-- Read-only public Devnet discovery attempted 2026-10-12 returned **429 Too Many Requests**. This does not establish successful live indexing or payment acceptance. A configured live wallet/portfolio and reliable RPC are still required.
+- `npm run test:bondops`: Test API security, persisted demo decisions, deadline/inbox deduplication, no live/team rows, no database opened in Solana-only mode; exact settle-instruction confirmation decoding and genesis rejection.
+- `npm run protocol:test:bondops`: real local-validator transactions for initialization, membership/revocation, scopes, deadlines, cases, proof-gated closure, immutable audit, conservative reference retention and recipient-only deduplicated notices.
+- `npm run protocol:test:bondops:ui`: same fixture plus browser → wallet signature → local Rust program → fresh account read; Test API disabled, zero workspace API requests.
+- `npx playwright test --config playwright.bondops.config.ts`: filled Test Workspace, source/RPC separation and desktop/mobile layouts.
+- `npm run protocol:build`, `npm run build`, `npm run build:next`: SBF stack checks, shared frontend and Next compilation.
+
+Bank/paying-agent provider, external delivery, autonomous keeper, public Devnet deployment/acceptance and complete archival/scale validation remain open. Provider selection for banking is explicitly deferred by the user.
+
+Recorded verification for this revision: SBF build and compiler-IDL check passed; 15 Rust unit tests, 9 local program checks, 8 Test API/reader checks, 14 illustrative/desktop/mobile browser checks and one end-to-end browser-to-program test passed. The latter also verifies retained Unknown obligations after RPC loss and zero Test API requests. Vite and Next builds passed. Evidence: `target/protocol-evidence/bondops.json` and `target/design-evidence/bondops-local-program.png` (ignored generated artifacts).

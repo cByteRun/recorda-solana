@@ -8,6 +8,1159 @@ export type Recorda = {
   },
   "instructions": [
     {
+      "name": "initializeOps",
+      "discriminator": [
+        81,
+        137,
+        6,
+        252,
+        61,
+        117,
+        208,
+        163
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "instrument",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  115,
+                  116,
+                  114,
+                  117,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument.mint",
+                "account": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "governance",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  97,
+                  110,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "instrument"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "configureOps",
+      "discriminator": [
+        215,
+        205,
+        109,
+        1,
+        227,
+        56,
+        128,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.instrument",
+                "account": "opsWorkspace"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "actor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  97,
+                  117,
+                  100,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "sequence"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "leadHours",
+          "type": "u16"
+        },
+        {
+          "name": "escalateHours",
+          "type": "u16"
+        },
+        {
+          "name": "sequence",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setOpsMember",
+      "discriminator": [
+        129,
+        165,
+        118,
+        33,
+        37,
+        149,
+        198,
+        74
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.instrument",
+                "account": "opsWorkspace"
+              }
+            ]
+          }
+        },
+        {
+          "name": "target",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  97,
+                  117,
+                  100,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "sequence"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "role",
+          "type": "u8"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "active",
+          "type": "bool"
+        },
+        {
+          "name": "sequence",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setOpsDeadline",
+      "discriminator": [
+        48,
+        209,
+        40,
+        75,
+        19,
+        51,
+        115,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.instrument",
+                "account": "opsWorkspace"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "actor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "action"
+        },
+        {
+          "name": "deadline",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  100,
+                  101,
+                  97,
+                  100,
+                  108,
+                  105,
+                  110,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  97,
+                  117,
+                  100,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "sequence"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "dueAt",
+          "type": "i64"
+        },
+        {
+          "name": "sequence",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updateOpsCase",
+      "discriminator": [
+        183,
+        82,
+        116,
+        85,
+        63,
+        214,
+        246,
+        122
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.instrument",
+                "account": "opsWorkspace"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "actor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "assignee",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "assignee.wallet",
+                "account": "opsMember"
+              }
+            ]
+          }
+        },
+        {
+          "name": "action"
+        },
+        {
+          "name": "right"
+        },
+        {
+          "name": "case",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  99,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "arg",
+                "path": "holder"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  97,
+                  117,
+                  100,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "sequence"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "holder",
+          "type": "pubkey"
+        },
+        {
+          "name": "owner",
+          "type": "pubkey"
+        },
+        {
+          "name": "status",
+          "type": "u8"
+        },
+        {
+          "name": "note",
+          "type": "string"
+        },
+        {
+          "name": "sequence",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "retainOpsReference",
+      "discriminator": [
+        94,
+        23,
+        194,
+        21,
+        254,
+        143,
+        84,
+        14
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.instrument",
+                "account": "opsWorkspace"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "actor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "action"
+        },
+        {
+          "name": "right"
+        },
+        {
+          "name": "case",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  99,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "arg",
+                "path": "holder"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  97,
+                  117,
+                  100,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "sequence"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "holder",
+          "type": "pubkey"
+        },
+        {
+          "name": "signature",
+          "type": "string"
+        },
+        {
+          "name": "sequence",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "createOpsNotice",
+      "discriminator": [
+        175,
+        26,
+        162,
+        160,
+        90,
+        114,
+        123,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.instrument",
+                "account": "opsWorkspace"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "actor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipientMember",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "recipient"
+              }
+            ]
+          }
+        },
+        {
+          "name": "action"
+        },
+        {
+          "name": "deadline",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  100,
+                  101,
+                  97,
+                  100,
+                  108,
+                  105,
+                  110,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "case",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  112,
+                  115,
+                  45,
+                  99,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "case.holder",
+                "account": "opsCase"
+              }
+            ]
+          }
+        },
+        {
+          "name": "right",
+          "optional": true
+        },
+        {
+          "name": "notice",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "recipient",
+          "type": "pubkey"
+        },
+        {
+          "name": "kind",
+          "type": "u8"
+        },
+        {
+          "name": "stamp",
+          "type": "i64"
+        },
+        {
+          "name": "subject",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "readOpsNotice",
+      "discriminator": [
+        205,
+        175,
+        91,
+        168,
+        127,
+        28,
+        211,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "signer": true
+        },
+        {
+          "name": "notice",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createActionV2",
       "discriminator": [
         101,
@@ -4984,6 +6137,84 @@ export type Recorda = {
       ]
     },
     {
+      "name": "opsAudit",
+      "discriminator": [
+        128,
+        41,
+        231,
+        60,
+        253,
+        56,
+        90,
+        132
+      ]
+    },
+    {
+      "name": "opsCase",
+      "discriminator": [
+        81,
+        187,
+        61,
+        209,
+        155,
+        8,
+        39,
+        185
+      ]
+    },
+    {
+      "name": "opsDeadline",
+      "discriminator": [
+        230,
+        79,
+        114,
+        197,
+        61,
+        17,
+        215,
+        136
+      ]
+    },
+    {
+      "name": "opsMember",
+      "discriminator": [
+        67,
+        167,
+        160,
+        217,
+        115,
+        90,
+        76,
+        111
+      ]
+    },
+    {
+      "name": "opsNotice",
+      "discriminator": [
+        120,
+        190,
+        174,
+        119,
+        137,
+        99,
+        53,
+        83
+      ]
+    },
+    {
+      "name": "opsWorkspace",
+      "discriminator": [
+        216,
+        205,
+        135,
+        31,
+        139,
+        244,
+        68,
+        113
+      ]
+    },
+    {
       "name": "claimRecord",
       "discriminator": [
         57,
@@ -5207,6 +6438,214 @@ export type Recorda = {
           }
         ],
         "kind": "struct"
+      }
+    },
+    {
+      "name": "opsAudit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workspace",
+            "type": "pubkey"
+          },
+          {
+            "name": "sequence",
+            "type": "u64"
+          },
+          {
+            "name": "actor",
+            "type": "pubkey"
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "subject",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "at",
+            "type": "i64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "note",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "opsCase",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workspace",
+            "type": "pubkey"
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "note",
+            "type": "string"
+          },
+          {
+            "name": "signature",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "opsDeadline",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workspace",
+            "type": "pubkey"
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "dueAt",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "opsMember",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workspace",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "role",
+            "type": "u8"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "opsNotice",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workspace",
+            "type": "pubkey"
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "stamp",
+            "type": "i64"
+          },
+          {
+            "name": "subject",
+            "type": "pubkey"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "readAt",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "opsWorkspace",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "leadHours",
+            "type": "u16"
+          },
+          {
+            "name": "escalateHours",
+            "type": "u16"
+          },
+          {
+            "name": "sequence",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
       }
     },
     {

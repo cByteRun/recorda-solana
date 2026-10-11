@@ -1,6 +1,6 @@
 # Recorda BondOps — product direction
 
-This document supplements [TZ](TZ.md) and [REQUIREMENTS](REQUIREMENTS.md). It defines product value and evolution; it does not amend protocol IDs or close acceptance gates. BO-01–07 now specify the operational layer; current source delivery and live limits are documented in BONDOPS-OPERATIONS and ROADMAP. [ROADMAP](ROADMAP.md) owns delivery status.
+This document supplements [TZ](TZ.md) and [REQUIREMENTS](REQUIREMENTS.md). It defines product value and evolution; it does not amend protocol IDs or close acceptance gates. BO-01–10 now specify the operational layer; current source delivery and live limits are documented in BONDOPS-OPERATIONS and ROADMAP. [ROADMAP](ROADMAP.md) owns delivery status.
 
 ## Central value
 
@@ -43,7 +43,7 @@ Use a **financial operations workspace**: tables, clear amounts, status filters,
 |---|---|---|
 | 1. One action | Instrument setup → action detail; Expected / Confirmed / Unsettled summary, holder reconciliation table, exception detail and one permitted next action | Locally implemented reconciliation/case views; live evidence gate remains open |
 | 2. Servicing workspace | Instruments / Actions / Exceptions / Audit navigation; search, due-date filters and cross-action attention queue → action → holder → evidence | Locally implemented portfolio/calendar/queues and source adapter; live indexing acceptance remains open |
-| 3. Team operations | Calendar, assignments, notifications, approval queue and retained resolution history | SQLite persistence, workspace wallet roles/scopes and in-app notification/escalation outbox implemented; SSO/external delivery/production acceptance remain open |
+| 3. Team operations | Calendar, assignments, notifications, approval queue and retained resolution history | Rust PDA persistence, transaction-signer roles/scopes and on-chain inbox implemented; SQLite is only a filled Test Workspace. Keeper/external delivery/Devnet acceptance remain open |
 | 4. Infrastructure | API/SDK, settlement connectors and embedded servicing views | Long-term integration product; requires reliability, security, support and demand evidence |
 
 Recommended first layout: a compact instrument header; three amount cards; a prominent exception row; a holder table; a detail panel containing right, formula, evidence and permitted action. Show principal and final coupon separately for redemption, together with required holder signature and retired supply. Voting uses its own quorum/tally view rather than payment metrics.

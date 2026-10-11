@@ -6,7 +6,7 @@ The central product promise is **Control coupon payments, redemptions, errors an
 
 The recommended category is a financial operations workspace. Start with one action: Expected / Confirmed / Unsettled cards → holder reconciliation table → exception detail with fixed right, formula and authoritative evidence → permitted corrective action → refreshed confirmation. Portfolio queues, team operations and integration APIs follow later. Full flow and the illustrative $500 missing-payment case: [PRODUCT](PRODUCT.md#interface-progression-simple-to-complex).
 
-The operational frontend/backend now covers portfolio, deadline calendar, confirmation states, exception investigation/assignment/history, team authorization and in-app reminders/escalations. Demo and live are separate sources; [setup and limits](BONDOPS-OPERATIONS.md) and [ROADMAP](ROADMAP.md) distinguish source delivery from live acceptance. Preserve readable amounts, technical evidence drill-down, holder signatures and wallet-free audit access.
+The operational frontend/backend now covers portfolio, deadline calendar, confirmation states, exception investigation/assignment/history, team authorization and in-app reminders/escalations. Test Workspace is a filled SQLite example; Solana workspace reads/writes Rust program accounts. Separate RPC selection chooses Devnet or local validator; [setup and limits](BONDOPS-OPERATIONS.md) and [ROADMAP](ROADMAP.md) distinguish source delivery from live acceptance. Preserve readable amounts, technical evidence drill-down, holder signatures and wallet-free audit access.
 
 ## Entry and working journey
 

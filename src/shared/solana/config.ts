@@ -3,7 +3,12 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { createRpcFetch } from "@/shared/solana/rpc-fetch";
 
 export const DEVNET_RPC = import.meta.env?.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
-export const connection = new Connection(DEVNET_RPC, {
+export const LOCAL_RPC = import.meta.env?.VITE_LOCAL_SOLANA_RPC_URL || 'http://127.0.0.1:8899';
+export type RpcNetwork = 'devnet'|'local';
+export function selectedRpc(): RpcNetwork {try{return sessionStorage.getItem('recorda-rpc')==='local'?'local':'devnet';}catch{return 'devnet';}}
+export const RPC_NETWORK=selectedRpc();
+export const RPC_URL=RPC_NETWORK==='local'?LOCAL_RPC:DEVNET_RPC;
+export const connection = new Connection(RPC_URL, {
   commitment: "confirmed",
   disableRetryOnRateLimit: true,
   fetch: createRpcFetch()
@@ -14,10 +19,10 @@ export const MEMO_PROGRAM_ID = new PublicKey(
 );
 
 export function explorerTx(signature: string) {
-  return `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+  return `https://explorer.solana.com/tx/${signature}?${RPC_NETWORK==='local'?`cluster=custom&customUrl=${encodeURIComponent(RPC_URL)}`:'cluster=devnet'}`;
 }
 
 export function explorerAddress(address: string) {
-  return `https://explorer.solana.com/address/${address}?cluster=devnet`;
+  return `https://explorer.solana.com/address/${address}?${RPC_NETWORK==='local'?`cluster=custom&customUrl=${encodeURIComponent(RPC_URL)}`:'cluster=devnet'}`;
 }
 

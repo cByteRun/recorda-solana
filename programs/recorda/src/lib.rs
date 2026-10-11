@@ -16,12 +16,22 @@ pub mod distributor;
 pub use distributor::*;
 pub mod engine;
 pub use engine::*;
+pub mod bondops;
+pub use bondops::*;
 
 declare_id!("CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF");
 
 #[program]
 pub mod recorda {
     use super::*;
+    pub fn initialize_ops(ctx: Context<InitializeOps>) -> Result<()> { bondops::initialize(ctx) }
+    pub fn configure_ops(ctx: Context<ConfigureOps>, lead_hours: u16, escalate_hours: u16, sequence: u64) -> Result<()> { bondops::configure_workspace(ctx, lead_hours, escalate_hours, sequence) }
+    pub fn set_ops_member(ctx: Context<SetOpsMember>, wallet: Pubkey, role: u8, name: String, active: bool, sequence: u64) -> Result<()> { bondops::set_member(ctx, wallet, role, name, active, sequence) }
+    pub fn set_ops_deadline(ctx: Context<SetOpsDeadline>, due_at: i64, sequence: u64) -> Result<()> { bondops::set_deadline(ctx, due_at, sequence) }
+    pub fn update_ops_case(ctx: Context<UpdateOpsCase>, holder: Pubkey, owner: Pubkey, status: u8, note: String, sequence: u64) -> Result<()> { bondops::update_case(ctx, holder, owner, status, note, sequence) }
+    pub fn retain_ops_reference(ctx: Context<RetainOpsReference>, holder: Pubkey, signature: String, sequence: u64) -> Result<()> { bondops::retain_reference(ctx, holder, signature, sequence) }
+    pub fn create_ops_notice(ctx: Context<CreateOpsNotice>, recipient: Pubkey, kind: u8, stamp: i64, subject: Pubkey) -> Result<()> { bondops::create_notice(ctx, recipient, kind, stamp, subject) }
+    pub fn read_ops_notice(ctx: Context<ReadOpsNotice>) -> Result<()> { bondops::read_notice(ctx) }
     pub fn create_action_v2(
         ctx: Context<CreateV2>,
         id: u64,

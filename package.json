@@ -36,7 +36,10 @@
     "benchmark:protocol": "node scripts/measure-protocol.mjs",
     "build:bondops": "node scripts/build-bondops.mjs",
     "test:bondops": "node --test --test-isolation=none server/bondops/*.test.mjs",
-    "bondops:serve": "node scripts/bondops-server.mjs"
+    "bondops:serve": "node scripts/bondops-server.mjs",
+    "bondops:local": "node scripts/bondops-local.mjs",
+    "protocol:test:bondops": "node scripts/protocol-test.mjs --suite=bondops",
+    "protocol:test:bondops:ui": "node scripts/protocol-test.mjs --suite=bondops --ui"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.32.1",

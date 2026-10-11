@@ -111,7 +111,7 @@ export async function phantomSignAndSend({
       });
       if (simulation.value.err) {
         const logs = (simulation.value.logs ?? []).slice(-6).join("\n");
-        throw new Error(`${label} simulation failed on Solana Devnet: ${JSON.stringify(simulation.value.err)}${logs ? `\n${logs}` : ""}`);
+        throw new Error(`${label} simulation failed on Solana: ${JSON.stringify(simulation.value.err)}${logs ? `\n${logs}` : ""}`);
       }
 
       let signed: Transaction | VersionedTransaction;
@@ -125,7 +125,7 @@ export async function phantomSignAndSend({
       } catch (error) {
         if (/unexpected error/i.test(errorMessage(error))) {
           throw new Error(
-            "Phantom could not sign the Devnet transaction. Set Phantom to Solana Devnet, verify the connected account, unlock the wallet and reconnect. RPC simulation passed; no transaction was submitted.",
+            "Phantom could not sign the transaction. Verify the selected RPC and connected account, unlock the wallet and reconnect. RPC simulation passed; no transaction was submitted.",
             { cause: error }
           );
         }

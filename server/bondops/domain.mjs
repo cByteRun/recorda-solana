@@ -4,14 +4,30 @@ export const iso=(seconds)=>new Date(Number(seconds)*1000).toISOString();
 export function event(state,actor,type,title,detail,context={}){state.audit.push({id:key(state.audit.length,state.revision,type,context),at:new Date().toISOString(),actor,type,title,detail,...context});}
 export function seed(mode,now=Date.now()){
  const at=delta=>new Date(now+delta*3600000).toISOString();
- const empty={schema:1,mode,instruments:[],actions:[],cases:[],audit:[],notifications:[],preferences:{leadHours:72,escalateHours:24},lastSync:null,syncError:null};
+ const empty={schema:2,mode,instruments:[],actions:[],cases:[],audit:[],notifications:[],preferences:{leadHours:72,escalateHours:24},lastSync:null,syncError:null};
  if(mode==='live')return empty;
  const instrument={id:'DEMO-KZB26',symbol:'KZB26',name:'KASE Corporate Bond 2026',authority:'demo-operator',asset:'DEMO-MOCKUSD',currency:'Mock USD',decimals:2,faceMinor:'100000',rateBps:1000,frequency:2,supply:'17',redeemedSupply:'0',maturity:at(720),source:'illustrative',verified:true};
  const right=(id,units,amount,status)=>({id:`DEMO-CA-001:${id}`,holder:id,name:`Investor ${id}`,units:String(units),principalMinor:'0',couponMinor:String(amount),expectedMinor:String(amount),confirmedMinor:status==='confirmed'?String(amount):'0',status,signature:null,settledSlot:status==='confirmed'?'demo':null,evidence:status==='confirmed'?'Illustrative confirmation; not chain evidence':'No matching execution confirmation',calculated:true,source:'illustrative'});
  empty.instruments=[instrument];empty.actions=[{id:'DEMO-CA-001',version:2,label:'Купонная выплата · H2 2026',instrument:instrument.id,kind:'coupon',status:'executing',recordAt:at(-24),dueAt:at(-2),dueSource:'demo schedule',asset:instrument.asset,currency:instrument.currency,decimals:2,faceMinor:instrument.faceMinor,rateBps:1000,frequency:2,approved:true,funded:true,receipt:null,source:'illustrative',verified:true,rights:[right('A',10,50000,'unknown'),right('B',5,25000,'confirmed'),right('C',2,10000,'confirmed'),right('D',0,0,'confirmed')]},{id:'DEMO-CA-002',version:2,label:'Решение держателей',instrument:instrument.id,kind:'voting',status:'scheduled',recordAt:at(24),dueAt:at(48),dueSource:'demo voting close',asset:instrument.asset,currency:instrument.currency,decimals:2,approved:false,funded:false,source:'illustrative',verified:true,rights:[],quorumBps:5000},{id:'DEMO-CA-003',version:2,label:'Полное погашение',instrument:instrument.id,kind:'redemption',status:'scheduled',recordAt:at(720),dueAt:at(720),dueSource:'demo maturity',asset:instrument.asset,currency:instrument.currency,decimals:2,approved:false,funded:false,source:'illustrative',verified:true,rights:[]}];
  event(empty,'demo','snapshot','Зафиксированы права инвесторов','17 единиц · 10 / 5 / 2 / 0',{instrument:instrument.id,action:'DEMO-CA-001'});
  event(empty,'demo','calculation','Рассчитан купон','850.00 Mock USD · по историческим правам',{instrument:instrument.id,action:'DEMO-CA-001'});
- reconcileCases(empty,now);return empty;
+ const demoTransactions=[
+  ['issue','confirmed','Выпуск 17 облигаций','10 / 5 / 2 / 0 · Token-2022 пример',-48],
+  ['snapshot','confirmed','Зафиксированы исторические права','Cutoff: A=10, B=5, C=2, D=0',-24],
+  ['transfer','confirmed','Перевод после record date','A → B: 4 облигации. Текущие позиции 6 / 9 / 2 / 0; купон остаётся 500 / 250 / 100 / 0',-22],
+  ['approval','confirmed','Оператор одобрил обязательство','850.00 Mock USD · подтверждён расчёт по историческим правам',-20],
+  ['funding','confirmed','Vault обеспечен средствами','850.00 Mock USD · пример финансирования',-18],
+  ['settlement','confirmed','Investor B: исполнено 250.00','Пример подтверждения выплаты и защиты от повторного исполнения',-16],
+  ['settlement','confirmed','Investor C: исполнено 100.00','Иллюстративное processed право',-15],
+  ['transaction','failed','Investor A: неуспешная попытка','Пример ошибки исполнения. Право остаётся неоплаченным',-10],
+  ['transaction','pending','Investor A: отправленная транзакция','Пример ожидания финальности; новую выплату нельзя считать безопасной',-8],
+  ['transaction','unknown','Investor A: подтверждение недоступно','500.00 Mock USD требуют сверки; отсутствие ответа RPC не подтверждает выплату',-4],
+ ];
+ empty.demoTransactions=demoTransactions.map(([kind,status,title,detail,hours],index)=>({id:`TEST-TX-${String(index+1).padStart(3,'0')}`,kind,status,title,detail,at:at(hours),instrument:instrument.id,action:'DEMO-CA-001',source:'illustrative'}));
+ empty.audit=[];for(const tx of empty.demoTransactions){event(empty,'Test Workspace',tx.kind,tx.title,tx.detail,{instrument:tx.instrument,action:tx.action,source:'illustrative',evidence:`${tx.id} · ${tx.status}`});empty.audit.at(-1).at=tx.at;}
+ reconcileCases(empty,now);
+ const investigation=empty.cases[0];if(investigation){investigation.owner='demo-reviewer';investigation.status='investigating';investigation.history.push({at:at(-3),actor:'demo-reviewer',note:'Сверить retained transaction и finalized право. Не повторять выплату до проверки.',evidence:'Test example: unknown confirmation'});event(empty,'demo-reviewer','case','Начат разбор исключения','Investor A · 500.00 Mock USD · назначен Reviewer',{instrument:instrument.id,action:'DEMO-CA-001',caseId:investigation.id,source:'illustrative'});}
+ return empty;
 }
 export function totals(actions){const groups=new Map();for(const a of actions.filter(a=>a.kind!=='voting'&&a.status!=='cancelled')){const k=`${a.asset}:${a.decimals}`;const g=groups.get(k)??{asset:a.asset,currency:a.currency,decimals:a.decimals,expected:0n,confirmed:0n,unsettled:0n,unknown:0n};for(const r of a.rights){if(!r.calculated)continue;const expected=BigInt(r.expectedMinor),confirmed=BigInt(r.confirmedMinor);g.expected+=expected;g.confirmed+=confirmed;g.unsettled+=expected-confirmed;if(r.status==='unknown')g.unknown+=expected-confirmed;}groups.set(k,g);}return [...groups.values()].map(g=>Object.fromEntries(Object.entries(g).map(([k,v])=>[k,typeof v==='bigint'?v.toString():v])));}
 export function timing(action,now=Date.now()){if(action.status==='cancelled'||action.verified&&['settled','finalized'].includes(action.status))return 'complete';if(!action.dueAt)return 'unscheduled';return Date.parse(action.dueAt)<now?'overdue':'upcoming';}

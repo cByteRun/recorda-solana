@@ -101,20 +101,21 @@ The [product experience](PRODUCT-EXPERIENCE.md) makes the existing business beha
 - [x] Investor card comparing current and record-date positions, entitlement and formula; finalized-action result and onward navigation.
 - [x] Desktop/mobile welcome and working-route checks. Local chain/browser checks remain scoped evidence; historical full-audit hashes above do not certify this UI revision.
 
-## BondOps frontend/backend delivery (2026-10-12)
+## BondOps program backend and Test Workspace (2026-10-12)
 
-- [x] Reference dashboard: preserve welcome, light/dark operator shell and working Coupon/Voting/Redemption/claims routes; adapt demo to TZ's 17 units / 850 Mock USD obligation.
-- [x] **BO-01 — Timeliness:** month calendar, deadline queues, operator-set coupon due dates and contract-sourced voting/maturity dates; persist timezone-qualified schedules.
-- [x] **BO-02 — Reconciliation:** server finalized-reader adapter reuses protocol audits; asset-separated integer summaries and Due/Pending/Failed/Unknown/Confirmed states. Failed live reads never fall back to demo.
-- [x] **BO-03 — Exception investigation and management:** fixed right/formula/cutoff, approval/funding/proof and permitted next action; durable assignment/history, retained signature, repeat-safe reconciliation and proof-gated resolution.
-- [x] **BO-04 — Team security:** origin-bound single-use wallet challenge, server roles/scopes, membership administration/revocation, HttpOnly session and CSRF validation; sandbox identities are explicit and production-disabled.
-- [x] **BO-05 — Portfolio and audit:** instrument/action tables, durable observation/decision journal, case/action links and provenance-labelled exports; full independent action audit remains in operational screens.
-- [x] **BO-06 — Notifications/escalations:** minute worker, deduplicated in-app outbox, per-recipient inbox/read status, assigned-case escalation and configurable lead/escalation hours.
-- [x] **BO-07 — Source boundary:** Solana source/status screen and documented future bank-confirmation contract; no simulated bank settlement.
-- [ ] **BO-01–06 live acceptance:** complete real wallet login → scoped portfolio → finalized reconciliation → evidence-backed exception closure on Devnet. Public RPC smoke currently blocked by 429; no live PASS claimed.
-- [ ] **BO-05 archival/scale acceptance:** validate complete historical retention, backups and reliable recovery at the supported portfolio size.
-- [ ] **BO-06 external delivery:** select email/messenger provider, implement delivery/retry state and verify recipient delivery; current delivery is in-app only.
-- [ ] **BO-07 bank connector:** provider selection is explicitly deferred by user; implement authenticated final confirmations and replay/conflict tests after selection.
-- [ ] Production hosting: persistent database/worker, operational SLA, organization SSO and deployment verification; current runtime envelope is a persistent single-node service.
+- [x] **BO-08:** Move live roles, deadlines, cases, references, append-only decisions and inbox/rules to Rust PDA accounts; wallet-signed writes and on-chain permission/proof checks. No live SQLite reads/writes and no live workspace API calls.
+- [x] **BO-09:** Separate workspace and RPC selections; Devnet / local validator applied across operational screens and explorer links; keep selected source on navigation/reload.
+- [x] **BO-10:** Filled SQLite Test Workspace with TZ's 17 units / 850 Mock USD, post-cutoff transfer, approval/funding, evidence-state examples, assigned investigation, calendar and inbox; conditional bottom-left workspace card.
+- [x] **BO-01–03:** Calendar, source-derived reconciliation, formula/cutoff/approval/funding/evidence panel, stable case assignment/history and proof-gated closure through the Rust program.
+- [x] **BO-04–05:** Canonical per-instrument membership/revocation and sequenced immutable audit PDAs; public proof reads and provenance-labelled exports. Financial execution permissions remain in the existing action engine/governance.
+- [x] **BO-06 source:** Rust rules/inbox, Clock-validated signed notice creation, deduplication and recipient acknowledgement. Test Workspace has a separate illustrative minute worker.
+- [x] Local fixture runner loads the current program, seeds real example transactions and keeps an isolated validator available for the UI.
+- [ ] **BO-01–06 Devnet acceptance:** Deploy/upgrade the new SBF binary on public Devnet, then verify with actual Phantom and an available RPC. Prior public discovery hit 429; no public deployment/live PASS is claimed.
+- [ ] **BO-03 recovery:** Define an authenticated on-chain failed-reference release/replacement mechanism; unresolved reference replacement currently remains conservatively blocked.
+- [ ] **BO-05 archival/scale:** Retention, recovery, RPC history availability, rent/fees and portfolio-size acceptance. Public chain metadata/notes are bounded and publicly readable.
+- [ ] **BO-06 automation/external delivery:** Keeper scheduling/signer operations and email/messenger delivery/retries; signed Check deadlines works now.
+- [ ] **BO-07 bank connector:** Provider selection is deferred by user; authenticated callbacks, exact obligation binding and replay/conflict acceptance follow provider selection.
 
-Verification: 11 backend tests and 47 isolated browser checks passed; Vite and Next builds passed. Backend tests exercise confirmed/failure/unknown flows with injected authoritative readers; transaction tests use real instruction encoding and login tests use real Ed25519 signatures. Browser tests cover the API/SQLite demo path and source isolation, not a real Devnet payment. Detailed evidence and limitations: [BONDOPS-OPERATIONS](BONDOPS-OPERATIONS.md#verification). Existing FR-01–58 and human MVP submission gates are unchanged.
+Current evidence is scoped to source builds, real local-validator transactions, the browser-to-program path and the illustrative Test Workspace. Commands and limitations: [BONDOPS-OPERATIONS](BONDOPS-OPERATIONS.md#verification). Historical full-audit counts above do not certify this revision or close existing human Devnet/Phantom gates.
+
+Local evidence: 15 Rust unit tests, 9 program checks, 8 Test API/reader checks, 14 Test Workspace/browser checks and one browser → signed instruction → program account → RPC-loss recovery check passed; SBF/IDL, Vite and Next compilation passed. Public Devnet deployment and autonomous keeper remain unchecked.
