@@ -1,6 +1,8 @@
 # Technical Specification (TZ)
 ## KASE Corporate Actions Engine
 
+**Product supplement:** [Recorda BondOps](PRODUCT.md) frames the same lifecycle around issuer/paying-agent operations: control obligations, execution confirmations and exceptions. Its proposed settlement workspace and long-term Infrastructure API/SDK direction add product intent; they do not replace the KASE scenarios or establish implementation status.
+
 **Authority:** the KASE track brief supplied by the team → this TZ and its [REQUIREMENTS annex](REQUIREMENTS.md) → architecture → implementation. The brief takes precedence for track obligations. Recorda's additional business scope is explicitly separated below and cannot replace required scenarios.
 
 This document defines the product boundary and key business rules. Detailed UC/FR/NFR/TC remain in REQUIREMENTS; technical contracts belong in [ARCHITECTURE](ARCHITECTURE.md); implementation and acceptance status belong in [ROADMAP](ROADMAP.md). Section numbers are retained for existing references.

@@ -1,5 +1,7 @@
 # Architecture
 
+**BondOps context:** this lifecycle supplies rights, authorized execution and evidence for [the servicing workspace](PRODUCT.md). Cross-action exception aggregation, case management, bank confirmations and a supported Infrastructure API/SDK are proposed extensions, not current architectural components.
+
 Current source architecture. [TZ](TZ.md) and [REQUIREMENTS](REQUIREMENTS.md) define scope; [ROADMAP](ROADMAP.md) owns delivery status; [SECURITY-AUDIT](SECURITY-AUDIT.md) owns attack coverage and evidence. Installation and deployment: [README](../README.md).
 
 ## Frameworks and runtime

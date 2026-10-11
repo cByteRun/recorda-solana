@@ -1,12 +1,16 @@
 # Recorda 🧾
 
-### Corporate actions for tokenized bonds on Solana
+### Recorda BondOps — servicing workspace for tokenized bonds
 
 **Solana · Token-2022 · Phantom · Coupon / Voting / Redemption**
 
-> Turn ownership at a record date into an approved payment, a holder decision or a completed redemption — with proof of who was entitled, who approved it and what happened.
+> Control coupon payments, redemptions, errors and confirmations from one workspace.
 
-**🎯 The product edge:** connect historical ownership, investor rights, authorized execution and the final receipt in one traceable workflow. Operators service the bond, investors exercise their rights, and auditors verify the result from chain data.
+**🎯 The product value:** help issuers, paying agents and operations specialists see what is owed, what execution is confirmed, and what still requires attention. Fixed record-date rights, authorized execution and verifiable evidence underpin that servicing workflow.
+
+**Current foundation:** issuance/registry → rights → approval/funding → execution → audit. **Next product step:** an exception-focused settlement workspace; this interface is proposed, not shipped. [Product direction and illustrative missing-payment case](docs/PRODUCT.md) supplement TZ without replacing its required scenarios.
+
+**Long-term direction — Recorda Infrastructure:** API/SDK for exchanges, tokenization platforms, custodians and financial developers to integrate bond-servicing mechanisms on Solana. Production reliability and market demand must be demonstrated before treating this as a proven offering.
 
 **Record Date → Right → Controlled Execution → Verifiable Proof**
 
@@ -350,6 +354,8 @@ For retained proofs, `npm run distribution:index -- journal.json parameters.json
 
 | File | Single responsibility |
 |---|---|
+| [Product](docs/PRODUCT.md) | BondOps value, target users, proposed exception flow and Infrastructure direction |
+| [Product experience](docs/PRODUCT-EXPERIENCE.md) | Current screens and proposed interface progression |
 | [TZ](docs/TZ.md) | KASE brief obligations, key business rules and separately scoped Recorda additions |
 | [Requirements](docs/REQUIREMENTS.md) | Business domains and UC/FR/NFR/TC checklists; live DoD |
 | [Roadmap](docs/ROADMAP.md) | Delivered milestones and remaining acceptance/release work |

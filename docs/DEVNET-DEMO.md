@@ -1,5 +1,7 @@
 # Devnet demo: Coupon → Voting → Full Redemption
 
+**BondOps presentation:** explain the run as servicing an obligation: establish rights → approve/fund → execute → verify confirmations and outcome. The [CA-001 missing-payment example](PRODUCT.md#proposed-demonstration-missing-coupon-payment) is a separate illustrative future feature. Its $1,750/$1,250/$500 totals must not be presented as this runner's data or evidence.
+
 Judge-facing MVP walkthrough. The runner drives one fresh instrument through three corporate actions; the presenter confirms real Phantom signatures and switches accounts. Allow **20–40 minutes**. Post-MVP scenarios are verified separately by the feature/attack audit.
 
 ## Preparation

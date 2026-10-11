@@ -1,5 +1,7 @@
 # Critical business invariants — coverage checklist
 
+**BondOps value:** these invariants underpin [obligation reconciliation and exception resolution](PRODUCT.md): a fixed right is distinct from confirmed execution, ambiguous results must be reconciled before retry, and a corrective action cannot bypass authority or duplicate-payment protection. The proposed exception workspace is not covered as delivered by this checklist.
+
 This checklist derives from [TZ](TZ.md) and its normative [REQUIREMENTS annex](REQUIREMENTS.md). It groups existing obligations by business domain and introduces no new requirements. Delivery and live acceptance remain owned by [ROADMAP](ROADMAP.md). The [README summary](../README.md#business-domains-and-critical-invariants) links here.
 
 `[x]` means implementation and executable checks cover the stated scope. `[ ]` means a gap, partial guarantee or unclosed acceptance gate. A checked item is not exhaustive security assurance or human Devnet acceptance. AT references resolve to the [MVP attack matrix](SECURITY-AUDIT.md#attack-matrix) and [v2/Post-MVP matrix](SECURITY-AUDIT.md#v2--post-mvp-attack-matrix).

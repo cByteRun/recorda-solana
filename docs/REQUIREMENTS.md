@@ -1,5 +1,7 @@
 # Requirements — normative TZ annex
 
+**Product context:** [PRODUCT](PRODUCT.md) defines BondOps servicing value and a proposed missing-payment workflow. Existing UC/FR/NFR/TC remain unchanged. Exception aggregation, operational case management and external settlement confirmation require separately specified requirements and acceptance before delivery claims.
+
 This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained; new IDs are appended. Delivery status belongs in [ROADMAP](ROADMAP.md); evidence is maintained in [ROADMAP](ROADMAP.md#verification-and-gaps).
 
 Current human Devnet MVP reproduction for Coupon, Voting and Redemption is described in [the demo guide](DEVNET-DEMO.md) and [README](../README.md#devnet-demo--coupon--voting--redemption), using a real Operator and A/B/C Phantom accounts. `test:e2e:actions:devnet` supplies happy-path evidence; `test:audit` retains feature and attack coverage, including TC-04/15–19 negative scenarios and Post-MVP. Airdrop supplies test SOL for fees/rent, not coupon funding. Historical v1 evidence does not establish current v2 acceptance.

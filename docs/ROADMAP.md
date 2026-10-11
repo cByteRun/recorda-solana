@@ -2,6 +2,16 @@
 
 Source scope **FR-01–58 is implemented**. The current focus is fresh feature/attack evidence, human Phantom three-action Devnet acceptance and release. [TZ](TZ.md) defines the product; [REQUIREMENTS](REQUIREMENTS.md) owns UC/FR/NFR/TC wording and checklists; this file owns delivery and open work.
 
+## BondOps product evolution — proposed
+
+[PRODUCT](PRODUCT.md) supplements TZ with a servicing focus. These steps are open product work, separate from implemented FR-01–58 and current release gates:
+
+- [ ] Specify authoritative confirmation/finality and exception classification, including uncertain or unavailable evidence; map the new acceptance criteria before implementation.
+- [ ] Build one-action Expected / Confirmed / Unsettled reconciliation and holder exception drill-down; validate the illustrative CA-001 case and safe correction/recovery.
+- [ ] Align welcome/workspace copy with BondOps and validate the recurring servicing job with issuers, paying agents and operations specialists.
+- [ ] Add portfolio discovery and an attention queue after the one-action flow works; specify team assignments, notifications and resolution history separately.
+- [ ] Validate bank confirmation connectors and Infrastructure API/SDK demand, reliability and supported operations before expanding the offering.
+
 ## Verification and gaps
 
 Two entrypoints: `test:e2e:actions:devnet` for human MVP demonstration and `test:audit` for requirement/feature/attack coverage. Preparation: [README](../README.md). Presentation: [DEVNET-DEMO](DEVNET-DEMO.md). Contracts/operations: [ARCHITECTURE](ARCHITECTURE.md). Attack matrix: [SECURITY-AUDIT](SECURITY-AUDIT.md). Exact requirement→evidence paths: [audit-coverage.json](audit-coverage.json).

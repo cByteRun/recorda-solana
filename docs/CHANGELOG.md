@@ -2,6 +2,12 @@
 
 Dated entries describe their own revisions. Historical counts, deployment addresses and pending-work notes do not establish current acceptance; current architecture is in [ARCHITECTURE](ARCHITECTURE.md), and fresh evidence gates are in [ROADMAP](ROADMAP.md).
 
+## 2026-10-12 — BondOps product direction (documentation only)
+
+- Reframe README and documentation around issuer/paying-agent servicing: control coupon/redemption obligations, exceptions and execution confirmations in one workspace.
+- Add [PRODUCT](PRODUCT.md) with the illustrative CA-001 $500 confirmation gap, authorized reconciliation/correction flow, interface progression and long-term Recorda Infrastructure direction.
+- Separate proposed capabilities from existing screens, normative requirements and Devnet evidence. No application/protocol behavior or requirement IDs changed.
+
 ## 2026-10-12 — Welcome and connected product experience
 
 - Add a wallet-free EN/RU welcome with a clear Operator promise, orbital background motion and an interactive 10 → 6 current units / 10 fixed rights / 500 Mock USD coupon story. Include pause, manual steps, keyboard role tabs and reduced-motion behavior.

@@ -1,6 +1,12 @@
 # Recorda product & marketing experience
 
-The product promise is **Ownership changes. Rights stay recorded.** The primary user is the bond servicing Operator; Investor and Auditor perspectives explain the consequence of the same action. This presentation does not add track requirements or replace [TZ](TZ.md), live acceptance or submission gates.
+The central product promise is **Control coupon payments, redemptions, errors and confirmations from one workspace — Recorda BondOps.** **Ownership changes. Rights stay recorded.** remains a supporting explanation of entitlement correctness. The primary user is the bond servicing Operator; Investor and Auditor perspectives explain the consequence of the same action. This presentation does not add track requirements or replace [TZ](TZ.md), live acceptance or submission gates.
+
+## Proposed BondOps interface
+
+The recommended category is a financial operations workspace. Start with one action: Expected / Confirmed / Unsettled cards → holder reconciliation table → exception detail with fixed right, formula and authoritative evidence → permitted corrective action → refreshed confirmation. Portfolio queues, team operations and integration APIs follow later. Full flow and the illustrative $500 missing-payment case: [PRODUCT](PRODUCT.md#interface-progression-simple-to-complex).
+
+This is product direction, not a description of the current screens. The current welcome and routes below remain the implemented presentation; updating their copy and building reconciliation views is separate work. Preserve readable amounts, technical evidence drill-down, holder signatures and wallet-free audit access.
 
 ## Entry and working journey
 
@@ -12,8 +18,6 @@ The product promise is **Ownership changes. Rights stay recorded.** The primary 
 - Audit, raw minor-unit amounts, full holder/destination addresses, commitments and transaction evidence remain available. Voting document verification, role authorization and wallet signature requirements remain enforced.
 
 ## Welcome: corporate actions in a new light
-
-The user-supplied video in `tmp_assets/Matias____-_Shipped_a_new_shader_today_-_Ray-traced_lights_locally_-_Stored_bake_DXajrT.mp4` is the visual source of truth. Its black field, generous negative space, two-line copy on the left, brief explanation on the right, and interactive light sculpture in the center define the composition. It is a single welcome experience, with no landing-page sections. The video is a design reference, not a runtime backdrop.
 
 **Real assets. Lasting rights.** introduces KASE bonds, Solana settlement and record-date rights. Twelve spheres form the current SVG logos: **KASE's faceted triangle → Solana's three offset bars → RECORDA's R**, centered in a full-width black field. The two-line heading and small pill actions sit at the left edge; brief product copy sits on the right. The scene retains generous negative space and fits the original 2590 × 1560 viewport without scrolling. Mobile stacks the same content rather than shrinking desktop copy.
 

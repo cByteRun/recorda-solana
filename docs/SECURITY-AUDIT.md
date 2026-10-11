@@ -1,5 +1,7 @@
 # Requirements and adversarial audit
 
+**BondOps boundary:** [PRODUCT](PRODUCT.md) proposes settlement exceptions and corrective workflows. Existing negative/recovery tests underpin them; they do not verify a shipped exception queue, bank confirmation connector or operational case system. A missing confirmation is not proof of nonpayment; reconcile uncertain execution before authorizing another payment.
+
 Authority: [TZ](TZ.md) and its normative [REQUIREMENTS annex](REQUIREMENTS.md). [ROADMAP](ROADMAP.md) records delivery; it does not waive requirements. This revision covers the complete FR-01–58 source scope, retaining Coupon and the separately labelled Browser/Memo reference. New typed MVP and Post-MVP acceptance sources are linked below; deployment/human Devnet acceptance stays separate.
 
 Story: React Operator opens an instrument/action → the client reads canonical PDAs and Token-2022 accounts → the wallet signs the simulated instruction → Anchor validates authority, record date, immutable rights and lifecycle → atomic payment records progress → an independent read reopens and reconciles the final receipt. Investor/demo/Auditor role selection is presentation, never signing authority.
