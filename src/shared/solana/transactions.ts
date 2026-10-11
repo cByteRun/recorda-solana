@@ -157,7 +157,8 @@ export async function phantomSignAndSend({
       const signedBytes = Uint8Array.from(signed.serialize());
       attemptedSignature = base58Encode(signed.signatures[0]);
       const height = await rpc.getBlockHeight("confirmed");
-      if (height > latest.value.lastValidBlockHeight) {
+      // Leave forwarding time after a slow human approval, not just one block.
+      if (height + 20 >= latest.value.lastValidBlockHeight) {
         throw new Error("BLOCKHASH_EXPIRED_BEFORE_SEND");
       }
       if (!provider.publicKey?.equals(operator)) {
@@ -171,7 +172,9 @@ export async function phantomSignAndSend({
       broadcastSignature = await rpc.sendRawTransaction(signedBytes, {
         skipPreflight: false,
         preflightCommitment: "confirmed",
-        maxRetries: 0,
+        // RPC may forward the SAME signed bytes again; this cannot create a
+        // second payment/signature. Never rebuild after broadcast.
+        maxRetries: 20,
         minContextSlot: requiredContextSlot
       });
       onSubmitted?.(broadcastSignature);
@@ -194,6 +197,20 @@ export async function phantomSignAndSend({
       // Once broadcast, never rebuild/re-sign a payment automatically: its
       // confirmation can be ambiguous even when the transfer actually landed.
       if (broadcastSignature) {
+        // Confirmation subscriptions can lag or fail even after inclusion.
+        // Reconcile this exact signature against history before reporting failure.
+        try {
+          const status = (await rpc.getSignatureStatuses([broadcastSignature], {
+            searchTransactionHistory: true
+          })).value[0];
+          if (status && !status.err &&
+              (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized")) {
+            onProgress?.("confirmed");
+            return broadcastSignature;
+          }
+        } catch {
+          // Unavailable history is not success and must not authorize a retry.
+        }
         throw new Error(`${label}: ${errorMessage(error)}. Transaction ${broadcastSignature} was submitted. Check its Devnet Explorer status and balances before retrying.`, { cause: error });
       }
       if (broadcastAttempted) {

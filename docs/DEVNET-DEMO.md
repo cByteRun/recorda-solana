@@ -24,7 +24,7 @@ In terminal 3, with Operator selected:
 npm run test:e2e:actions:devnet
 ```
 
-The runner attaches to the already open browser and opens its own tab. Confirm every Phantom request; one stage may require several signatures. Switch to the exact address printed in the terminal. Expected order: Operator setup/Coupon → A/B/C voting → Operator tally → A/B/C redemption → Operator completion.
+The runner attaches to the already open browser and opens its own tab. Confirm every Phantom request; one stage may require several signatures. At each wallet switch, the test tab shows a yellow banner with the expected and connected addresses. Open Phantom in that same Chromium profile → account selector → choose the matching Solana account → unlock. If connection approval is required, click Connect Phantom / Wallet on the test page and approve. The runner refreshes trusted connection without signing; a wrong or unapproved account cannot continue. Expected order: Operator setup/Coupon → A/B/C voting → Operator tally → A/B/C redemption → Operator completion.
 
 | Stage | Presenter action | Expected result |
 |---|---|---|

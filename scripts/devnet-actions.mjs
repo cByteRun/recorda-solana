@@ -7,6 +7,7 @@ import { getAccount, getMint, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_
 import { devnetConnection } from './devnet.mjs';
 import { readChainClock, waitForRecordDate } from '../src/shared/solana/chain-clock.mjs';
 import { protocolStage } from './protocol-stage.mjs';
+import { waitForDevnetWallet } from './devnet-wallet.mjs';
 
 const holders = ['A', 'B', 'C'].map(name => {
   const value = process.env[`RECORDA_HOLDER_${name}`];
@@ -50,21 +51,12 @@ async function click(name, target) {
 }
 async function wallet(address) {
   console.log(`Switch Phantom to ${address}, unlock it. Waiting for that exact account…`);
-  // A navigation creates a new provider which may not expose publicKey until connect().
+  // Display instructions before awaiting extension authorization.
+  await waitForDevnetWallet(page, address);
+  // Synchronize React even when the extension did not emit accountChanged.
   await page.getByRole('button', { name: /^(Connect Phantom|Wallet )/ }).click();
   await idle();
-  const deadline = Date.now() + 600_000;
-  while (Date.now() < deadline) {
-    const active = await page.evaluate(() => (window.phantom?.solana ?? window.solana)?.publicKey?.toBase58());
-    if (active === address) {
-      await page.getByRole('button', { name: /^(Connect Phantom|Wallet )/ }).click();
-      await idle();
-      await expect(page.getByRole('button', { name: `Wallet ${address}`, exact: true })).toBeVisible();
-      return;
-    }
-    await sleep(1000);
-  }
-  throw Error(`Timed out waiting for holder ${address}`);
+  await expect(page.getByRole('button', { name: `Wallet ${address}`, exact: true })).toBeVisible();
 }
 async function report() {
   return page.evaluate(async () => {

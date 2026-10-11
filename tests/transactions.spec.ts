@@ -24,6 +24,7 @@ function harness() {
   }) as Connection["simulateTransaction"];
   rpc.sendRawTransaction = async () => { calls.send += 1; return "submitted-signature"; };
   rpc.confirmTransaction = (async () => ({ context: { slot: 10 }, value: { err: null } })) as Connection["confirmTransaction"];
+  rpc.getSignatureStatuses = async () => ({ context: { slot: 10 }, value: [null] });
   const provider: PhantomProvider = {
     publicKey: operator.publicKey,
     connect: async () => ({ publicKey: operator.publicKey }),
@@ -109,6 +110,43 @@ test("confirmation expiry after broadcast never signs or pays again", async () =
   await expect(h.send()).rejects.toThrow("submitted-signature was submitted");
   expect(h.calls.sign).toBe(1);
   expect(h.calls.send).toBe(1);
+});
+
+for (const state of ['confirmed', 'finalized', 'processed', 'missing', 'failed', 'unavailable'] as const) {
+  test(`confirmation expiry reconciles exact signature: ${state}`, async () => {
+    const h = harness();
+    h.rpc.confirmTransaction = (async () => { throw new Error('block height exceeded'); }) as Connection['confirmTransaction'];
+    h.rpc.getSignatureStatuses = async (signatures, options) => {
+      expect(signatures).toEqual(['submitted-signature']);
+      expect(options).toEqual({ searchTransactionHistory: true });
+      if (state === 'unavailable') throw new Error('RPC unavailable');
+      return { context: { slot: 10 }, value: [state === 'missing' ? null : {
+        slot: 10, confirmations: state === 'finalized' ? null : 1,
+        err: state === 'failed' ? { InstructionError: [0, 'InvalidArgument'] } : null,
+        confirmationStatus: state === 'failed' ? 'finalized' : state
+      }] };
+    };
+    if (state === 'confirmed' || state === 'finalized') {
+      await expect(h.send()).resolves.toBe('submitted-signature');
+    } else {
+      await expect(h.send()).rejects.toThrow('was submitted');
+    }
+    expect(h.calls).toEqual({ simulate: 1, sign: 1, send: 1 });
+  });
+}
+
+test('near-expired human approval rebuilds before send; RPC retries only identical bytes', async () => {
+  const h = harness();
+  let heights = 0;
+  h.rpc.getBlockHeight = async () => ++heights === 1 ? 85 : 50;
+  h.rpc.sendRawTransaction = async (_bytes, options) => {
+    expect(options?.maxRetries).toBe(20);
+    expect(options?.skipPreflight).toBe(false);
+    h.calls.send++;
+    return 'submitted-signature';
+  };
+  await expect(h.send()).resolves.toBe('submitted-signature');
+  expect(h.calls).toEqual({ simulate: 2, sign: 2, send: 1 });
 });
 
 test("successful simulation still requires operator signing before broadcast", async () => {

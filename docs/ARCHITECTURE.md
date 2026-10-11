@@ -72,7 +72,7 @@ Coupon periods are explicitly reserved while Scheduled and permanently consumed 
 
 ### Authority and recovery
 
-Frontend role selection changes presentation, not authority. Phantom holds real keys; browser storage caches references/demo identities. Action PDAs restore state after storage loss. The adapter fixes compute/priority instructions before simulation/signing, checks wallet identity across awaits, normalizes returned wire data and verifies unchanged message/partial signatures. Signed bytes/signature are captured before broadcast; uncertain submissions require reconciliation rather than automatic resending.
+Frontend role selection changes presentation, not authority. Phantom holds real keys; browser storage caches references/demo identities. Action PDAs restore state after storage loss. The adapter fixes compute/priority instructions before simulation/signing, checks wallet identity across awaits, normalizes returned wire data and verifies unchanged message/partial signatures. Signed bytes/signature are captured before broadcast. RPC forwarding retries reuse identical signed bytes; confirmation errors trigger exact-signature history reconciliation. Uncertain submissions never automatically rebuild/re-sign a payment. Near-expired signatures are rebuilt only before broadcast.
 
 Clients validate canonical PDAs, ownership, custody and supply. Independent audits recompute commitments, formulas and outcomes. Current balances alone do not prove historical payments. RPC/archive responses remain trust boundaries; client hashes do not authenticate fabricated provider data. History uses stable address/signature cursors and reports pruned transaction bodies. Closed/reassigned destinations require retained historical evidence.
 

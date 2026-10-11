@@ -2,6 +2,17 @@
 
 Dated entries describe their own revisions. Historical counts, deployment addresses and pending-work notes do not establish current acceptance; current architecture is in [ARCHITECTURE](ARCHITECTURE.md), and fresh evidence gates are in [ROADMAP](ROADMAP.md).
 
+## 2026-10-11 — Human Phantom wallet-switch guidance
+
+- Show expected/connected wallet addresses and account-switch instructions in the runner's browser tab; bring it to the foreground. Refresh Phantom trusted connection without signing or automatic approval, then synchronize React wallet state.
+- Reject wrong/unapproved accounts and include last provider/account/connection state in timeout diagnostics. Update the presenter guide. Runner synchronization tests: 8 passed on rerun (first run hit the existing 25-ms stage-test timing limit); TypeScript passed. Real Phantom three-action acceptance still requires a human run.
+
+## 2026-10-11 — Devnet transaction expiry handling
+
+- Enable bounded RPC forwarding of identical signed bytes (`maxRetries: 20`), preserving single-signature payment identity. Rebuild/re-simulate/re-sign only before broadcast when fewer than 20 block heights remain.
+- On confirmation errors, query the exact submitted signature with transaction-history search. Continue only for successful confirmed/finalized status; missing, processed, failed or unavailable status remains an explicit reconciliation stop without another payment.
+- Transaction regression suite: 31 passed; TypeScript build passed. Full human Phantom Devnet acceptance remains pending; the previously submitted settlement must be reconciled before another demo run.
+
 ## 2026-10-11 — Documentation consistency cleanup
 
 - Consolidate docs into seven main Markdown files: move implementation contracts/operations to ARCHITECTURE, use REQUIREMENTS as the single FR checklist and README/TZ for product positioning. Remove redundant PRODUCT/implementation files, condense ROADMAP and DEVNET-DEMO, and update reference links/machine-readable evidence paths.
