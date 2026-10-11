@@ -43,7 +43,7 @@ test('reduced motion stops automatic storytelling but preserves manual explorati
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await expect(page.locator('.welcome')).toHaveAttribute('data-motion', 'paused');
-  await expect(page.locator('.orbit-system')).toHaveCSS('animation-name', 'none');
+  await expect(page.locator('.bond-unit').first()).toHaveCSS('animation-name', 'none');
   await page.getByRole('button', { name: 'Change the ownership', exact: true }).click();
   await expect(page.locator('.holding-comparison')).toContainText('6');
   await page.getByRole('tab', { name: 'Operator', exact: true }).focus();
@@ -78,4 +78,21 @@ for (const width of [1440, 390, 320]) test(`welcome and workspace fit ${width}px
   await expect(page.getByLabel('Action kind', { exact: true })).toHaveValue('voting');
   await expect(page.getByLabel('Instrument PDA', { exact: true })).toHaveValue('11111111111111111111111111111111');
   await page.screenshot({ path: `target/design-evidence/workspace-${width}.png`, fullPage: true });
+});
+
+test('rights choreography moves four bonds while keeping the entitlement readable and supports replay', async ({ page }) => {
+  await page.goto('/');
+  const logos = page.locator('.kase-origin img, .solana-outcome img');
+  await expect(logos).toHaveCount(2);
+  expect(await logos.evaluateAll(images => images.every(image => (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
+  await page.getByRole('button', { name: 'Change the ownership', exact: true }).click();
+  await expect(page.locator('.welcome')).toHaveAttribute('data-motion', 'paused');
+  await expect(page.locator('.stage-caption')).toHaveCSS('opacity', '1');
+  await expect.poll(() => page.locator('.bond-moving').first().evaluate(element => new DOMMatrix(getComputedStyle(element).transform).m41)).toBeGreaterThan(120);
+  await expect(page.locator('.coupon-value')).toContainText('500.00');
+  await page.waitForTimeout(5600);
+  await expect(page.locator('.wm-step-buttons button').nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Replay', exact: true }).click();
+  await expect(page.locator('.wm-step-buttons button').first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.welcome')).toHaveAttribute('data-motion', 'playing');
 });

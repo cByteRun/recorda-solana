@@ -11,21 +11,24 @@ The product promise is **Ownership changes. Rights stay recorded.** The primary 
 - The action summary explains state, approval/execution progress, readable amounts, quorum, cutoff, paid amount and supply. The Investor card places current holdings beside record-date holdings, entitlement and formula.
 - Audit, raw minor-unit amounts, full holder/destination addresses, commitments and transaction evidence remain available. Voting document verification, role authorization and wallet signature requirements remain enforced.
 
-## Visual system and motion
+## Welcome: Rights in Motion
 
-Graphite `#121e17` anchors the welcome. Off-white `#f4f5ef` supports the workspace. Lime `#c7f879` highlights rights and primary calls to action; forest green supports execution controls. Lavender identifies the illustrative transfer. Large sans-serif type establishes the promise; a serif accent distinguishes the lasting record.
+The welcome is a single entry window rather than a landing page. The promise is **Ownership changes. The right stays yours.** A graphite stage and lime primary action frame a small financial story: ten illustrative bonds at the cutoff, four moving to Investor B, and an unchanged 500 Mock USD entitlement for Investor A. Coupon, Voting and Redemption are introduced beside the entry action; a compact accessible perspective selector explains each role.
 
-Two separate motion layers: slow orbital lines in the background and a foreground bond/rights story with changing balances, a transfer indicator and an unchanged entitlement. CSS transform/opacity animation and React state avoid new animation dependencies. Manual step selection pauses autoplay; the pause control also stops continuous background/ticket motion. Reduced-motion preference disables automatic motion while retaining manual exploration. No marketing animation runs in the signing flow.
+The welcome-specific Recorda mark combines a fixed spine with three folded record layers. It suggests a prism and a sequence of rights without merging third-party trademarks. The existing workspace identity is unchanged. Official KASE and Solana artwork is stored locally in `public/brand/`; these identify track context and execution network, not a live KASE integration or sponsorship.
 
-Navigation, story controls, perspective tabs and disclosure summaries support keyboards. The tablist supports arrows/Home/End. Responsive layouts cover 320px phones through desktop; technical tables scroll within their panel.
+React and `@gsap/react` scope the entrance and state-transition timelines to the welcome and clean them up on unmount. Four bond objects move while the certificate remains anchored; an SVG connection traces the right, and Recorda's folds settle at the final stage. Automatic steps run every 5.5 seconds. Manual selection stops automatic progression and completes its selected transition. Pause stops the current transition; replay restarts the story. Reduced motion renders each selected state immediately and disables autoplay. No RPC or wallet connection is made by this illustration.
 
-## Research references
+The window stacks on phones, preserves keyboard-operated perspective tabs, and supports EN/RU. Test-asset and illustrative-state disclosures remain visible.
 
-- [Linear](https://linear.app/): positioning connected to concrete product workflows.
-- [React Bits](https://reactbits.dev/): distinct background animation and interactive component motion.
-- [Motion React documentation](https://motion.dev/docs/react): reference for animation options; no dependency was added.
+### Research and asset sources
 
-The composition and assets are authored in this repository; no third-party component source is copied.
+- [Refero](https://refero.design/): inspected the public onboarding, dialog, card and animation categories. Its screen library prompted login; no gated product screens were used or copied.
+- [KASE corporate style](https://kase.kz/ru/media-center/corporate-style): original SVG artwork and prism semantics.
+- [Solana branding](https://solana.com/branding): original gradient logomark.
+- [GSAP React documentation](https://gsap.com/resources/React/): scoped timelines and automatic cleanup with `useGSAP`.
+
+Composition and Recorda's new welcome mark are authored in this repository.
 
 ## Verification
 
