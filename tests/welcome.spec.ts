@@ -20,7 +20,8 @@ test('judge can understand fixed rights, change perspectives, and enter the real
   await expect(page.getByRole('tabpanel')).toContainText('without connecting a wallet');
   expect(rpcRequests).toEqual([]);
   await page.getByRole('dialog').getByRole('link', { name: 'Get started', exact: true }).click();
-  await expect(page).toHaveURL(/\/actions$/);
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.getByRole('link', { name: 'Corporate actions', exact: true }).click();
   await expect(page.getByLabel('Role', { exact: true })).toHaveValue('Operator');
   await expect(page.getByLabel('Action kind', { exact: true })).toHaveValue('coupon');
   await expect(page.getByRole('button', { name: 'Create action', exact: true })).toBeDisabled();
@@ -38,7 +39,7 @@ test('Russian welcome retains the story and start route', async ({ page }) => {
   await page.getByRole('button', { name: 'Изменить владение', exact: true }).click();
   await expect(page.locator('.coupon-value')).toContainText('500.00');
   await page.getByRole('dialog').getByRole('link', { name: 'Начать', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Corporate actions', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Every asset. Every right.', exact: true })).toBeVisible();
 });
 
 test('reduced motion stops automatic storytelling but preserves manual exploration and keyboard tabs', async ({ page }) => {
@@ -121,7 +122,7 @@ test('without WebGL the SVG sculpture remains visible and the welcome still open
   await page.getByRole('button', { name: 'RECORDA: The record', exact: true }).click();
   await expect(page.locator('.welcome')).toHaveAttribute('data-phase', '2');
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
-  await expect(page).toHaveURL(/\/actions$/);
+  await expect(page).toHaveURL(/\/dashboard$/);
 });
 
 test('reference light responds to the pointer, freezes on pause and survives context loss', async ({ page }) => {
@@ -154,7 +155,7 @@ test('reference light responds to the pointer, freezes on pause and survives con
   await page.getByRole('button', { name: 'SOLANA: The execution', exact: true }).click();
   await expect(page.locator('.light-right-copy')).toContainText('Coupon. Voting. Redemption.');
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
-  await expect(page).toHaveURL(/\/actions$/);
+  await expect(page).toHaveURL(/\/dashboard$/);
   expect(errors).toEqual([]);
 });
 
