@@ -63,38 +63,50 @@
 .light-footer { display: flex; justify-content: space-between; gap: 20px; padding: 13px 24px; font: 7px ui-monospace, monospace; letter-spacing: .7px; color: #59645b; border-top: 1px solid #ffffff0b; }
 .welcome-light a:focus-visible, .welcome-light button:focus-visible { outline: 1px solid #c5edda; outline-offset: 5px; }
 /* The explanation uses the welcome's black field, quiet lines and white pills. */
-.light-explanation { margin: auto; width: min(590px, calc(100vw - 32px)); max-height: calc(100svh - 40px); overflow-y: auto; padding: 34px; border: 1px solid var(--light-border); border-radius: 12px; background: var(--light-surface); color: var(--light-text); box-shadow: 0 30px 100px #000b; color-scheme: dark; }
+/* Readable dialog typography: a clear heading, body copy and supporting labels. */
+.light-explanation { margin: auto; width: min(680px, calc(100vw - 32px)); max-height: calc(100svh - 40px); overflow-y: auto; padding: 36px; border: 1px solid var(--light-border); border-radius: 12px; background: var(--light-surface); color: var(--light-text); box-shadow: 0 30px 100px #000b; color-scheme: dark; font-size: 16px; line-height: 1.65; }
 .light-explanation::backdrop { background: #000a; backdrop-filter: blur(8px); }
-.light-dialog-close { position: absolute; right: 16px; top: 16px; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--light-border); border-radius: 50%; cursor: pointer; color: var(--light-muted); transition: color .2s, border-color .2s; }
+.light-dialog-close { position: absolute; right: 16px; top: 16px; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--light-border); border-radius: 50%; cursor: pointer; color: var(--light-secondary); transition: color .2s, border-color .2s; }
 .light-dialog-close:hover { color: var(--light-text); border-color: #ffffff50; }
-.light-dialog-eyebrow { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid #ffffff1c; border-radius: 24px; font: 7px ui-monospace, monospace; letter-spacing: .8px; color: #aeafaa; max-width: calc(100% - 24px); }
+.light-dialog-eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #ffffff1c; border-radius: 24px; font: 10px/1.5 ui-monospace, monospace; letter-spacing: .5px; color: var(--light-secondary); max-width: calc(100% - 44px); }
 .light-dialog-eyebrow::before { content: ''; flex-shrink: 0; width: 4px; height: 4px; border-radius: 50%; background: #c5dcd0; box-shadow: 0 0 7px #c5dcd050; }
-.welcome-light .light-explanation h2 { font-size: 34px; font-weight: 400; letter-spacing: -1.4px; line-height: 1.12; margin: 27px 0 17px; max-width: 440px; }
-.light-dialog-intro { color: var(--light-muted); font-size: 12px; line-height: 1.8; }
-.light-example { margin-top: 27px; padding: 20px 0; background: none; border-block: 1px solid var(--light-border); border-radius: 0; }
-.light-example-stats { display: grid; grid-template-columns: .7fr .7fr 1fr; gap: 12px; }
-.light-example-stats > div { display: block; margin: 0; padding: 0; border: 0; background: none; }
-.light-example-stats span { display: block; font-size: 8px; color: var(--light-muted); }
-.light-example-stats strong { display: block; font-size: 32px; font-weight: 400; margin-top: 8px; letter-spacing: -1px; }
+.welcome-light .light-explanation h2 { font-size: 38px; font-weight: 450; letter-spacing: -1.1px; line-height: 1.15; margin: 28px 0 20px; max-width: 590px; text-wrap: balance; }
+.light-dialog-intro { color: var(--light-secondary); font-size: 16px; line-height: 1.7; }
+.light-example { margin-top: 28px; padding: 24px 0; background: none; border-block: 1px solid var(--light-border); border-radius: 0; }
+.light-example-stats { display: grid; grid-template-columns: .85fr .85fr 1fr; gap: 20px; }
+.light-example-stats > div { min-width: 0; display: block; margin: 0; padding: 0; border: 0; background: none; }
+.light-example-stats span { display: block; font-size: 12px; line-height: 1.5; color: var(--light-secondary); }
+.light-example-stats strong { display: block; font-size: 38px; line-height: 1.2; font-weight: 450; margin-top: 10px; letter-spacing: -.8px; font-variant-numeric: tabular-nums; }
 .light-example-stats .coupon-value { color: var(--light-accent); }
-.light-example-stats small { display: block; font: 7px ui-monospace, monospace; letter-spacing: .5px; color: var(--light-muted); margin-top: 4px; }
-.light-example-caption { font-size: 11px; line-height: 1.7; color: var(--light-secondary); min-height: 38px; margin-top: 22px; }
-.light-example-steps { display: flex; gap: 14px; margin-top: 18px; }
-.light-example-steps button { flex: 1; border-top: 1px solid var(--light-border); padding: 11px 0; font-size: 8px; color: var(--light-muted); cursor: pointer; text-align: left; transition: color .2s, border-color .2s; }
-.light-example-steps button span { display: block; font: 7px ui-monospace, monospace; margin-bottom: 5px; }
+.light-example-stats .coupon-value small { display: block; font: 12px/1.5 ui-monospace, monospace; font-weight: 400; letter-spacing: .3px; color: var(--light-secondary); margin: 6px 0 0; }
+.light-example-caption { font-size: 15px; line-height: 1.7; color: var(--light-secondary); min-height: 52px; margin-top: 24px; }
+.light-example-steps { display: flex; gap: 16px; margin-top: 22px; }
+.light-example-steps button { min-width: 0; flex: 1; border-top: 1px solid var(--light-border); padding: 14px 0; font-size: 13px; line-height: 1.5; font-weight: 500; color: var(--light-secondary); cursor: pointer; text-align: left; transition: color .2s, border-color .2s; }
+.light-example-steps button span { display: block; font: 11px/1.5 ui-monospace, monospace; margin-bottom: 6px; }
 .light-example-steps button:hover { color: var(--light-text); }
 .light-example-steps button[aria-pressed=true] { color: var(--light-text); border-color: var(--light-accent); }
-.light-example-formula { font: 8px ui-monospace, monospace; color: #939b94; margin: 14px 0 10px; }
-.light-example-note { font: 6px ui-monospace, monospace; letter-spacing: .5px; color: #686c66; }
-.light-role-tabs { display: flex; gap: 8px; margin-top: 24px; }
-.light-role-tabs button { padding: 9px 14px; border: 1px solid var(--light-border); border-radius: 24px; color: var(--light-muted); font-size: 10px; cursor: pointer; transition: color .2s, background .2s; }
+.light-example-formula { font: 13px/1.7 ui-monospace, monospace; color: var(--light-secondary); margin: 16px 0 12px; overflow-wrap: anywhere; }
+.light-example-note { font: 11px/1.6 ui-monospace, monospace; letter-spacing: .3px; color: #a0a7a1; }
+.light-role-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.light-role-tabs button { padding: 10px 18px; border: 1px solid var(--light-border); border-radius: 24px; color: var(--light-secondary); font-size: 14px; line-height: 1.5; cursor: pointer; transition: color .2s, background .2s; }
 .light-role-tabs button:hover { color: var(--light-text); }
 .light-role-tabs button[aria-selected=true] { color: #101310; background: #efefeb; border-color: #efefeb; }
-.light-role-panel { font-size: 11px; line-height: 1.7; color: var(--light-muted); min-height: 38px; margin-top: 16px; }
-.light-dialog-start { margin-top: 19px; }
+.light-role-panel { font-size: 15px; line-height: 1.7; color: var(--light-secondary); min-height: 52px; margin-top: 20px; }
+.light-explanation .light-dialog-start { margin-top: 22px; padding: 12px 20px; font-size: 14px; line-height: 1.5; }
+@media(max-width: 480px) {
+  .light-explanation { width: calc(100vw - 24px); padding: 28px 24px; }
+  .welcome-light .light-explanation h2 { font-size: 30px; letter-spacing: -.7px; }
+  .light-example-stats { grid-template-columns: 1fr 1fr; gap: 20px 16px; }
+  .light-example-stats .coupon-value { grid-column: 1 / -1; }
+  .light-example-steps { display: grid; gap: 0; }
+  .light-example-steps button { display: grid; grid-template-columns: 28px 1fr; align-items: baseline; padding: 12px 0; }
+  .light-example-steps button span { margin-bottom: 0; }
+  .light-role-tabs { gap: 6px; flex-wrap: nowrap; }
+  .light-role-tabs button { flex: 1; padding: 10px 8px; font-size: 12px; }
+}
 @media(min-width: 1700px) { .light-composition { padding-inline: 2vw; } .light-right-copy { width: 19vw; } .light-description p { font-size: clamp(12px, .8vw, 19px); } }
 @media(max-width: 1150px) { .light-header, .light-composition { padding-inline: 28px; } .light-header-context { display: none; } .light-composition { grid-template-columns: 1fr 1fr .7fr; } .welcome-light h1 { font-size: 34px; letter-spacing: -1.6px; }  .light-right-copy { width: 175px; } .light-description p { font-size: 10px; } .light-cta-row { gap: 8px; } .light-start, .light-why { font-size: 11px; padding: 11px 15px; gap: 14px; } .light-bottom { grid-template-columns: 1fr; justify-items: center; gap: 15px; padding-inline: 28px; } .light-bottom .light-series { display: none; } .light-quiet-note { order: 2; } .light-footer { padding-inline: 28px; } }
 @media(max-width: 760px) { .light-header { min-height: 70px; padding-inline: 22px; } .light-header-actions { gap: 16px; } .light-open { font-size: 10px; padding: 8px 10px; gap: 9px; } .light-wordmark { font-size: 21px; gap: 6px; } .light-wordmark svg { width: 26px; height: 26px; } .light-main { min-height: 0; } .light-kicker { font-size: 6px; letter-spacing: .8px; margin-top: 16px; padding: 8px 10px; } .light-composition { display: grid; grid-template-columns: 1fr; padding: 0 22px; min-height: 0; } .light-copy { text-align: center; padding-top: 39px; margin: 0; } .welcome-light h1 { font-size: clamp(39px, 6vw, 54px); letter-spacing: -1.9px; } .light-copy > p { margin: 16px auto 0; max-width: 310px; font-size: 11px; } .light-cta-row { justify-content: center; margin-top: 23px; } .light-sculpture { position: relative; inset: auto; height: 310px; margin: 0 -22px; grid-column: 1; grid-row: 2; } .light-field { width: 100%; height: 100%; } .light-art-caption { bottom: 7px; font-size: 6px; } .light-right-copy { grid-column: 1; grid-row: 3; display: grid; grid-template-columns: 26px 1fr; align-items: center; column-gap: 12px; justify-self: center; width: min(100%, 390px); margin: 28px 0 26px; } .light-phase-symbol { width: 26px; height: 26px; margin: 0; } .light-phase-symbol > svg { width: 26px; height: 26px; } .light-phase-name { margin: 0; } .light-description { grid-column: 1 / 3; margin-top: 17px; text-align: center; } .light-description p { display: inline; font-size: 10px; line-height: 1.8; } .light-description p:not(:last-child)::after { content: ' '; white-space: pre; } .light-proof-link { grid-column: 1 / 3; justify-self: center; margin-top: 14px; min-width: 195px; } .light-bottom { padding: 0 22px 27px; gap: 13px; } .light-sequence { gap: 12px; } .light-track { font-size: 7px; letter-spacing: .5px; gap: 5px; } .light-track-line { width: 14px; margin-left: 4px; } .network-icon, .network-icon > svg { width: 13px; height: 13px; } .light-footer { font-size: 6px; padding: 16px 22px; line-height: 1.7; gap: 18px; } .light-footer > span:last-child { text-align: right; } }
-@media(max-width: 380px) { .light-header { padding-inline: 16px; } .light-open { display: none; } .light-kicker { font-size: 5.5px; } .light-composition { padding-inline: 16px; } .welcome-light h1 { font-size: 35px; } .light-start, .light-why { font-size: 10px; padding: 11px 14px; } .light-sequence { gap: 8px; } .light-track-line { width: 8px; } .light-track { font-size: 6px; gap: 4px; } .light-player { height: 24px; width: 24px; } .light-explanation { padding: 25px 20px; } .welcome-light .light-explanation h2 { font-size: 26px; } .light-example { padding: 18px 0; } .light-example-stats { gap: 8px; } .light-example-stats span { font-size: 7px; } .light-example-stats strong { font-size: 25px; } }
+@media(max-width: 380px) { .light-header { padding-inline: 16px; } .light-open { display: none; } .light-kicker { font-size: 5.5px; } .light-composition { padding-inline: 16px; } .welcome-light h1 { font-size: 35px; } .light-start, .light-why { font-size: 10px; padding: 11px 14px; } .light-sequence { gap: 8px; } .light-track-line { width: 8px; } .light-track { font-size: 6px; gap: 4px; } .light-player { height: 24px; width: 24px; } .light-explanation { padding: 25px 20px; } .light-example { padding: 18px 0; } }
 @media(prefers-reduced-motion: reduce) { .welcome-light *, .welcome-light *::before, .welcome-light *::after { animation: none !important; transition: none !important; } }
 @media(max-width: 380px) { .light-sculpture { margin-inline: -16px; } }
