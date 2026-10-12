@@ -1,20 +1,20 @@
 # BondOps program workspace
 
-## Workspace entry: Demo / Test / Devnet
+## Workspace entry: Demo / Localnet / Devnet
 
 Welcome → `/workspaces` → explicit selection → dashboard. A direct workspace URL without a selection displays the selector; there is no automatic environment choice.
 
 | Workspace | Source of truth | RPC | Signing |
 | --- | --- | --- | --- |
 | Demo / Preview | Illustrative KZB26 dataset; local demo service uses SQLite | None | None |
-| Test / Localnet | Local Rust program accounts and ledger | `VITE_LOCAL_SOLANA_RPC_URL`, default `http://127.0.0.1:8899` | Compatible wallet / isolated local test harness |
+| Localnet Workspace | Local Rust program accounts and ledger | `VITE_LOCAL_SOLANA_RPC_URL`, default `http://127.0.0.1:8899` | Compatible wallet / isolated local test harness |
 | Devnet | Public Devnet Rust program accounts | `VITE_SOLANA_RPC_URL`, default public Devnet RPC | Wallet confirmation for mutations |
 
 Demo includes an embedded read-only fixture for public deployments without the demo service. Local demo service retains existing editable examples and server authorization. Demo operational pages never invoke blockchain readers or signers. The packaged preview is an illustrative, fixed-date example, not live obligations.
 
-Test requires a validator on the visitor’s computer and a separately loaded program. `npm run bondops:local` loads the program and seeds the existing fixture. A hosted site cannot provide its author's localhost to visitors. Local ledger operations never migrate into Devnet; a Devnet deployment is separate. Phantom Localnet support is not assumed; use the isolated protocol test harness or a compatible signer.
+Localnet requires a validator on the visitor’s computer and a separately loaded program. `npm run bondops:local` loads the program and seeds the existing fixture. A hosted site cannot provide its author's localhost to visitors. Local ledger operations never migrate into Devnet; a Devnet deployment is separate. Phantom Localnet support is not assumed; use the isolated protocol test harness or a compatible signer.
 
-The workspace determines RPC; there is no independent selector that can mix modes. Optional `VITE_LOCAL_RECORDA_PROGRAM_ID` and `VITE_DEVNET_RECORDA_PROGRAM_ID` distinguish program deployments, falling back to the existing shared public program ID. Switching workspace drops the remembered wallet, performs full navigation to `/dashboard` without selected-address query parameters, and discards in-memory readers/caches. Cached protocol addresses and disposable holder identities are namespaced by workspace. Local storage only caches UI references; it is never financial evidence in Test or Devnet.
+The workspace determines RPC; there is no independent selector that can mix modes. Optional `VITE_LOCAL_RECORDA_PROGRAM_ID` and `VITE_DEVNET_RECORDA_PROGRAM_ID` distinguish program deployments, falling back to the existing shared public program ID. Switching workspace drops the remembered wallet, performs full navigation to `/dashboard` without selected-address query parameters, and discards in-memory readers/caches. Cached protocol addresses and disposable holder identities are namespaced by workspace. Local storage only caches UI references; it is never financial evidence in Localnet or Devnet.
 
 
 Recorda helps the operator control fixed investor rights → obligations → authorized execution → confirmation → evidence-backed resolution. [TZ](TZ.md) and existing FR-01–58 remain the protocol source of truth; appended BO requirements cover the operating workspace.
@@ -25,7 +25,7 @@ Recorda helps the operator control fixed investor rights → obligations → aut
 |---|---|---|---|
 | Demo Workspace | Explicit illustrative dataset, 17 units and 850 Mock USD | SQLite, only the `demo` row | Local sandbox API; predefined demo roles |
 | Devnet Workspace | Existing finalized Recorda action/right/receipt accounts | Rust PDA accounts in the same Recorda program | Wallet-signed instructions; authorization checked by Rust |
-| Test Workspace / Localnet | The same compiled Rust program on a separate local ledger | The same PDA schemas | The same wallet-signed instructions |
+| Localnet Workspace / Localnet | The same compiled Rust program on a separate local ledger | The same PDA schemas | The same wallet-signed instructions |
 
 Live mode performs no Demo Workspace API requests and stores no live data in SQLite. A Node server started with `BONDOPS_MODE=live` opens no database. SQLite is initialized lazily only when the illustrative workspace is enabled. Existing old `live` or `team-live` database rows are not read or migrated as authority; importing real metadata would require explicit wallet-signed program instructions.
 
@@ -81,12 +81,12 @@ For the illustrative workspace only, Node 22.18+ and `BONDOPS_MODE=demo`, `BONDO
 
 ## Verification
 
-- `npm run test:bondops`: Test API security, persisted demo decisions, deadline/inbox deduplication, no live/team rows, no database opened in Solana-only mode; exact settle-instruction confirmation decoding and genesis rejection.
+- `npm run test:bondops`: Demo API security, persisted demo decisions, deadline/inbox deduplication, no live/team rows, no database opened in Solana-only mode; exact settle-instruction confirmation decoding and genesis rejection.
 - `npm run protocol:test:bondops`: real local-validator transactions for initialization, membership/revocation, scopes, deadlines, cases, proof-gated closure, immutable audit, conservative reference retention and recipient-only deduplicated notices.
-- `npm run protocol:test:bondops:ui`: same fixture plus browser → wallet signature → local Rust program → fresh account read; Test API disabled, zero workspace API requests.
+- `npm run protocol:test:bondops:ui`: same fixture plus browser → wallet signature → local Rust program → fresh account read; Demo API disabled, zero workspace API requests.
 - `npx playwright test --config playwright.bondops.config.ts`: filled Demo Workspace, source/RPC separation and desktop/mobile layouts.
 - `npm run protocol:build`, `npm run build`, `npm run build:next`: SBF stack checks, shared frontend and Next compilation.
 
 Bank/paying-agent provider, external delivery, autonomous keeper, public Devnet deployment/acceptance and complete archival/scale validation remain open. Provider selection for banking is explicitly deferred by the user.
 
-Recorded verification for this revision: SBF build and compiler-IDL check passed; 15 Rust unit tests, 9 local program checks, 8 Test API/reader checks, 14 illustrative/desktop/mobile browser checks and one end-to-end browser-to-program test passed. The latter also verifies retained Unknown obligations after RPC loss and zero Test API requests. Vite and Next builds passed. Evidence: `target/protocol-evidence/bondops.json` and `target/design-evidence/bondops-local-program.png` (ignored generated artifacts).
+Recorded verification for this revision: SBF build and compiler-IDL check passed; 15 Rust unit tests, 9 local program checks, 8 Demo API/reader checks, 14 illustrative/desktop/mobile browser checks and one end-to-end browser-to-program test passed. The latter also verifies retained Unknown obligations after RPC loss and zero Demo API requests. Vite and Next builds passed. Evidence: `target/protocol-evidence/bondops.json` and `target/design-evidence/bondops-local-program.png` (ignored generated artifacts).

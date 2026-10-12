@@ -24,7 +24,7 @@ export function seed(mode,now=Date.now()){
   ['transaction','unknown','Investor A: подтверждение недоступно','500.00 Mock USD требуют сверки; отсутствие ответа RPC не подтверждает выплату',-4],
  ];
  empty.demoTransactions=demoTransactions.map(([kind,status,title,detail,hours],index)=>({id:`TEST-TX-${String(index+1).padStart(3,'0')}`,kind,status,title,detail,at:at(hours),instrument:instrument.id,action:'DEMO-CA-001',source:'illustrative'}));
- empty.audit=[];for(const tx of empty.demoTransactions){event(empty,'Test Workspace',tx.kind,tx.title,tx.detail,{instrument:tx.instrument,action:tx.action,source:'illustrative',evidence:`${tx.id} · ${tx.status}`});empty.audit.at(-1).at=tx.at;}
+ empty.audit=[];for(const tx of empty.demoTransactions){event(empty,'Demo Workspace',tx.kind,tx.title,tx.detail,{instrument:tx.instrument,action:tx.action,source:'illustrative',evidence:`${tx.id} · ${tx.status}`});empty.audit.at(-1).at=tx.at;}
  reconcileCases(empty,now);
  const investigation=empty.cases[0];if(investigation){investigation.owner='demo-reviewer';investigation.status='investigating';investigation.history.push({at:at(-3),actor:'demo-reviewer',note:'Сверить retained transaction и finalized право. Не повторять выплату до проверки.',evidence:'Test example: unknown confirmation'});event(empty,'demo-reviewer','case','Начат разбор исключения','Investor A · 500.00 Mock USD · назначен Reviewer',{instrument:instrument.id,action:'DEMO-CA-001',caseId:investigation.id,source:'illustrative'});}
  return empty;

@@ -2,7 +2,7 @@
 
 ### Workspace separation
 
-- [x] Explicit Welcome → Demo / Test / Devnet selection, fixed RPC binding, scoped caches and environment labels.
+- [x] Explicit Welcome → Demo / Localnet / Devnet selection, fixed RPC binding, scoped caches and environment labels.
 - [x] Public read-only Demo fixture; existing SQLite demo editing remains local.
 - [ ] Optional local sandbox controls (fund/reset/scenario replay) in the product UI; existing CLI and isolated harness remain available.
 - [ ] Separately deploy/upgrade the Rust program in public Devnet and verify with the chosen wallet. Local execution does not satisfy this deployment item.

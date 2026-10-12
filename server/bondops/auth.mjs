@@ -1,4 +1,4 @@
-// Sessions authorize ONLY the illustrative Test Workspace. Live authority is in Rust.
+// Sessions authorize ONLY the illustrative Demo Workspace. Live authority is in Rust.
 import { randomBytes } from 'node:crypto';
 export const demoMembers=[{id:'demo-operator',name:'Demo Operator',role:'operator',scopes:['*']},{id:'demo-reviewer',name:'Demo Reviewer',role:'reviewer',scopes:['*']},{id:'demo-auditor',name:'Demo Auditor',role:'auditor',scopes:['*']}];
 export const fail=(status,message)=>Object.assign(new Error(message),{status});

@@ -197,7 +197,7 @@
     {
       "id": "47ceb5ba235884920f50fedd",
       "at": "2026-10-10T12:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "issue",
       "title": "Выпуск 17 облигаций",
       "detail": "10 / 5 / 2 / 0 · Token-2022 пример",
@@ -209,7 +209,7 @@
     {
       "id": "dc8c88fa124f78e82c878e0c",
       "at": "2026-10-11T12:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "snapshot",
       "title": "Зафиксированы исторические права",
       "detail": "Cutoff: A=10, B=5, C=2, D=0",
@@ -221,7 +221,7 @@
     {
       "id": "56e97b16817a7c274c641627",
       "at": "2026-10-11T14:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "transfer",
       "title": "Перевод после record date",
       "detail": "A → B: 4 облигации. Текущие позиции 6 / 9 / 2 / 0; купон остаётся 500 / 250 / 100 / 0",
@@ -233,7 +233,7 @@
     {
       "id": "f81080daf2c647752e3f0750",
       "at": "2026-10-11T16:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "approval",
       "title": "Оператор одобрил обязательство",
       "detail": "850.00 Mock USD · подтверждён расчёт по историческим правам",
@@ -245,7 +245,7 @@
     {
       "id": "081453ac4612b3fe15c2ca2b",
       "at": "2026-10-11T18:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "funding",
       "title": "Vault обеспечен средствами",
       "detail": "850.00 Mock USD · пример финансирования",
@@ -257,7 +257,7 @@
     {
       "id": "849c205b1efd26905af6bd12",
       "at": "2026-10-11T20:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "settlement",
       "title": "Investor B: исполнено 250.00",
       "detail": "Пример подтверждения выплаты и защиты от повторного исполнения",
@@ -269,7 +269,7 @@
     {
       "id": "6b1e35f3efcc2c76eb459da6",
       "at": "2026-10-11T21:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "settlement",
       "title": "Investor C: исполнено 100.00",
       "detail": "Иллюстративное processed право",
@@ -281,7 +281,7 @@
     {
       "id": "2d8d0c9b0d76a353ecd02cca",
       "at": "2026-10-12T02:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "transaction",
       "title": "Investor A: неуспешная попытка",
       "detail": "Пример ошибки исполнения. Право остаётся неоплаченным",
@@ -293,7 +293,7 @@
     {
       "id": "2b5402e15230064137906b81",
       "at": "2026-10-12T04:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "transaction",
       "title": "Investor A: отправленная транзакция",
       "detail": "Пример ожидания финальности; новую выплату нельзя считать безопасной",
@@ -305,7 +305,7 @@
     {
       "id": "5344d142785ddb39c5d48ef6",
       "at": "2026-10-12T08:00:00.000Z",
-      "actor": "Test Workspace",
+      "actor": "Demo Workspace",
       "type": "transaction",
       "title": "Investor A: подтверждение недоступно",
       "detail": "500.00 Mock USD требуют сверки; отсутствие ответа RPC не подтверждает выплату",
