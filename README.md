@@ -12,7 +12,7 @@
 
 **Long-term direction — Recorda Infrastructure:** API/SDK for exchanges, tokenization platforms, custodians and financial developers to integrate bond-servicing mechanisms on Solana. Production reliability and market demand must be demonstrated before treating this as a proven offering.
 
-**Workspace entry:** Welcome → choose **Demo** (illustrative preview), **Test** (local validator) or **Devnet** (public development network). Each workspace fixes its data source and RPC.
+**Three workspaces:** **DEMO** to explore the product and role cabinets → **TEST** to execute with Phantom on local Solana → **DEVNET** to verify on the public Solana test network. [Choose your workspace](#choose-your-workspace--demo--test--devnet).
 
 **Role cabinets:** [RBAC and wallet address configuration](docs/RBAC.md). Open `/login` to preview Operator, Investor A/B/C, Auditor or Reviewer; Test/Devnet identify the cabinet from the connected Phantom address.
 
@@ -32,34 +32,33 @@
 
 The implemented source covers **Coupon, Voting and maturity Redemption**, plus the specified [Post-MVP FR-49–58](docs/REQUIREMENTS.md#16-functional-requirements-fr). Recorda is a B2B servicing layer for market operators, issuers/paying agents and depository infrastructure; [roadmap](docs/ROADMAP.md) separates implementation from acceptance evidence.
 
-| 🚀 Run the demo | 🔎 Explore the product | 🛡️ Verify the implementation |
-|---|---|---|
-| [Devnet walkthrough](#devnet-demo--coupon--voting--redemption) | [Screens and roles](#product-screens-and-manual-acceptance) | [Feature and attack audit](#feature-and-attack-audit) |
+## Choose your workspace — Demo / Test / Devnet
 
-Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting → Full Redemption on one instrument. Use `test:audit` separately to verify requirements, business features and bypass attempts, including Post-MVP.
+**One product journey, three environments:** Instrument → Holder → Record-date Right → Authorized Action → Receipt.
+
+| Workspace | Best for | Wallet & network | Scenarios and evidence |
+|---|---|---|---|
+| **👀 DEMO** · product preview | Present the product value and explore each role's cabinet | No Phantom or Solana RPC required; populated illustrative data | Operator's obligation/exception queue, Investor's current holdings versus fixed rights, Auditor's evidence views and Reviewer's cases. Coupon, Voting and Redemption examples explain the TZ lifecycle; they do not execute blockchain transactions. |
+| **🧪 TEST** · Solana Localnet | Run and debug the full workflow on local Solana infrastructure | Phantom signs actual transactions; Rust program runs on a local validator through local RPC | Create/register the instrument → Coupon → Voting → Full Redemption. Inspect real local token balances, retired supply and receipts. The local ledger is independent of Devnet. |
+| **🌐 DEVNET** · public Solana test network | Demonstrate network execution and independently inspect test-network evidence | Phantom signs transactions on Solana Devnet; requires the matching deployed Rust program | The same corporate-action flow with public test-network accounts, transaction signatures and Explorer links. Uses test SOL and mock settlement tokens; **not Mainnet**. |
+
+**DEMO role tour:** Operator — what is owed, confirmed and needs attention; Investor A/B/C — holdings, fixed rights, voting and payment history; Auditor — inspect outcomes and evidence; Reviewer — investigate and assign exceptions. Choose a role at `/login`; role selection in Demo is a preview, while Test/Devnet identify participants from their wallet address. [Role guide](docs/RBAC.md).
+
+**Presentation route:** start in **DEMO** with the 850 Mock USD coupon example: 350 shown settled and 500 awaiting evidence. Show why a post-record transfer changes holdings but preserves rights, then open the exception and next-step controls. Continue in **TEST** to demonstrate signed execution and receipts; use **DEVNET** for public test-network verification after deployment and configuration.
+
+**Start here:** Welcome → `/workspaces` → choose an environment. For execution, follow the [local Phantom pipeline](#local-rpc-pipeline-with-real-phantom) or the [Devnet walkthrough](#devnet-demo--coupon--voting--redemption). Operator/Investor mutations require Phantom; public Auditor reads can be opened without a wallet. Mainnet rollout and production RWA integrations remain in the [roadmap](docs/ROADMAP.md#future-scope-requiring-new-requirements).
 
 ---
 
 ## Table of contents
 
-- [Operator control — from rights to recorded outcomes](#operator-control--from-rights-to-recorded-outcomes)
-- [🚀 Devnet demo — Coupon → Voting → Redemption](#devnet-demo--coupon--voting--redemption)
-  - [Install and prepare the program](#1-install-and-prepare-the-program)
-  - [Prepare Phantom accounts and configuration](#2-prepare-four-phantom-accounts-and-envlocal)
-  - [Start three terminals](#3-start-three-terminals)
-  - [Expected result and evidence](#4-expected-result-and-evidence)
-- [🏗️ Architecture at a glance](#architecture-at-a-glance)
-- [✨ Features and business domains](#features-and-business-domains)
-- [From prototype to RWA infrastructure](#from-prototype-to-rwa-infrastructure)
-- [🖥️ Product screens and manual acceptance](#product-screens-and-manual-acceptance)
-  - [Manual acceptance](#manual-acceptance)
-- [⚙️ Technical setup](#technical-setup)
-  - [Install tools and browser](#install-tools-and-browser)
-  - [Deploy or update the program](#deploy-a-new-program-or-update-the-existing-one)
-- [🛡️ Feature and attack audit](#feature-and-attack-audit)
-- [🔧 Troubleshooting](#troubleshooting)
-- [📦 CI and website deployment](#ci-and-website-deployment)
-- [📚 Documentation](#documentation)
+| 🎯 Product & presentation | 🚀 Run & develop | 🔎 Architecture & evidence |
+|---|---|---|
+| [DEMO / TEST / DEVNET](#choose-your-workspace--demo--test--devnet) | [Devnet walkthrough](#devnet-demo--coupon--voting--redemption) | [Architecture](#architecture-at-a-glance) |
+| [Operator control](#operator-control--from-rights-to-recorded-outcomes) | [Local Solana + Phantom](#local-rpc-pipeline-with-real-phantom) | [Feature & attack audit](#feature-and-attack-audit) |
+| [Features & business domains](#features-and-business-domains) | [Technical setup](#technical-setup) | [CI & deployment](#ci-and-website-deployment) |
+| [Screens & role journeys](#product-screens-and-manual-acceptance) | [BondOps workspace](#bondops-operational-workspace) | [Documentation](#documentation) |
+| [RWA evolution & scale](#from-prototype-to-rwa-infrastructure) | [Troubleshooting](#troubleshooting) | [Tokenization research](docs/ASSET-TOKENIZATION-RESEARCH.md) |
 
 ---
 
@@ -471,7 +470,7 @@ TZ takes precedence; roadmap checkmarks do not amend requirements. All rights re
 
 ## BondOps operational workspace
 
-The workspace selector separates **Demo Workspace** (a filled illustrative example in SQLite) from **Solana program** (all financial and operational state in Rust PDA accounts). The independent **RPC validator** selector chooses Devnet or a local validator and applies to dashboard, actions, protocol, claims and explorer links. A local validator is a separate ledger; switching RPC does not copy Devnet accounts.
+The workspace selector offers **Demo** (a filled illustrative example), **Test** (Solana Localnet) and **Devnet** (the public Solana test network). Each workspace fixes its data source and RPC for dashboard, actions, protocol, claims and explorer links. Test and Devnet store financial and operational state in Rust PDA accounts; SQLite is reserved for the local Demo backend. A local validator has a separate ledger; switching workspace does not copy Devnet accounts. [Environment comparison](#choose-your-workspace--demo--test--devnet).
 
 In Solana mode, wallet-free reads use the selected RPC; deadlines, cases/history, team membership, retained references, notification rules and inbox writes require wallet-signed program instructions. No live workspace state is stored in SQLite or sent to the Demo Workspace API. See [requirements](docs/REQUIREMENTS.md#bondops-program-storage-and-workspace-boundary) and [complete setup](docs/BONDOPS-OPERATIONS.md).
 
@@ -482,7 +481,7 @@ npm run bondops:local
 npm run dev
 ```
 
-Choose **Solana program → Local validator** in the interface. `bondops:local` starts an isolated validator on 8899, loads the compiled program, seeds the TZ example and keeps the ledger running. Set `RECORDA_LOCAL_WALLET` to a local test key file matching your Phantom wallet to administer the seeded workspace; otherwise the fixture uses a disposable test signer. Demo Workspace is already filled without a wallet. Its footer card is labelled **Demo Workspace**. Public Devnet requires deploying/upgrading the new program binary; local acceptance does not certify the currently deployed Devnet binary.
+Choose **Test Workspace** in the interface and **Solana Localnet** in Phantom. `bondops:local` starts an isolated validator on 8899, loads the compiled program, seeds the TZ example and keeps the ledger running. Set `RECORDA_LOCAL_WALLET` to a local test key file matching your Phantom wallet to administer the seeded workspace; otherwise the fixture uses a disposable test signer. Demo Workspace is already filled without a wallet. Its footer card is labelled **Demo Workspace**. Public Devnet requires deploying/upgrading the new program binary; local acceptance does not certify the currently deployed Devnet binary.
 
 `npm run test:bondops` checks Demo Workspace isolation and confirmation decoding. `npm run protocol:test:bondops` checks actual Rust transactions. `npm run protocol:test:bondops:ui` checks browser → wallet signature → local program → fresh read, with the Test API disabled. Historical full-audit counts above describe earlier revisions.
 
