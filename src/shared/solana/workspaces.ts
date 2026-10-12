@@ -4,6 +4,7 @@ export function selectedWorkspace(): WorkspaceMode | null {
   try { const mode=sessionStorage.getItem('recorda-workspace'); return mode==='demo'||mode==='test'||mode==='devnet'?mode:null; } catch { return null; }
 }
 export function enterWorkspace(mode:WorkspaceMode) {
+  sessionStorage.removeItem('bondops-access');
   sessionStorage.removeItem('bondops-wallet');
   sessionStorage.removeItem('bondops-persona');
   sessionStorage.removeItem('bondops-signed-out');
@@ -15,6 +16,8 @@ export function enterWorkspace(mode:WorkspaceMode) {
     localStorage.removeItem(`kase_real_action_v2:${workspace}`);
   }
   sessionStorage.setItem('recorda-workspace',mode);
+  if(mode==='demo')sessionStorage.setItem('bondops-persona','demo-operator');
   // A full navigation discards readers, wallet state, selected addresses and in-memory RPC caches.
-  location.assign('/dashboard');
+  if(mode!=='demo')sessionStorage.setItem('bondops-signed-out','true');
+  location.assign(mode==='demo'?'/dashboard':'/login');
 }

@@ -151,3 +151,32 @@ a{text-decoration:none} .content > main{min-width:0} .operational{padding:28px;m
 }
 @keyframes workspace-orbit {to {transform:rotate(360deg)}}
 @keyframes workspace-breathe {50% {opacity:.45;transform:scale(.9)}}
+
+/* Let card contents size and wrap inside their rounded boundaries. */
+@scope (.bondops) {
+ .card,.stat-card,.a-card,.login-role,.dashboard-panel,.dashboard-metric {min-width:0;border-radius:16px}
+ .card.pad {padding:clamp(18px,2vw,28px)}
+ .card-heading,.card-desc,.page-sub,.stat-label,.stat-note,.stat-big,.work-title,.work-desc,.activity-title,.activity-details,.kv strong,.kv span {overflow-wrap:anywhere;min-width:0}
+ .stat-card {height:auto;min-height:150px;padding:22px;display:flex;flex-direction:column;gap:8px}
+ .stat-big {font-size:clamp(24px,2.3vw,34px);line-height:1.2}
+ .card-top,.a-head,.a-bottom,.filter-line,.select-line,.head-buttons {flex-wrap:wrap;gap:12px}
+ .card-top>div,.deadline-row>div,.activity-item>div,.sheet-grid>div {min-width:0}
+ .card-top .card-heading {flex:1 1 180px}
+ .deadline-row {gap:12px}.deadline-row>div {flex:1}.deadline-row small {overflow-wrap:anywhere}
+ .status,.btn svg,.notice>svg,.deadline-row>svg {flex-shrink:0}
+ .status {white-space:normal;overflow-wrap:anywhere;max-width:100%}
+ .notice {align-items:flex-start}.notice span {min-width:0;overflow-wrap:anywhere}
+ .table-wrap {max-width:100%;overflow-x:auto;border-radius:0 0 16px 16px}
+ .login-role:disabled {cursor:not-allowed;transform:none}.login-role:disabled.selected {background:var(--paper);border-color:var(--line);box-shadow:none}
+ @media(max-width:620px) {.cards {grid-template-columns:1fr}.stat-card {min-height:125px;padding:18px}.card.pad {padding:18px}.head-buttons {width:100%}.head-buttons .btn {max-width:100%}.deadline-row {flex-wrap:wrap}}
+}
+@scope (.bondops) {
+ @media(max-width:620px) {
+  .topbar {height:auto;min-height:78px;padding:10px 14px;gap:8px}
+  .top-actions {min-width:0;width:100%;flex-wrap:wrap;justify-content:flex-start;gap:8px}
+  .top-actions .role-select {min-width:0;max-width:140px;flex:0 1 140px}
+  .top-actions .pill {max-width:170px;overflow:hidden;text-overflow:ellipsis}
+  .top-actions .inline-link {white-space:normal;font-size:10px}
+  .ico-btn {flex-shrink:0}
+ }
+}
