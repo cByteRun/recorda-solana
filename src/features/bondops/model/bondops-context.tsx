@@ -55,5 +55,5 @@ export function BondOpsProvider({children}:{children:ReactNode}){
 }
 export function useBondOps(){const value=useContext(Context);if(!value)throw Error('BondOpsProvider missing');return value;}
 export function amount(minor:string|undefined,decimals=2){if(minor===undefined)return '—';const n=BigInt(minor),base=10n**BigInt(decimals);return `${(n/base).toLocaleString('en-US')}${decimals?'.'+(n%base).toString().padStart(decimals,'0'):''}`;}
-export function dateTime(iso:string|null|undefined){return iso?new Intl.DateTimeFormat('ru-RU',{dateStyle:'medium',timeStyle:'short',timeZoneName:undefined}).format(new Date(iso)):'Не назначен';}
+export function dateTime(iso:string|null|undefined,language:'en'|'ru'=localStorage.getItem('recorda-language')==='ru'?'ru':'en'){return iso?new Intl.DateTimeFormat(language==='ru'?'ru-RU':'en-US',{dateStyle:'medium',timeStyle:'short',timeZoneName:undefined}).format(new Date(iso)):language==='ru'?'Не назначен':'Not scheduled';}
 export function actionHref(action:Action){return action.source==='illustrative'?`/actions?example=${encodeURIComponent(action.id)}`:`/${action.version===1?'protocol':'actions'}?action=${encodeURIComponent(action.id)}`;}

@@ -11,9 +11,9 @@ test('workspace pins RPC and discards signer and demo balances when switching',a
  const rpc:string[]=[];await page.route('**/*',route=>{const req=route.request();if(req.postData()?.includes('"jsonrpc"')){rpc.push(req.url());return route.abort();}return route.continue();});
  await page.goto('/workspaces');await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();await expect(page.getByRole('heading',{name:'Operations overview.'})).toBeVisible();
  await page.evaluate(()=>{sessionStorage.setItem('bondops-wallet','old-signer');localStorage.setItem('recorda:protocol:addresses:v1:test',JSON.stringify({action:'stale-selection'}));});
- await page.getByLabel('Workspace',{exact:true}).selectOption('test');await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toHaveText('Ожидаем входа');await expect(page.locator('.login-role:disabled')).toHaveCount(4);await expect(page.locator('.stat-card')).toHaveCount(0);
+ await page.getByLabel('Workspace',{exact:true}).selectOption('test');await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toHaveText('Waiting for sign-in');await expect(page.locator('.login-role:disabled')).toHaveCount(4);await expect(page.locator('.stat-card')).toHaveCount(0);
  expect(await page.evaluate(()=>sessionStorage.getItem('bondops-wallet'))).toBeNull();expect(await page.evaluate(()=>localStorage.getItem('recorda:protocol:addresses:v1:test'))).toBeNull();expect(rpc).toEqual([]);
- rpc.length=0;await page.getByLabel('Workspace',{exact:true}).selectOption('devnet');await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toHaveText('Ожидаем входа');expect(rpc).toEqual([]);
+ rpc.length=0;await page.getByLabel('Workspace',{exact:true}).selectOption('devnet');await expect(page).toHaveURL(/\/login$/);await expect(page.getByRole('status')).toHaveText('Waiting for sign-in');expect(rpc).toEqual([]);
  await page.reload();await expect(page.getByLabel('Workspace',{exact:true})).toHaveValue('devnet');await expect(page.locator('.stat-card')).toHaveCount(0);
 });
 test('public Demo uses packaged illustrative data when demo service is disabled',async({page})=>{

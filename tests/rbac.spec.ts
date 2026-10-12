@@ -37,7 +37,7 @@ test('wallet address controls identity even when a different role card is select
  test.skip(!operator,'Configure RECORDA_OPERATOR to test the local wallet address map');
  await page.addInitScript(({operator})=>{sessionStorage.setItem('recorda-workspace','test');sessionStorage.setItem('bondops-wallet','forged-wallet');const provider={isPhantom:true,connect:async(options?:{onlyIfTrusted?:boolean})=>{if(options?.onlyIfTrusted)throw Error('Not connected');return {publicKey:{toBase58:()=>operator}};},on:()=>{},removeListener:()=>{}};Object.defineProperty(window,'phantom',{value:{solana:provider}});},{operator});
  await page.route('http://127.0.0.1:8899/**',r=>r.abort());await page.goto('/login');await expect(page.getByRole('button',{name:/^auditor/i})).toBeDisabled();await page.getByRole('button',{name:'Connect Phantom & identify me'}).click();await expect(page.getByText('Current identity: Bond operator · Operator')).toBeVisible();await expect(page.locator('.top-actions')).toContainText('Bond operator · Operator');
- await page.locator('.sidebar').getByRole('link',{name:'Overview',exact:true}).click();await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page).toHaveURL(/\/login\?next=%2Fdashboard$/);await expect(page.getByRole('status')).toHaveText('Ожидаем входа');
+ await page.locator('.sidebar').getByRole('link',{name:'Overview',exact:true}).click();await page.locator('.top-actions').getByRole('button',{name:'Open profile',exact:true}).click();await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page).toHaveURL(/\/login\?next=%2Fdashboard$/);await expect(page.getByRole('status')).toHaveText('Waiting for sign-in');
 });
 for(const width of [1440,390,320])test(`role login fits ${width}px`,async({page})=>{await page.setViewportSize({width,height:1000});await page.goto('/login');await expect(page.locator('.login-role')).toHaveCount(4);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});
 
@@ -47,13 +47,13 @@ test('login keeps controls locked and shows actual loading while RPC is pending'
  test.skip(!investor,'Configure a holder address');
  await page.addInitScript(({investor})=>{sessionStorage.setItem('recorda-workspace','test');const provider={isPhantom:true,publicKey:{toBase58:()=>investor},connect:async()=>{throw Error('Already connected: do not reconnect');},on:()=>{},removeListener:()=>{}};Object.defineProperty(window,'phantom',{value:{solana:provider}});},{investor});
  await page.route('http://127.0.0.1:8899/**',()=>{});
- await page.goto('/login');await expect(page.getByRole('button',{name:'Open my dashboard'})).toBeDisabled();await expect(page.getByRole('status')).toHaveText('Загружаем операционные данные');await expect(page.locator('.login-role:disabled')).toHaveCount(4);await expect(page).toHaveURL(/\/login$/);await expect(page.locator('.top-actions')).toContainText('Investor');await expect(page.getByText('Connecting…')).toHaveCount(0);
+ await page.goto('/login');await expect(page.getByRole('button',{name:'Open my dashboard'})).toBeDisabled();await expect(page.getByRole('status')).toHaveText('Loading operational data');await expect(page.locator('.login-role:disabled')).toHaveCount(4);await expect(page).toHaveURL(/\/login$/);await expect(page.locator('.top-actions')).toContainText('Investor');await expect(page.getByText('Connecting…')).toHaveCount(0);
 });
 
 test('signed-out login stays idle and does not read RPC before Connect Phantom',async({page})=>{
  await page.addInitScript(()=>{sessionStorage.setItem('recorda-workspace','test');sessionStorage.setItem('bondops-signed-out','true');Object.defineProperty(window,'phantom',{value:{solana:{isPhantom:true,publicKey:{toBase58:()=> '7FKcUyMW6tFFRsAdGZ3ByC3pMVXdoxd6BdKnCVpQzYhu'},connect:async()=>{throw Error('No automatic connection');},on:()=>{},removeListener:()=>{}}}});});
  const rpc:string[]=[];await page.route('http://127.0.0.1:8899/**',r=>{rpc.push(r.request().url());return r.abort();});
- await page.goto('/login');await expect(page.getByRole('status')).toHaveText('Ожидаем входа');await expect(page.getByRole('button',{name:'Connect Phantom & identify me'})).toBeEnabled();
+ await page.goto('/login');await expect(page.getByRole('status')).toHaveText('Waiting for sign-in');await expect(page.getByRole('button',{name:'Connect Phantom & identify me'})).toBeEnabled();
  await page.waitForTimeout(1000);await expect(page).toHaveURL(/\/login$/);expect(rpc).toEqual([]);
  const links=await page.locator('.rail-ico').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));expect(new Set(links).size).toBe(links.length);
 });
@@ -61,17 +61,17 @@ test('signed-out login stays idle and does not read RPC before Connect Phantom',
 test('signed-out routes and sidebar links lead to login without reading RPC',async({page})=>{
  await page.addInitScript(()=>{sessionStorage.setItem('recorda-workspace','test');sessionStorage.setItem('bondops-signed-out','true');});
  const rpc:string[]=[];await page.route('http://127.0.0.1:8899/**',r=>{rpc.push(r.request().url());return r.abort();});
- await page.goto('/holdings');await expect(page).toHaveURL(/\/login\?next=%2Fholdings$/);await expect(page.getByRole('status')).toHaveText('Ожидаем входа');
+ await page.goto('/holdings');await expect(page).toHaveURL(/\/login\?next=%2Fholdings$/);await expect(page.getByRole('status')).toHaveText('Waiting for sign-in');
  for(const link of ['Audit overview','Proof explorer','Notifications']){
-   await page.locator('.sidebar').getByRole('link',{name:link,exact:true}).click();await expect(page).toHaveURL(/\/login\?next=/);await expect(page.getByRole('status')).toHaveText('Ожидаем входа');
+   await page.locator('.sidebar').getByRole('link',{name:link,exact:true}).click();await expect(page).toHaveURL(/\/login\?next=/);await expect(page.getByRole('status')).toHaveText('Waiting for sign-in');
  }
  expect(rpc).toEqual([]);await expect(page.getByRole('button',{name:'Connect Phantom & identify me'})).toBeEnabled();
 });
 
 test('public auditor enters without Phantom and cannot acquire mutation access',async({page})=>{
  await page.addInitScript(()=>{sessionStorage.setItem('recorda-workspace','test');sessionStorage.setItem('bondops-signed-out','true');});
- await page.route('http://127.0.0.1:8899/**',r=>r.abort());await page.goto('/login');await page.getByRole('button',{name:'Открыть аудит без кошелька'}).click();
+ await page.route('http://127.0.0.1:8899/**',r=>r.abort());await page.goto('/login');await page.getByRole('button',{name:'Open audit without a wallet'}).click();
  await expect(page.locator('.top-actions')).toContainText('Public auditor · Auditor');await expect(page.locator('.sidebar').getByRole('link',{name:'Proof explorer',exact:true})).toBeVisible();
  await page.goto('/settings');await expect(page.getByRole('heading',{name:'Your role workspace'})).toBeVisible();await expect(page.getByRole('button',{name:'Save notification rules'})).toHaveCount(0);
- await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page).toHaveURL(/\/login\?next=/);await expect(page.getByRole('status')).toHaveText('Ожидаем входа');
+ await page.locator('.top-actions').getByRole('button',{name:'Open profile',exact:true}).click();await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page).toHaveURL(/\/login\?next=/);await expect(page.getByRole('status')).toHaveText('Waiting for sign-in');
 });

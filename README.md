@@ -4,6 +4,8 @@
 
 **Solana · Token-2022 · Phantom · Coupon / Voting / Redemption**
 
+**Workspace profile:** [appearance, 20 palettes and EN/RU preferences](docs/WORKSPACE-PREFERENCES.md). Open the avatar for account details and sign out.
+
 **Role cabinets:** [RBAC and wallet address configuration](docs/RBAC.md). Open `/login` to preview Operator, Investor A/B/C, Auditor or Reviewer; Test/Devnet identify the cabinet from the connected Phantom address.
 
 **Workspace entry:** Welcome → choose **Demo** (illustrative preview), **Test** (local validator) or **Devnet** (public development network). Each workspace fixes its data source and RPC.
