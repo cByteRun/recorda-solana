@@ -10,6 +10,14 @@ The recurring job is to identify a financial obligation, reconcile its execution
 
 Investor signing and Auditor verification support the operator's workflow. Issuance and the holder registry establish the instrument being serviced; Coupon and Redemption are the core servicing tasks. Voting remains the required third KASE scenario.
 
+### Operator control in the current overview
+
+The dashboard turns the shared lifecycle into a next-step queue: fix rights → calculate → approve → fund when required → execute/vote → finalize the receipt → inspect evidence. Filters group actions by the work still required, with uncertain results prioritized for reconciliation. Each action exposes its own cutoff and sourced deadline.
+
+Voting has a quorum/tally view without payment funding. Redemption shows principal and final coupon separately after verified calculation, requires holder authorization and tracks retirement alongside payment. Expandable asset details show base instrument terms, authority and outstanding/retired supply; each action retains its own fixed terms. Unknown/pending payments must be reconciled before retry, and execution without a verified final receipt remains incomplete in the overview.
+
+These controls support the recurring servicing job with existing authorized workflows. [Dashboard contract](ONCHAIN-DASHBOARD.md) describes the read model; [asset-tokenization research](ASSET-TOKENIZATION-RESEARCH.md) maps this presentation to TZ and the supplied Chainlink reference.
+
 ## Proposed demonstration: missing coupon payment
 
 **Illustrative product scenario, not real Devnet payment data.** The operational frontend/backend now exposes this workflow; live acceptance is separate. The original product example below uses 35 units. The implemented demo is aligned to TZ: 17 units, rights 500/250/100/0, illustrative confirmations 350 and unknown 500 Mock USD. Dollar amounts describe obligations, not actual fiat settlement.
@@ -55,3 +63,19 @@ End-to-end servicing flow: **create/select instrument → register/distribute po
 API and SDK for automating corporate actions on Solana, for exchanges, tokenization platforms, custodians and financial developers. The promise is to connect verified bond-servicing mechanisms to existing systems instead of rebuilding them. Existing typed clients and CLI/library helpers are a foundation, not a supported production API/SDK offering.
 
 Advance after validating recurring BondOps usage, demand for integrations and willingness to pay, and demonstrating reliable recovery, settlement-source trust, supported capacity and production security. Reuse and integration potential are hypotheses, not established market evidence.
+
+## Real-world asset assurance and scale
+
+The prototype's instrument, registry, fixed rights and receipts establish the on-chain servicing core. A real-world deployment also needs a verifiable relationship between the tokenized instrument and the issuer's actual obligations/assets, eligible participants and authoritative payment records. These capabilities extend the product beyond the current mock-money prototype; they require new integration requirements and separate acceptance.
+
+| Area | Intended operator workflow | Foundation and remaining boundary |
+|---|---|---|
+| Participant eligibility / KYC | Review a provider's participant decision, apply expiry/revocation and enforce the policy for new transfers without rewriting historical rights | FR-54 provides versioned eligibility checks. A real KYC/AML provider, operational review and acceptance remain open. Private documents and PII stay off-chain. |
+| Asset documents / provenance | Associate issuer and asset identifiers, issuance terms and relevant ownership/custody or collateral documents with the instrument; record reviewer, source, version and validity | FR-55 provides versioned URI/hash commitments and immutable action terms; FR-57 provides external-event provenance. Neither authenticates the underlying document or proves legal rights/backing on its own. External source verification, controlled document access and issuer/custodian review remain to be defined. |
+| External settlement | Reconcile authenticated bank/paying-agent evidence to the same fixed obligation and retain conflicting/unknown results for investigation | BO-07 is deferred until provider selection. Confirmation must bind action, holder, asset and amount and resist replay; an external-event proposal is not proof of payment. |
+| Larger servicing portfolios | Discover obligations and exceptions reliably, keep proofs available, recover partial execution and measure supported holder/portfolio capacity | Existing historical distribution/claims capabilities and offline benchmarks are a foundation. Native acceptance covers four holders per instrument; 10,000-holder offline calculations are not production throughput. Hosted indexing, retention/recovery, rent/fees and end-to-end load acceptance remain open. |
+| Partner integration | Embed rights, authorized actions and inspectable outcomes into exchange, custodian or tokenization-platform systems | Existing clients/helpers are not a supported production API/SDK. Define service ownership, authentication, delivery/recovery contracts and support commitments after demand and reliability validation. |
+
+Reserve or valuation feeds should be selected for the specific asset model. An action vault funds a particular payment; it is not evidence that the entire bond is collateralized. Document, identity and settlement sources must remain distinguishable from verified Solana state in the operator interface.
+
+The [research matrix](ASSET-TOKENIZATION-RESEARCH.md) records reference applicability and source coverage. [Roadmap](ROADMAP.md#future-scope-requiring-new-requirements) owns future delivery; [Architecture operations](ARCHITECTURE.md#operations-and-supported-scope) owns current trust and capacity boundaries. These product directions do not amend TZ or close human Devnet/submission gates.

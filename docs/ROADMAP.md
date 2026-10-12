@@ -18,6 +18,7 @@ Source scope **FR-01–58 is implemented**. The current focus is fresh feature/a
 - [x] Define authoritative finality, integer/asset reconciliation, uncertainty and proof-gated case closure.
 - [x] Build Expected / Confirmed / Unsettled / Unknown views with holder drill-down, retained references and permitted recovery links.
 - [x] Add portfolio discovery, coupon deadline calendar, overdue queue, assignment, retained resolution history, team scope enforcement and in-app reminders/escalations.
+- [x] Add action next-step filters, separate Voting/Redemption control, expandable base instrument terms and outstanding/retired supply, and uncertainty-first reconciliation links. [Dashboard contract](ONCHAIN-DASHBOARD.md) and [asset-tokenization coverage](ASSET-TOKENIZATION-RESEARCH.md); 2026-10-12 local UI verification: 19 browser tests and production build passed, without closing live Devnet acceptance.
 - [ ] Accept the complete live operator flow with a configured Devnet wallet/portfolio and a reliable RPC; public RPC discovery returned 429 on 2026-10-12.
 - [ ] Validate recurring servicing usage, timeliness rules and willingness to pay with issuers/paying agents/operators.
 - [ ] Add bank/paying-agent confirmation after provider selection; add external email/messenger delivery and organization SSO separately.
@@ -95,9 +96,13 @@ These are implemented CLI/library/program capabilities, not claims of hosted ind
 
 - [ ] Dividends, tender/buyback and other new action UCs/FRs/fixtures.
 - [ ] Real KYC/AML, custody/recovery, fiat rails and depository integrations.
+- [ ] External asset documentation and assurance: issuer/asset identifiers, versioned issuance terms, relevant ownership/custody or collateral evidence, reviewer/source verification and controlled off-chain document access. Existing URI/hash and event commitments do not establish legal rights or backing.
+- [ ] Measure larger holder/portfolio capacity and end-to-end indexing, proof retrieval, partial execution and recovery before expanding supported scale; offline 10,000-holder benchmarks do not establish production throughput.
 - [ ] Production security, provider operations, capacity and legal review.
 
 These tasks are not silently included in the implemented FR-01–58 checklist and are not closed by the MVP demo.
+
+Product purpose and integration boundaries: [RWA assurance and scale](PRODUCT.md#real-world-asset-assurance-and-scale). Reference applicability and current coverage: [asset-tokenization research](ASSET-TOKENIZATION-RESEARCH.md). Supported native/offline capacity and document/PII handling: [Architecture operations](ARCHITECTURE.md#operations-and-supported-scope).
 
 ## Product and presentation experience
 

@@ -4,12 +4,6 @@
 
 **Solana · Token-2022 · Phantom · Coupon / Voting / Redemption**
 
-**Workspace profile:** [appearance, 20 palettes and EN/RU preferences](docs/WORKSPACE-PREFERENCES.md). Open the avatar for account details and sign out.
-
-**Role cabinets:** [RBAC and wallet address configuration](docs/RBAC.md). Open `/login` to preview Operator, Investor A/B/C, Auditor or Reviewer; Test/Devnet identify the cabinet from the connected Phantom address.
-
-**Workspace entry:** Welcome → choose **Demo** (illustrative preview), **Test** (local validator) or **Devnet** (public development network). Each workspace fixes its data source and RPC.
-
 > Control coupon payments, redemptions, errors and confirmations from one workspace.
 
 **🎯 The product value:** help issuers, paying agents and operations specialists see what is owed, what execution is confirmed, and what still requires attention. Fixed record-date rights, authorized execution and verifiable evidence underpin that servicing workflow.
@@ -17,6 +11,12 @@
 **Current foundation:** issuance/registry → rights → approval/funding → execution → audit. **Operational frontend/backend:** portfolio and deadline calendar, confirmation reconciliation, durable exception cases, team permissions, audit and in-app notifications are implemented locally. Live Devnet acceptance, production hosting and bank/external delivery connectors remain open. [Setup and boundaries](docs/BONDOPS-OPERATIONS.md). [Product direction and illustrative missing-payment case](docs/PRODUCT.md) supplement TZ without replacing its required scenarios.
 
 **Long-term direction — Recorda Infrastructure:** API/SDK for exchanges, tokenization platforms, custodians and financial developers to integrate bond-servicing mechanisms on Solana. Production reliability and market demand must be demonstrated before treating this as a proven offering.
+
+**Workspace entry:** Welcome → choose **Demo** (illustrative preview), **Test** (local validator) or **Devnet** (public development network). Each workspace fixes its data source and RPC.
+
+**Role cabinets:** [RBAC and wallet address configuration](docs/RBAC.md). Open `/login` to preview Operator, Investor A/B/C, Auditor or Reviewer; Test/Devnet identify the cabinet from the connected Phantom address.
+
+**Workspace profile:** [appearance, 20 palettes and EN/RU preferences](docs/WORKSPACE-PREFERENCES.md). Open the avatar for account details and sign out.
 
 **Record Date → Right → Controlled Execution → Verifiable Proof**
 
@@ -42,6 +42,7 @@ Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting →
 
 ## Table of contents
 
+- [Operator control — from rights to recorded outcomes](#operator-control--from-rights-to-recorded-outcomes)
 - [🚀 Devnet demo — Coupon → Voting → Redemption](#devnet-demo--coupon--voting--redemption)
   - [Install and prepare the program](#1-install-and-prepare-the-program)
   - [Prepare Phantom accounts and configuration](#2-prepare-four-phantom-accounts-and-envlocal)
@@ -49,6 +50,7 @@ Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting →
   - [Expected result and evidence](#4-expected-result-and-evidence)
 - [🏗️ Architecture at a glance](#architecture-at-a-glance)
 - [✨ Features and business domains](#features-and-business-domains)
+- [From prototype to RWA infrastructure](#from-prototype-to-rwa-infrastructure)
 - [🖥️ Product screens and manual acceptance](#product-screens-and-manual-acceptance)
   - [Manual acceptance](#manual-acceptance)
 - [⚙️ Technical setup](#technical-setup)
@@ -58,6 +60,23 @@ Start with the **real Phantom/Devnet demo below**. It runs Coupon → Voting →
 - [🔧 Troubleshooting](#troubleshooting)
 - [📦 CI and website deployment](#ci-and-website-deployment)
 - [📚 Documentation](#documentation)
+
+---
+
+## Operator control — from rights to recorded outcomes
+
+The operator's daily loop is **identify the obligation → inspect fixed rights → choose the authorized next step → reconcile execution → retain proof**. `/dashboard` brings those decisions into one overview, with exact per-asset amounts and an assigned exception queue.
+
+| Operator question | Dashboard control |
+|---|---|
+| What needs my action next? | Next-step filters for fixing rights, calculation, approval, funding, execution/voting, receipt finalization and evidence review. Every action retains its own cutoff and deadline source. |
+| What changes for voting or redemption? | Voting shows quorum and available votes without a payment vault. Redemption separates principal/final coupon and identifies the required holder signature and retirement checks. |
+| Which asset am I servicing? | Expandable base instrument terms, authority, maturity and outstanding/retired supply for the selected settlement asset. Action terms remain fixed separately. |
+| Can an uncertain payment be retried? | Unknown/pending results lead to reconciliation before another payment. Missing verification or a missing final receipt remains visible; a reference or case note cannot prove completion. |
+
+The overview supports EN/RU, themes, keyboard controls and mobile layouts. [Dashboard design and data contract](docs/ONCHAIN-DASHBOARD.md) explains the implementation; the [asset-tokenization research and coverage matrix](docs/ASSET-TOKENIZATION-RESEARCH.md) maps the Chainlink reference to TZ and current source coverage.
+
+The implemented core is a **prototype for servicing tokenized bonds**. Connecting it to a real-world asset requires external documents, evidence of the token's relationship to that asset and authoritative settlement integrations. The [RWA development path](#from-prototype-to-rwa-infrastructure) separates those future capabilities from delivered prototype functionality.
 
 ---
 
@@ -231,11 +250,31 @@ The full stable-source audit passed **216 tests**. Additional domains are covere
 
 Full feature wording and implementation/test links: [requirement checklist][features]. UC/FR/NFR/TC traceability: [requirement mapping][mapping]. Bypass and failure scenarios: [security audit][security].
 
+## From prototype to RWA infrastructure
+
+The next product step is to connect the operator's servicing workflow to an issuer's actual asset records, eligible participants and payment systems. Issuers/paying agents can use BondOps as their operations workspace; exchanges, tokenization platforms and custodians could embed the same mechanisms through a future supported API/SDK.
+
+| Development area | Product purpose and remaining work |
+|---|---|
+| **KYC/AML and participant eligibility** | Integrate a selected identity/compliance provider with expiry, revocation and eligibility policies. Private KYC documents and personal data stay off-chain. Existing policy checks are a foundation; real KYC acceptance remains open. |
+| **External asset documents and provenance** | Bind issuer/asset identifiers, issuance terms and relevant ownership/custody or collateral evidence to the instrument. Define reviewers, document versions, validity and source verification. URI/hash commitments preserve a reference; they do not independently establish legal rights or backing. |
+| **Bank / paying-agent confirmations** | Match authenticated provider confirmations to the exact action, holder, asset and amount, with replay/conflict handling and reconciliation. Keep external confirmations distinct from Solana evidence. Provider selection and BO-07 acceptance are deferred. |
+| **Measured scale and recovery** | Validate larger holder populations and portfolios, indexing, proof availability, rent/fees, partial execution, retention and disaster recovery. Offline benchmarks up to 10,000 holders do not establish production throughput; native acceptance currently covers four holders per instrument. |
+| **Infrastructure API/SDK** | Package verified rights, authorized action flows and evidence for partner systems after demonstrating recurring demand, provider reliability, production security and supported capacity. |
+
+The asset model determines whether reserve, valuation or custody feeds are needed. Funding one action vault establishes readiness for that payment; it does not prove backing of the entire bond. Real KYC, bank connectors, external asset assurance and production deployment remain future work.
+
+Scope and priorities: [Product evolution](docs/PRODUCT.md#real-world-asset-assurance-and-scale) · [Roadmap](docs/ROADMAP.md#future-scope-requiring-new-requirements) · [Architecture and supported capacity][operations] · [Asset-tokenization coverage](docs/ASSET-TOKENIZATION-RESEARCH.md). Conceptual references: [Chainlink asset tokenization](https://chain.link/education/asset-tokenization) and [tokenization workflow](https://chain.link/education-hub/how-to-tokenize-an-asset); these inform the development path without replacing KASE/TZ requirements.
+
 ## Product screens and manual acceptance
 
 | Route | Purpose |
 |---|---|
 | `/` | Welcome, interactive record-date story, EN/RU copy and role perspectives → Get started |
+| `/dashboard` | Role home; Operator controls next steps, fixed obligations, evidence gaps, voting/redemption and serviced assets |
+| `/bonds` · `/holders` | Instrument portfolio and holder registry; current supply/positions remain distinct from action rights |
+| `/settlements` · `/calendar` | Reconcile payment evidence, investigate assigned exceptions and control sourced deadlines |
+| `/audit` · `/infrastructure` | Inspect retained evidence and distinguish connected sources from future external integrations |
 | `/actions` | Operator workspace with Coupon → Voting → Redemption journey |
 | `/protocol` | Instrument/holder setup and historical Coupon → Continue to actions |
 | `/actions?instrument=<PDA>` | Create Coupon, Voting, Full or Partial Redemption |
@@ -406,6 +445,8 @@ For retained proofs, `npm run distribution:index -- journal.json parameters.json
 |---|---|
 | [Product](docs/PRODUCT.md) | BondOps value, target users, proposed exception flow and Infrastructure direction |
 | [Product experience](docs/PRODUCT-EXPERIENCE.md) | Current screens and proposed interface progression |
+| [Operator dashboard](docs/ONCHAIN-DASHBOARD.md) | Servicing controls, evidence presentation and dashboard data contract |
+| [Asset-tokenization research](docs/ASSET-TOKENIZATION-RESEARCH.md) | Chainlink reference, TZ coverage, operator improvements and remaining RWA boundaries |
 | [TZ](docs/TZ.md) | KASE brief obligations, key business rules and separately scoped Recorda additions |
 | [Requirements](docs/REQUIREMENTS.md) | Business domains and UC/FR/NFR/TC checklists; live DoD |
 | [Roadmap](docs/ROADMAP.md) | Delivered milestones and remaining acceptance/release work |

@@ -21,3 +21,9 @@ The supplied templates are design references, not dependencies or data providers
 - Existing calendar, operational notices, rules, membership, governance, audit/export and Coupon/Voting/Redemption flows remain reachable through the unchanged role navigation. Pipeline counts describe current stages, not mutually exclusive financial totals. Voting has no funding/payment stage.
 
 The header keeps workspace, language, profile and 20 theme palettes. Phones retain all 11 operator tabs and profile in the bottom panel. EN/RU applies to new operational controls; public on-chain names and evidence remain verbatim.
+
+## Asset-tokenization review (2026-10-12)
+
+The [research and coverage matrix](ASSET-TOKENIZATION-RESEARCH.md) compares the supplied Chainlink reference with TZ and the servicing value. The overview now adds actionable next-stage filters for Coupon, Voting and Redemption, cutoff and deadline provenance, verified calculation components, holder-signature requirements and expandable instrument terms/supply. Unverified actions and uncertain payment results require review; receipts remain distinct from execution state. These controls describe loaded evidence and navigate to existing workflows without granting authority or sending transactions.
+
+The action control spans all portfolio instruments/assets; the existing financial summaries and serviced-asset details follow the selected settlement mint. External asset documents, reserve verification and bank confirmations are disclosed as unavailable. Demo is illustrative, never legal ownership or proof of reserves. Protocol requirements and human Devnet acceptance gates remain unchanged.
