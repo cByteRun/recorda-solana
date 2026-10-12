@@ -35,3 +35,10 @@ test('corporate actions follows both themes and the chosen accent palette',async
  await expect.poll(async()=>(await colors()).button).toBe('rgb(121, 82, 179)');
  const light=await colors();expect(light.panel).toBe('rgb(255, 255, 255)');expect(light.input).toBe('rgb(249, 251, 249)');expect(light.button).toBe('rgb(121, 82, 179)');expect(dark.button).not.toBe(light.button);
 });
+
+for(const width of [390,320])test(`all eleven operator tabs are visible and usable in bottom navigation at ${width}px`,async({page})=>{
+ await page.setViewportSize({width,height:844});const links=page.locator('.rail .rail-ico');await expect(links).toHaveCount(11);
+ const desktop=await page.locator('.sidebar .nav-item').evaluateAll(es=>es.map(e=>e.getAttribute('href')));expect(await links.evaluateAll(es=>es.map(e=>e.getAttribute('href')))).toEqual(desktop);
+ for(const href of desktop){const link=page.locator(`.rail .rail-ico[href="${href}"]`);await expect(link).toBeInViewport();await link.click();await expect(link).toHaveAttribute('aria-current','page');await expect(page.locator('main')).toBeVisible();}
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator('.rail-profile').click();await expect(page.getByRole('dialog')).toBeVisible();
+});

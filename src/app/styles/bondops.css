@@ -255,3 +255,17 @@ a{text-decoration:none} .content > main{min-width:0} .operational{padding:28px;m
  .actions-workspace .summary-heading,.actions-workspace .execution-progress {flex-wrap:wrap}
  @media(max-width:620px) {.actions-workspace {padding:25px 14px 45px}.actions-workspace .workspace-heading {padding:20px}.actions-workspace .workspace-heading h1 {font-size:27px}}
 }
+
+@scope (.bondops) {
+ .rail-label {display:none}
+ @media(max-width:620px) {
+  .app-shell {padding-bottom:calc(132px + env(safe-area-inset-bottom,0px))}
+  .rail {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:54px;gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));height:auto;min-height:120px;overflow:visible;background:var(--paper);border-top:1px solid var(--line);box-shadow:0 -8px 24px #0001}
+  .rail .rail-ico {display:flex;flex-direction:column;justify-content:center;gap:4px;width:100%;height:54px;padding:4px 2px;border-radius:10px;color:var(--muted)}
+  .rail .rail-ico.active,.rail .rail-ico:hover {background:var(--mint);color:var(--brand)}
+  .rail-ico svg {width:19px;height:19px;flex-shrink:0}
+  .rail-label {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:8px;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+  .rail .rail-profile {width:100%;height:54px;border:0;border-radius:10px;background:var(--light)}
+  .rail .brand-mark,.rail .rail-grow {display:none}
+ }
+}
