@@ -7,7 +7,7 @@ export async function waitForDevnetWallet(page, address, { timeout = 600_000, in
     panel.id = 'recorda-wallet-wait';
     panel.setAttribute('role', 'status');
     Object.assign(panel.style, { position: 'fixed', top: '8px', left: '8px', right: '8px', zIndex: '9999', padding: '16px', background: '#fff4cc', color: '#171717', border: '2px solid #d97706', overflowWrap: 'anywhere' });
-    panel.textContent = `Devnet test: switch account in Phantom in THIS browser to ${expected}. Open Phantom → account selector → choose this Solana address → unlock. If it is not connected, click Connect Phantom / Wallet on this page and approve the connection. No Google account switch is needed. `;
+    panel.textContent = `Wallet test: switch account in Phantom in THIS browser to ${expected}. Open Phantom → account selector → choose this Solana address → unlock. If it is not connected, click Connect Phantom / Wallet on this page and approve the connection. No Google account switch is needed. `;
     const current = document.createElement('strong');
     current.id = 'recorda-wallet-current';
     panel.append(current);

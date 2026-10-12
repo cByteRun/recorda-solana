@@ -128,6 +128,8 @@ Use `chromium` or `google-chrome` instead if that is your installed executable. 
 npm run test:e2e:actions:devnet
 ```
 
+**RPC limits:** public Devnet RPC can return **HTTP 429 (Too Many Requests)** and interrupt the pipeline, even with valid transactions and configuration. Use a separate Devnet RPC or the local pipeline below instead of repeatedly retrying the public endpoint. A local validator does not have the public Devnet provider's rate limits. Downloading the deployed program from Devnet can still encounter those limits; once downloaded, the local scenario does not need Devnet RPC.
+
 The runner opens its application tab and drives the buttons. **You review/confirm every Phantom prompt and switch accounts when the terminal asks.** Expect Operator → A/B/C → Operator for voting, then the same investor switching for redemption. One stage can require multiple signatures. The runner checks Devnet genesis, uses real Phantom and never requests a faucet or auto-signs.
 
 ### 4. Expected result and evidence
@@ -144,7 +146,48 @@ The runner opens its application tab and drives the buttons. **You review/confir
 
 Success prints `PASS` and saves **`passed: true`** in `target/devnet-evidence/actions-<run-id>/run.json`, alongside action screenshots. It checks actual token balance deltas, mint supply and audited receipts. Retain the JSON, Action URLs and Explorer links for judges. Reopen `/actions?action=<PDA>` as Auditor and use **Export verified audit**; for a clean manual recovery demonstration, use another browser without Phantom.
 
-The full runner has **no automatic resume**. On failure inspect `run.json`, `failure.png`, current Action URL and submitted signatures. A plain invocation creates a new instrument; reconcile partial progress before retrying payments. Explicit `--resume path/to/run.json` supports only interrupted pre-payment Coupon after chain validation; see [recovery rules](docs/DEVNET-DEMO.md#retain-proof-and-reopen-manually). A successful run proves this MVP Devnet scenario, not all Post-MVP operations or production readiness. The full human three-action PASS is still pending recorded evidence.
+The full runner has **no automatic resume**. On failure inspect `run.json`, `failure.png`, current Action URL and submitted signatures. A plain invocation creates a new instrument; reconcile partial progress before retrying payments. Explicit `--resume path/to/run.json` supports an interrupted pre-payment Coupon or one finalized Coupon before Voting, after chain validation; partial payment/execution is refused. See [recovery rules](docs/DEVNET-DEMO.md#retain-proof-and-reopen-manually). A successful run proves this MVP Devnet scenario, not all Post-MVP operations or production readiness. The full human three-action Devnet PASS is still pending recorded evidence.
+
+### Local RPC pipeline with real Phantom
+
+Use the same Operator and A/B/C public addresses, frontend and Chromium profile configured above. The runner creates a fresh instrument and executes the same **Coupon → Voting → Full Redemption** scenario using actual Phantom signatures on **Solana Localnet**, not a mocked wallet. No private keys need to leave Phantom.
+
+**Terminal 1 — copy the Devnet deployment and start local Solana:** requires the Solana CLI. Run the download once while Devnet RPC is available, then keep the validator running:
+
+```bash
+mkdir -p target/phantom-local
+solana program dump \
+  CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF \
+  target/phantom-local/recorda-devnet.so \
+  --url https://api.devnet.solana.com
+
+solana-test-validator \
+  --ledger target/phantom-local/ledger \
+  --bpf-program CFyseDHTMkDxMpnozdZpHV5a4fbEkPAkyue5RpHtrobF target/phantom-local/recorda-devnet.so \
+  --rpc-port 8899 --faucet-port 9900 --bind-address 127.0.0.1
+```
+
+This copies the **deployed program binary**; it does not copy Devnet instruments, accounts or balances. Use a new ledger directory when changing the binary or starting a clean run, and stop any validator already using port 8899. The copied deployment must support the repository's current IDL and v2 instructions. A local build and the deployed binary can differ: the full local PASS recorded on **2026-10-12** used `target/deploy/recorda.so`, loaded by `npm run bondops:local`, rather than the differing Devnet binary. To reproduce that source-build run, use `npm run protocol:build` followed by `npm run bondops:local` instead of the download/validator commands above; that command also seeds and checks the operational fixture.
+
+Add this setting to `.env.local` (keep `VITE_SOLANA_RPC_URL` pointing at Devnet for the separate Devnet workspace):
+
+```dotenv
+VITE_LOCAL_SOLANA_RPC_URL=http://127.0.0.1:8899
+```
+
+**Terminal 2 — frontend:** run `npm run dev` on `http://localhost:4444`; restart it after changing `.env.local`.
+
+**Terminal 3 — browser:** start Chromium with the same Phantom profile and `--remote-debugging-port=9222` as above. Unlock Phantom, select **Operator**, then **Settings → Developer Settings → Solana Localnet**. Choose **Test Workspace** in the app. Both Phantom and the app must use `http://127.0.0.1:8899`; enabling Devnet in Phantom is insufficient for this local run.
+
+**Terminal 4 — full pipeline:**
+
+```bash
+RECORDA_VOTE_SECONDS=300 npm run test:e2e:actions:local
+```
+
+Confirm the Phantom prompts and switch to the exact Operator/A/B/C account requested in the terminal. The runner selects the Test workspace, verifies the loopback RPC/genesis/program and funds local transaction fees through the local faucet. It waits for record dates and the five-minute voting window; keep all four terminals open until `PASS`.
+
+Expected payments and vote results are the same as the table above. Evidence is saved to **`target/local-evidence/actions-<run-id>/run.json`** with `passed: true`, audited finalized receipts, actual payment deltas and supply **17→7→2→0**. Open `/holders?action=<coupon-PDA>` in Test to verify four holders, zero current units and preserved record-date rights after redemption. The recorded full local run is `target/local-evidence/actions-1791767819752/run.json`; desktop/mobile registry checks are in `target/browser-acceptance-2026-10-12/final-registry.json`. These generated artifacts are not committed to Git.
 
 ## Architecture at a glance
 
@@ -277,6 +320,7 @@ The two verification paths serve different purposes:
 | Command | What it proves |
 |---|---|
 | `npm run test:e2e:actions:devnet` | Human Phantom-signed Coupon → Voting → Full Redemption on Devnet |
+| `npm run test:e2e:actions:local` | The same Phantom flow on the running local validator; choose Solana Localnet in Phantom, configure holder addresses in `.env.local`, and keep the app on port 4444 and Chromium CDP on 9222. The runner funds local fee balances and saves evidence under `target/local-evidence/`. |
 | `npm run test:audit` | Requirement traceability, business features and attack scenarios across MVP and specified Post-MVP |
 
 For the audit, install Rust/Solana tools from [technical setup](#technical-setup) and the Playwright browser, then run:

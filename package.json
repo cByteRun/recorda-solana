@@ -17,6 +17,7 @@
     "test:devnet:setup": "node --test --test-isolation=none scripts/devnet.test.mjs",
     "test:e2e:golden:devnet": "node scripts/devnet-golden.mjs",
     "test:e2e:actions:devnet": "node scripts/devnet-actions.mjs",
+    "test:e2e:actions:local": "node scripts/devnet-actions.mjs --local",
     "protocol:build": "node scripts/build-sbf.mjs",
     "protocol:idl": "node scripts/build-idl.mjs",
     "protocol:idl:check": "node scripts/build-idl.mjs --check",

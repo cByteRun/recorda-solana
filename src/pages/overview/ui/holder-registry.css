@@ -1,0 +1,63 @@
+.asset-dashboard { width:100%; max-width:1600px; margin:auto; padding:38px 44px 70px; }
+.asset-dashboard .dashboard-page-heading { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:24px; }
+.asset-dashboard h1 { font-size:clamp(25px,2.3vw,35px); font-weight:800; letter-spacing:-.05em; line-height:1.2; margin:10px 0; }
+.asset-dashboard p { color:var(--muted); font-size:13px; line-height:1.5; }
+.asset-dashboard .dashboard-eyebrow { font-size:10px; font-weight:800; letter-spacing:.12em; color:var(--brand); }
+.asset-dashboard .dash-primary,.asset-dashboard .dash-secondary { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--line); border-radius:11px; padding:11px 15px; font-size:12px; font-weight:700; background:var(--paper); white-space:nowrap; }
+.asset-dashboard .dash-primary { background:var(--strong); color:var(--paper); border-color:var(--strong); }
+.asset-dashboard .dashboard-viewbar { margin-bottom:16px; color:var(--muted); font-size:12px; }
+.asset-dashboard .dashboard-source-note { display:flex; align-items:center; gap:8px; }
+.asset-dashboard .dashboard-source-note i { width:6px; height:6px; background:var(--brand); border-radius:50%; }
+.asset-dashboard .dashboard-chain-form { display:flex; align-items:end; gap:12px; flex-wrap:wrap; padding:20px; background:var(--paper); border:1px solid var(--line); border-radius:16px; margin-bottom:24px; }
+.asset-dashboard .dashboard-chain-form label { flex:1; min-width:200px; font-size:12px; font-weight:700; }
+.asset-dashboard .dashboard-chain-form input { display:block; width:100%; min-width:0; margin-top:8px; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:var(--input); font-size:12px; font-weight:400; }
+.asset-dashboard .dashboard-chain-form a { display:inline-flex; align-items:center; gap:6px; color:var(--brand); font-size:12px; padding:11px 0; }
+.asset-dashboard .dashboard-error { padding:14px; background:var(--red-bg); color:var(--red); border-radius:10px; overflow-wrap:anywhere; }
+.asset-dashboard .dashboard-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:24px; }
+.asset-dashboard .dashboard-metric { padding:22px; background:var(--paper); border:1px solid var(--line); border-radius:20px; }
+.asset-dashboard .dashboard-metric > div { display:flex; justify-content:space-between; gap:8px; color:var(--muted); font-size:12px; }
+.asset-dashboard .dashboard-metric > strong { display:block; margin:14px 0 8px; font-size:30px; letter-spacing:-.04em; overflow-wrap:anywhere; }
+.asset-dashboard .dashboard-metric > small { color:var(--muted); font-size:11px; }
+.asset-dashboard .metric-accent { background:var(--mint); }
+.asset-dashboard .dashboard-registry-grid { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:20px; }
+.asset-dashboard .dashboard-panel { min-width:0; padding:24px; background:var(--paper); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow); }
+.asset-dashboard .registry-panel { padding:0; overflow:hidden; }
+.asset-dashboard .registry-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:24px; }
+.asset-dashboard h2 { font-size:21px; font-weight:700; letter-spacing:-.03em; margin-top:8px; }
+.asset-dashboard .registry-heading h2 span { margin-left:8px; color:var(--muted); font-size:12px; }
+.asset-dashboard .registry-toolbar { display:flex; align-items:center; gap:12px; padding:0 24px 20px; }
+.asset-dashboard .dashboard-search { display:flex; align-items:center; flex:1; gap:8px; min-width:0; color:var(--muted); }
+.asset-dashboard .dashboard-search input { min-width:0; width:100%; padding:10px 0; background:transparent; color:var(--ink); font-size:12px; }
+.asset-dashboard .registry-toolbar select { padding:9px; border:1px solid var(--line); border-radius:9px; background:var(--input); font-size:11px; }
+.asset-dashboard .registry-table-scroll { overflow-x:auto; }
+.asset-dashboard .registry-table { width:100%; white-space:nowrap; border-collapse:collapse; text-align:left; font-size:12px; }
+.asset-dashboard .registry-table th { padding:13px 16px; background:var(--light); color:var(--muted); font-size:10px; }
+.asset-dashboard .registry-table th small { display:block; margin-top:4px; }
+.asset-dashboard .registry-table td { padding:16px; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; }
+.asset-dashboard .registry-holder { display:flex; align-items:center; gap:10px; }
+.asset-dashboard .registry-holder > span { flex-shrink:0; width:32px; height:32px; display:grid; place-items:center; border-radius:50%; background:var(--holder-color); color:#14211d; }
+.asset-dashboard .registry-holder strong { display:block; }
+.asset-dashboard .registry-holder a,.asset-dashboard .registry-holder small { display:flex; align-items:center; gap:4px; margin-top:4px; font-size:10px; color:var(--muted); }
+.asset-dashboard .allocation-cell { display:flex; align-items:center; gap:8px; }
+.asset-dashboard .allocation-cell i { width:32px; height:4px; background:var(--line); border-radius:4px; overflow:hidden; }
+.asset-dashboard .allocation-cell b { display:block; height:100%; background:var(--brand); }
+.asset-dashboard .snapshot-cell { background:var(--mint); }
+.asset-dashboard .holder-status { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+.asset-dashboard .holder-status i { width:5px; height:5px; border-radius:50%; background:currentColor; }
+.asset-dashboard .holder-status.paid { color:var(--brand); }
+.asset-dashboard .registry-foot { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:20px 24px; font-size:10px; color:var(--muted); }
+.asset-dashboard .registry-foot > span:last-child { display:flex; align-items:center; gap:5px; }
+.asset-dashboard .dashboard-empty { padding:40px 24px; color:var(--muted); text-align:center; font-size:12px; }
+.asset-dashboard .allocation-panel h2 { font-size:18px; }
+.asset-dashboard .ownership-donut { display:grid; place-items:center; width:156px; height:156px; margin:28px auto; border-radius:50%; }
+.asset-dashboard .ownership-donut > div { width:126px; height:126px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--paper); border-radius:50%; }
+.asset-dashboard .ownership-donut strong { font-size:30px; }
+.asset-dashboard .ownership-donut span { font-size:11px; color:var(--muted); }
+.asset-dashboard .donut-legend { display:grid; gap:12px; font-size:12px; }
+.asset-dashboard .donut-legend > div { display:flex; justify-content:space-between; gap:12px; }
+.asset-dashboard .donut-legend span { display:flex; align-items:center; gap:7px; }
+.asset-dashboard .donut-legend i { width:7px; height:7px; border-radius:50%; }
+.asset-dashboard .allocation-note { display:flex; align-items:center; gap:10px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line); color:var(--brand); }
+.asset-dashboard .allocation-note p { font-size:11px; }
+@media(max-width:1200px) { .asset-dashboard { padding:28px 24px 50px; } .asset-dashboard .dashboard-registry-grid { grid-template-columns:minmax(0,1fr); } .asset-dashboard .allocation-panel { max-width:none; } }
+@media(max-width:760px) { .asset-dashboard { padding:24px 16px 40px; } .asset-dashboard .dashboard-page-heading { align-items:start; flex-direction:column; } .asset-dashboard .dashboard-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .asset-dashboard .dashboard-metric { padding:16px; } .asset-dashboard .dashboard-metric > strong { font-size:25px; } .asset-dashboard .dashboard-chain-form label { flex-basis:100%; min-width:0; } .asset-dashboard .registry-toolbar { flex-wrap:wrap; } .asset-dashboard .dashboard-search { flex-basis:100%; } }
