@@ -1,3 +1,5 @@
+import { useConnectedWallet } from "@/shared/solana/use-connected-wallet";
+import { useBondOps } from "@/features/bondops/model/bondops-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PublicKey, type TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync, createMintToInstruction, createTransferCheckedInstruction } from "@solana/spl-token";
@@ -11,6 +13,9 @@ import { listActionHistory, exportActionAudit } from "@/shared/solana/audit-hist
 import { u64 } from "@/shared/solana/protocol";
 
 export function useActionsController() {
+  const ops=useBondOps();
+  const creating=new URLSearchParams(location.search).has("new");
+  const selected=useRef(creating||new URLSearchParams(location.search).has("action")||new URLSearchParams(location.search).has("instrument"));
   const governanceClient=useMemo(()=>createGovernance(connection),[]);
   const [governance,setGovernance]=useState<Awaited<ReturnType<typeof governanceClient.read>>>(null);
   const [intentAddress,setIntentAddress]=useState(new URLSearchParams(location.search).get("intent")||""),[intent,setIntent]=useState<Awaited<ReturnType<typeof governanceClient.readIntent>>|null>(null);
@@ -19,7 +24,7 @@ export function useActionsController() {
   const client = useMemo(() => createActionsV2(connection), []);
   const [address, setAddress] = useState(new URLSearchParams(location.search).get("action") || "");
   const [instrument, setInstrument] = useState(new URLSearchParams(location.search).get("instrument") || "");
-  const [wallet, setWallet] = useState<PublicKey | null>(null), [role, setRole] = useState(address ? "Auditor" : "Operator");
+  const [wallet, setWallet] = useConnectedWallet(), [role, setRole] = useState(ops.session?.member?.role==='investor'?"Investor":ops.session?.member?.role==='operator'?"Operator":address ? "Auditor" : "Operator");
   const [report, setReport] = useState<ReportV2 | null>(null), [issues, setIssues] = useState<string[]>([]);
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [signature, setSignature] = useState("");
   const requestedKind = new URLSearchParams(location.search).get('kind');
@@ -58,7 +63,8 @@ export function useActionsController() {
     if(!wallet||!report||issues.length)throw new Error("A verified action and signing wallet are required");
     await send(await work(new PublicKey(address),governance?.data.signer??wallet));await refresh();
   }
-  useEffect(() => { void run(async()=>{if(intentAddress)setIntent(await governanceClient.readIntent(new PublicKey(intentAddress)));if(address)await refresh(address);}); }, []); // Initial URL is a chain reference, never cached state.
+  useEffect(() => { if(address||intentAddress)void run(async()=>{if(intentAddress)setIntent(await governanceClient.readIntent(new PublicKey(intentAddress)));if(address)await refresh(address);}); }, []); // Initial URL is a chain reference, never cached state.
+  useEffect(()=>{if(creating&&ops.data&&!instrument){const available=ops.data.instruments.find(i=>i.authority===ops.wallet&&BigInt(i.supply)>0n);if(available)setInstrument(available.id);}if(selected.current||!ops.data)return;const candidates=ops.data.actions.filter(a=>a.version===2&&ops.data!.instruments.some(i=>i.id===a.instrument&&i.authority===ops.wallet));const current=candidates.sort((a,b)=>b.recordAt.localeCompare(a.recordAt))[0];if(current){selected.current=true;void run(()=>refresh(current.id));}},[ops.data,ops.wallet]);
   useEffect(() => {
     let provider: ReturnType<typeof getPhantom>;try{provider=getPhantom();}catch{return;}
     const changed=(key?: PublicKey | null)=>setWallet(key ?? null);

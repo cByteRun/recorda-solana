@@ -1,9 +1,10 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { getMint, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { getMint, getAccount, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { Buffer } from 'buffer';
 import { createProtocol } from './protocol';
 import { createActionsV2, auditActionsV2 } from './actions-v2';
 import { auditProtocol } from './protocol-audit';
+const publicKeyFrom=s=>new PublicKey(s);
 const iso=seconds=>new Date(Number(seconds)*1000).toISOString();
 const value=n=>n.toString(), zero=new PublicKey('11111111111111111111111111111111');
 /** Reuse the same independent protocol audits as the working browser journeys. */
@@ -29,20 +30,23 @@ export async function createChainReader(endpoint='https://api.devnet.solana.com'
    const genesis=await rpc.getGenesisHash();
    if(options.network==='local'){if(!['localhost','127.0.0.1','[::1]'].includes(new URL(endpoint).hostname)||['EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG','5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d'].includes(genesis))throw Error('Expected an isolated local validator');}
    else if(genesis!=='EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG')throw Error('Expected Solana Devnet genesis; refusing another network');
-   const records=scopes.includes('*')?await legacy.program.account.instrument.all():await Promise.all(scopes.map(async address=>({publicKey:new PublicKey(address),account:await legacy.program.account.instrument.fetch(new PublicKey(address),'finalized')})));const instruments=[],actions=[];
+   const records=scopes.includes('*')?await legacy.program.account.instrument.all():await Promise.all(scopes.map(async address=>({publicKey:new PublicKey(address),account:await legacy.program.account.instrument.fetch(new PublicKey(address),'finalized')})));const instruments=[],actions=[],holdings=[];
    for(const {publicKey,account:i} of records.filter(r=>scopes.includes('*')||scopes.includes(r.publicKey.toBase58()))) {
     if(!legacy.pdas.instrument(i.mint).equals(publicKey))throw Error('Noncanonical instrument');
     const [asset,bond]=await Promise.all([getMint(rpc,i.paymentMint,'finalized',TOKEN_2022_PROGRAM_ID),getMint(rpc,i.mint,'finalized',TOKEN_2022_PROGRAM_ID)]);
     if(bond.decimals!==0||!bond.mintAuthority?.equals(publicKey)||!bond.freezeAuthority?.equals(publicKey)||bond.supply!==BigInt(i.outstandingSupply.toString()))throw Error('Instrument mint supply/authority mismatch');
     if(asset.decimals!==2)throw Error('Unsupported settlement precision: Recorda contract uses minor units with two decimals');
     const inst={id:publicKey.toBase58(),symbol:`BOND-${i.id}`,name:`Instrument #${i.id}`,authority:i.authority.toBase58(),asset:i.paymentMint.toBase58(),currency:Buffer.from(i.currency).toString().replace(/\0/g,''),decimals:asset.decimals,faceMinor:value(i.faceValueMinor),rateBps:i.couponBps,frequency:i.paymentsPerYear,supply:value(i.outstandingSupply),redeemedSupply:value(i.redeemedSupply),maturity:iso(i.maturityTimestamp),source:'solana-finalized',verified:true};instruments.push(inst);
+    const positions=await legacy.program.account.holderPosition.all([{memcmp:{offset:8,bytes:inst.id}}]);
+    for(const {publicKey,account:p} of positions){if(!legacy.pdas.holder(publicKeyFrom(inst.id),p.holder).equals(publicKey)||!p.tokenAccount.equals(legacy.pdas.bondAccount(publicKeyFrom(inst.id),p.holder)))throw Error('Noncanonical holder position');const balance=await getAccount(rpc,p.tokenAccount,'finalized',TOKEN_2022_PROGRAM_ID);if(!balance.owner.equals(p.holder)||!balance.mint.equals(i.mint)||!balance.isFrozen||!balance.closeAuthority?.equals(publicKeyFrom(inst.id)))throw Error('Holder account authority mismatch');holdings.push({instrument:inst.id,holder:p.holder.toBase58(),name:`Holder ${p.holder.toBase58().slice(0,6)}`,units:balance.amount.toString()});}
+    if(holdings.filter(h=>h.instrument===inst.id).reduce((n,h)=>n+BigInt(h.units),0n)!==bond.supply)throw Error('Holder balances do not reconcile with supply');
     const [old,typed]=await Promise.all([legacy.program.account.corporateAction.all([{memcmp:{offset:16,bytes:inst.id}}]),legacy.program.account.actionV2.all([{memcmp:{offset:8,bytes:inst.id}}])]);
     for(const record of [...old.map(r=>({...r,version:1})),...typed.map(r=>({...r,version:2}))]) {
      const address=record.publicKey.toBase58();
      try{actions.push(await readAction(address,record.version,inst));}catch(error){const prior=previous.actions.find(a=>a.id===address);actions.push({...prior,id:address,instrument:inst.id,label:prior?.label??`Action ${address.slice(0,6)}`,version:record.version,kind:prior?.kind??(record.version===2?Object.keys(record.account.parameters.kind)[0]:'coupon'),status:prior?.status??Object.keys(record.account.status)[0],asset:inst.asset,currency:inst.currency,decimals:2,recordAt:iso(record.version===2?record.account.parameters.recordAt:record.account.recordTimestamp),rights:(prior?.rights??[]).map(r=>({...r,status:'unknown',confirmedMinor:'0',evidence:`Verification unavailable: ${error.message}`})),verified:false,source:'solana-finalized',verificationError:error.message});}
     }
    }
-   return {instruments,actions};
+   return {instruments,actions,holdings};
   },
   async transaction(signature,action,right) {
    const {value:[status]}=await rpc.getSignatureStatuses([signature],{searchTransactionHistory:true});

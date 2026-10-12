@@ -1,3 +1,4 @@
+import { useConnectedWallet } from "@/shared/solana/use-connected-wallet";
 import { selectedWorkspace } from "@/shared/solana/workspaces";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Keypair, PublicKey, SystemProgram, type TransactionInstruction } from "@solana/web3.js";
@@ -36,7 +37,7 @@ function demoHolders(): Keypair[] {
 export function useProtocolController() {
   const protocol = useMemo(() => createProtocol(connection), []);
   const references = useMemo(readReference, []);
-  const [operator, setOperator] = useState<PublicKey | null>(null);
+  const [operator, setOperator] = useConnectedWallet();
   const [instrument, setInstrument] = useState(references.instrument || "");
   const [action, setAction] = useState(new URLSearchParams(location.search).get("action") || references.action || "");
   const [report, setReport] = useState<ProtocolReport | null>(null);
@@ -215,7 +216,7 @@ export function useProtocolController() {
       provider.removeListener?.("accountChanged", changed);
       provider.removeListener?.("disconnect", disconnected);
     };
-  }, [operator]);
+  }, []);
 
   const demoAddresses = useMemo(() => {
     try {

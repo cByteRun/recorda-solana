@@ -18,6 +18,6 @@ test('workspace pins RPC and discards signer and demo balances when switching',a
 });
 test('public Demo uses packaged illustrative data when demo service is disabled',async({page})=>{
  await page.route('**/api/bondops/**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({demoEnabled:false,member:null,csrf:null})}));
- await page.goto('/workspaces');await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();await expect(page.getByRole('heading',{name:'Operations overview.'})).toBeVisible();await expect(page.getByRole('button',{name:'Read-only preview'})).toBeDisabled();await expect(page.locator('.stat-card').filter({hasText:'Expected obligations'})).toContainText('850.00');
+ await page.goto('/workspaces');await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();await expect(page.getByRole('heading',{name:'Operations overview.'})).toBeVisible();await expect(page.getByRole('link',{name:'Choose role',exact:true})).toBeVisible();await expect(page.locator('.stat-card').filter({hasText:'Expected obligations'})).toContainText('850.00');
 });
 for(const width of [1440,390,320])test(`workspace entry fits ${width}px`,async({page})=>{await page.setViewportSize({width,height:1000});await page.goto('/workspaces');await expect(page.locator('.entry-card')).toHaveCount(3);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});

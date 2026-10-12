@@ -1,3 +1,4 @@
+import { useBondOps } from '@/features/bondops/model/bondops-context';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowDownToLine, ArrowRight, ArrowUpRight, Check, CircleDollarSign, Layers3, Search, ShieldCheck, Users, RefreshCw, Clock3 } from 'lucide-react';
 import { PublicKey } from '@solana/web3.js';
@@ -18,6 +19,7 @@ const stages = ['scheduled', 'snapshotPending', 'snapshotted', 'awaitingApproval
 
 export function OverviewPage() {
   const c = useRegistryController();
+  const ops=useBondOps();
   const [source] = useState<'preview' | 'chain'>('chain');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('largest');
@@ -30,7 +32,7 @@ export function OverviewPage() {
   const stageIndex = stages.indexOf(stage);
   const obligation = source === 'preview' ? '850.00' : report ? money(report.total) : '—';
   const paid = source === 'preview' ? '0.00' : report ? money(report.paid) : '—';
-  const actionHref = c.instrument && source === 'chain' ? `/actions?instrument=${encodeURIComponent(c.instrument)}` : '/actions';
+  const actionHref = c.instrument && source === 'chain' ? `/actions?instrument=${encodeURIComponent(c.instrument)}&new=1` : '/actions?new=1';
   const currentActionHref = source === 'chain' && report ? `/protocol?action=${encodeURIComponent(c.action)}` : actionHref;
   let validAction = false;
   try { validAction = new PublicKey(c.action).toBase58() === c.action; } catch { /* Form validation only. */ }
@@ -44,7 +46,7 @@ export function OverviewPage() {
   return <main className="asset-dashboard">
     <div className="dashboard-page-heading"><div><span className="dashboard-eyebrow">TOKENIZED DEBT · SERVICING PLATFORM</span><h1>{holdersOnly ? 'Your holder registry.' : 'Every asset. Every right.'}</h1><p>{holdersOnly ? 'Ownership, allocations and record-date rights in one place.' : 'A clear view of your instrument, its investors and what comes next.'}</p></div><a href={actionHref} className="dash-primary">Create action <ArrowUpRight size={16} /></a></div>
     <div className="dashboard-viewbar"><span className="dashboard-source-note"><i />{source === 'preview' ? 'Illustrative scenario · no live transactions' : report ? 'Loaded from configured Solana network' : 'Open a coupon action to load data'}</span></div>
-    {source === 'chain' && <section className="dashboard-chain-form"><label>Coupon action address<input value={c.action} onChange={e => {c.setAction(e.target.value.trim()); c.setReport(null);}} placeholder="Paste an Action PDA" /></label><button className="dash-secondary" disabled={!validAction || c.busy} onClick={() => void c.refresh()}><RefreshCw size={14} />{c.busy ? 'Reading…' : 'Read chain'}</button><a href="/actions">Open versioned actions <ArrowUpRight size={13} /></a></section>}
+    {source === 'chain' && <section className="dashboard-chain-form"><label>Portfolio coupon<select aria-label="Portfolio coupon" value={c.action} onChange={e=>c.setAction(e.target.value)}><option value="">Select a coupon</option>{ops.data?.actions.filter(a=>a.kind==='coupon').map(a=><option key={a.id} value={a.id}>{a.label} · {a.status}</option>)}</select></label><label>Coupon action address<input value={c.action} onChange={e => {c.setAction(e.target.value.trim()); c.setReport(null);}} placeholder="Paste an Action PDA" /></label><button className="dash-secondary" disabled={!validAction || c.busy} onClick={() => void c.refresh()}><RefreshCw size={14} />{c.busy ? 'Reading…' : 'Read chain'}</button><a href="/actions">Open versioned actions <ArrowUpRight size={13} /></a></section>}
     {source === 'chain' && c.error && <p role="alert" className="dashboard-error">{c.error}</p>}
     {source === 'chain' && c.audit && c.audit.issues.length > 0 && <p role="alert" className="dashboard-error">Independent verification found {c.audit.issues.length} issue(s). Review this action in Coupon servicing before execution.</p>}
     <section className="dashboard-metrics" aria-label="Asset metrics">

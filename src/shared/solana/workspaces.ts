@@ -5,6 +5,8 @@ export function selectedWorkspace(): WorkspaceMode | null {
 }
 export function enterWorkspace(mode:WorkspaceMode) {
   sessionStorage.removeItem('bondops-wallet');
+  sessionStorage.removeItem('bondops-persona');
+  sessionStorage.removeItem('bondops-signed-out');
   sessionStorage.removeItem('bondops-source');
   sessionStorage.removeItem('recorda-rpc');
   for(const workspace of ['demo','test','devnet']) {

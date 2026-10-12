@@ -5,7 +5,7 @@ export interface PhantomProvider {
   publicKey?: PublicKey;
   on?(event: "accountChanged" | "disconnect", listener: (publicKey?: PublicKey | null) => void): void;
   removeListener?(event: "accountChanged" | "disconnect", listener: (publicKey?: PublicKey | null) => void): void;
-  connect(): Promise<{ publicKey: PublicKey }>;
+  connect(options?:{onlyIfTrusted?:boolean}): Promise<{ publicKey: PublicKey }>;
   signMessage?(message: Uint8Array, display?: "utf8" | "hex"): Promise<{ signature: Uint8Array; publicKey: PublicKey }>;
   signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction>;
 }

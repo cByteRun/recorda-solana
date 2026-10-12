@@ -12,7 +12,7 @@ export const RPC_URL=RPC_NETWORK==='local'?LOCAL_RPC:DEVNET_RPC;
 export const connection = new Connection(RPC_URL, {
   commitment: "confirmed",
   disableRetryOnRateLimit: true,
-  fetch: createRpcFetch()
+  fetch: RPC_NETWORK==='local' ? (input,init)=>fetch(input,{...init,signal:init?.signal??AbortSignal.timeout(15000)}) : createRpcFetch()
 });
 
 export const MEMO_PROGRAM_ID = new PublicKey(

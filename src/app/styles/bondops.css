@@ -117,3 +117,18 @@ a{text-decoration:none} .content > main{min-width:0} .operational{padding:28px;m
 /* RPC and workspace are separate choices; both stay usable on compact screens. */
 @media(max-width:1100px){.topbar .crumbs{display:none}.top-actions{width:100%;justify-content:flex-end}}
 @media(max-width:620px){.topbar{height:auto;min-height:78px;padding-block:9px}.top-actions{flex-wrap:wrap;justify-content:flex-start}.topbar .role-select{max-width:115px;flex:1}.top-actions .pill{max-width:120px;overflow:hidden;text-overflow:ellipsis}.compact-navigation{top:82px}}
+
+@scope (.bondops) {
+ .login-content {max-width:1200px;margin:auto}
+ .login-roles {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}
+ .login-role {display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:16px;border:1px solid var(--line);border-radius:18px;padding:23px;background:var(--paper);color:var(--ink);min-height:195px}
+ .login-role.selected {border-color:var(--brand);background:var(--mint);box-shadow:0 0 0 1px var(--brand)}
+ .login-role strong {font-family:Manrope,sans-serif;font-size:20px}
+ .login-role span {font-size:12px;line-height:1.7;color:var(--muted)}
+ .login-connect .page-sub {max-width:700px;margin-block:18px}
+ .login-role:focus-visible {outline:3px solid var(--brand);outline-offset:3px}
+ @media(max-width:1100px) {.login-roles {grid-template-columns:repeat(2,minmax(0,1fr))}}
+ @media(max-width:620px) {.login-roles {gap:9px}.login-role {padding:16px;min-height:180px}.login-role strong {font-size:17px}.login-role span {font-size:11px}.top-actions .pill {max-width:180px}.table-wrap {max-width:100%}}
+}
+
+@scope (.bondops) { .dashboard-chain-form select {max-width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--input);color:var(--ink);font:inherit} }

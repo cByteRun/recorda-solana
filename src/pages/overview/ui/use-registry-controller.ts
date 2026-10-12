@@ -1,3 +1,4 @@
+import { useBondOps } from '@/features/bondops/model/bondops-context';
 import { useEffect, useRef, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { connection } from '@/shared/solana/config';
@@ -37,11 +38,14 @@ async function readRegistry(address: string) {
     }) };
 }
 export function useRegistryController() {
+  const ops=useBondOps();
+  const selected=useRef(new URLSearchParams(location.search).has("action"));
   const [action, updateAction] = useState(new URLSearchParams(location.search).get('action') ?? '');
   const [report, setReport] = useState<Awaited<ReturnType<typeof readRegistry>> | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const request = useRef(0);
-  function setAction(value: string) { request.current++; setReport(null); setError(''); setBusy(false); updateAction(value); }
+  function setAction(value: string) { selected.current=true; request.current++; setReport(null); setError(''); setBusy(false); updateAction(value); }
+  useEffect(()=>{if(selected.current||!ops.data)return;const candidates=ops.data.actions.filter(a=>a.kind==='coupon'&&ops.data!.instruments.some(i=>i.id===a.instrument&&i.authority===ops.wallet));const current=candidates.sort((a,b)=>b.recordAt.localeCompare(a.recordAt))[0];if(current){selected.current=true;updateAction(current.id);}},[ops.data,ops.wallet]);
   // Editing the address clears old evidence; an in-flight read cannot replace it.
   useEffect(() => {
     if (!action) return;
