@@ -1,5 +1,16 @@
 # Requirements — normative TZ annex
 
+### BO-11 — Explicit three-workspace entry
+
+- [x] Welcome opens `/workspaces` with **Demo**, **Test (Localnet)** and **Devnet** entry cards.
+- [x] Workspace fixes data source and RPC; missing selection opens entry instead of guessing a network.
+- [x] Demo shows populated illustrative rights, payments and exception history without RPC or wallet; a bundled read-only preview works without the demo API.
+- [x] Test reads and writes real Rust program state on a local validator; Devnet uses its separate public ledger.
+- [x] Switching resets the remembered signer, selected URLs and in-memory network data; cached addresses and disposable identities are scoped to the workspace.
+- [x] Sidebar and header identify the selected workspace. No automatic live-to-demo or demo-to-live substitution on RPC/API failure.
+
+
+
 **Product context:** [PRODUCT](PRODUCT.md) defines BondOps servicing value and the operational missing-confirmation workflow. Existing UC/FR/NFR/TC remain unchanged. BO-01–10 below specify portfolio, deadline, reconciliation and team features; implementation/evidence boundaries live in ROADMAP and BONDOPS-OPERATIONS.
 
 This file is part of [TZ](TZ.md), with the same authority. Original section numbers and UC/FR/NFR/TC IDs are retained; new IDs are appended. Delivery status belongs in [ROADMAP](ROADMAP.md); evidence is maintained in [ROADMAP](ROADMAP.md#verification-and-gaps).
@@ -489,7 +500,7 @@ Current frontend/backend boundary: `/dashboard`, `/bonds`, `/calendar`, `/settle
 - **BO-TC-02 / BO-02:** Expected equals Confirmed + Unsettled per settlement asset; Unknown is a disclosed subset of Unsettled; Voting never contributes payments; unavailable verification does not become success or fixture data.
 - **BO-TC-03 / BO-02–03:** A retained transaction is bound to the exact settle instruction/action/right. Pending, failed, pruned and finalized evidence produce distinct states; an uncertain reference blocks replacement and a confirmed right blocks another payment reference.
 - **BO-TC-04 / BO-03:** Stable action/holder cases retain assignment, notes and history across restart. Server rejects unconfirmed closure; matching verified execution resolves once; evidence loss reopens investigation without rewriting historical rights.
-- **BO-TC-05 / BO-04:** Live writes require a real transaction signature and canonical instrument-scoped membership PDA; unauthorized, out-of-scope and revoked members are rejected in Rust. Only the Test Workspace uses local sandbox sessions with origin/CSRF checks. A UI role selector cannot grant real authority.
+- **BO-TC-05 / BO-04:** Live writes require a real transaction signature and canonical instrument-scoped membership PDA; unauthorized, out-of-scope and revoked members are rejected in Rust. Only the Demo Workspace uses local sandbox sessions with origin/CSRF checks. A UI role selector cannot grant real authority.
 - **BO-TC-06 / BO-05:** Scoped observation/audit exports declare demo/live, network, finality and historical limits. Operational notes link to cases/actions and never masquerade as a receipt or an exhaustive transaction history.
 - **BO-TC-07 / BO-06:** Reminder, overdue and escalation events deduplicate per action/deadline/recipient and persist. Only the recipient can acknowledge an inbox item; schedule changes supersede prior unread reminders. In-app availability is distinct from external delivery.
 - **BO-TC-08 / BO-07, deferred:** Future authenticated provider callbacks bind event/action/holder/asset/amount/evidence; duplicate or conflicting confirmations cannot create a second payment or rewrite a snapshot. Requires a selected bank/paying-agent provider before acceptance.
@@ -499,8 +510,8 @@ Evidence: backend `server/bondops/*.test.mjs`; browser `tests/bondops.spec.ts` a
 ## BondOps program storage and workspace boundary
 
 - **BO-08 / BO-TC-09 — Rust operational backend:** In Solana mode, roles, deadlines, cases, decision history, references, notification rules and inbox MUST be persisted in the Recorda Rust program, using canonical PDA accounts and wallet-signed instructions. No live operational data may be read from or written to SQLite. Public chain reads remain wallet-free; writes use program-enforced permissions. A stored reference is metadata, never proof of payment.
-- **BO-09 / BO-TC-10 — Independent RPC choice:** A separate RPC validator control offers Devnet and local validator. The chosen endpoint applies consistently to dashboard, actions, protocol, claims, transaction submission and explorer links. Source/RPC selection survives navigation/reload; errors do not load fixtures. Local ledger is explicitly distinct from Devnet.
-- **BO-10 / BO-TC-11 — Filled Test Workspace:** Illustrative SQLite data demonstrates rights at cutoff, later transfer, calculation/approval/funding, confirmed/failed/pending/unknown evidence examples, assigned exception/history, deadlines and notices. The bottom-left workspace card must identify Test Workspace when selected. Illustrative transaction IDs must never be displayed as chain proof.
+- **BO-09 / BO-TC-10 — Workspace-bound RPC choice:** The workspace selector binds Test to local validator and Devnet to its public RPC. The chosen endpoint applies consistently to dashboard, actions, protocol, claims, transaction submission and explorer links. Workspace selection survives navigation/reload; errors do not load fixtures. Local ledger is explicitly distinct from Devnet.
+- **BO-10 / BO-TC-11 — Filled Demo Workspace:** Illustrative SQLite data demonstrates rights at cutoff, later transfer, calculation/approval/funding, confirmed/failed/pending/unknown evidence examples, assigned exception/history, deadlines and notices. The bottom-left workspace card must identify Demo Workspace when selected. Illustrative transaction IDs must never be displayed as chain proof.
 - **BO-TC-12 / BO-06, keeper deferred:** Notice creation is a signed instruction that validates Clock, deadline/open case and recipient. Solana does not execute a schedule autonomously; external keeper and delivery acceptance remain roadmap tasks.
 
 Evidence: `protocol-tests/bondops.test.mjs`, `protocol-ui-tests/bondops-live.spec.ts`, the isolated Test API tests and browser checks. Existing financial account layouts/UC/FR IDs remain unchanged; operational PDA schemas are additive.

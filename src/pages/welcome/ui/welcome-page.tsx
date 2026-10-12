@@ -89,7 +89,7 @@ export function WelcomePage() {
     <header className="light-header">
       <a className="light-wordmark" href="/" aria-label="Recorda home"><RecordaMark /><span>recorda</span><i /></a>
       <span className="light-header-context">KASE / SOLANA</span>
-      <div className="light-header-actions"><button className="light-language" onClick={() => setLanguage(ru ? 'en' : 'ru')} aria-label={ru ? 'Switch to English' : 'Switch to Russian'}><span className={ru ? '' : 'is-current'}>EN</span><span className={ru ? 'is-current' : ''}>RU</span></button><a href="/dashboard" className="light-open">{ru ? 'Открыть продукт' : 'Open workspace'}<ArrowUpRight size={13} /></a></div>
+      <div className="light-header-actions"><button className="light-language" onClick={() => setLanguage(ru ? 'en' : 'ru')} aria-label={ru ? 'Switch to English' : 'Switch to Russian'}><span className={ru ? '' : 'is-current'}>EN</span><span className={ru ? 'is-current' : ''}>RU</span></button><a href="/workspaces" className="light-open">{ru ? 'Открыть продукт' : 'Open workspace'}<ArrowUpRight size={13} /></a></div>
     </header>
     <main className="light-main" id="welcome-content" tabIndex={-1}>
       <div className="light-kicker light-enter"><span className="light-kicker-dot" />{t.label}</div>
@@ -97,7 +97,7 @@ export function WelcomePage() {
         <div className="light-copy light-enter">
           <h1>{t.title[0]}<br /><span>{t.title[1]}</span></h1>
           <p>{t.intro}</p>
-          <div className="light-cta-row"><a href="/dashboard" className="light-start">{t.start}<ArrowUpRight size={16} /></a><button className="light-why" ref={dialogTrigger} onClick={openExplanation}>{t.idea}<ArrowRight size={14} /></button></div>
+          <div className="light-cta-row"><a href="/workspaces" className="light-start">{t.start}<ArrowUpRight size={16} /></a><button className="light-why" ref={dialogTrigger} onClick={openExplanation}>{t.idea}<ArrowRight size={14} /></button></div>
         </div>
         <div className="light-sculpture" role="img" aria-label={ru ? `Световые узлы образуют ${names[phase]}. ${t.stages[phase]}.` : `Light nodes form ${names[phase]}. ${t.stages[phase]}.`}>
           <RightsLightField phase={phase} playing={playing && !explaining} motionAllowed={motionAllowed} replay={replay} />
@@ -133,7 +133,7 @@ export function WelcomePage() {
       </div>
       <div className="light-role-tabs" role="tablist" aria-label={ru ? 'Роли продукта' : 'Product perspectives'}>{t.roles.map((name, index) => <button key={name} id={`perspective-${index}`} role="tab" aria-selected={role === index} aria-controls="perspective-panel" tabIndex={role === index ? 0 : -1} onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : (role + (event.key === 'ArrowRight' ? 1 : 2)) % 3; setRole(next); document.getElementById(`perspective-${next}`)?.focus(); } }} onClick={() => setRole(index)}>{name}</button>)}</div>
       <p className="light-role-panel" role="tabpanel" id="perspective-panel" aria-labelledby={`perspective-${role}`}>{t.roleTexts[role]}</p>
-      <a className="light-start light-dialog-start" href="/dashboard">{t.start}<ArrowUpRight size={15} /></a>
+      <a className="light-start light-dialog-start" href="/workspaces">{t.start}<ArrowUpRight size={15} /></a>
     </dialog>
   </div>;
 }

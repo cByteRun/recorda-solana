@@ -1,3 +1,4 @@
+import { selectedWorkspace } from "@/shared/solana/workspaces";
 import { BN, Program, type IdlAccounts } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram, type Connection, type TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, getAccount, getMint } from "@solana/spl-token";
@@ -5,7 +6,7 @@ import idl from "@/shared/solana/idl/recorda.json" with { type: "json" };
 import type { Recorda } from "@/shared/solana/idl/recorda";
 
 export type ProtocolAccounts = IdlAccounts<Recorda>;
-export const RECORDA_PROGRAM_ID = new PublicKey(import.meta.env?.VITE_RECORDA_PROGRAM_ID || idl.address);
+export const RECORDA_PROGRAM_ID = new PublicKey((selectedWorkspace()==='test'?import.meta.env?.VITE_LOCAL_RECORDA_PROGRAM_ID:import.meta.env?.VITE_DEVNET_RECORDA_PROGRAM_ID) || import.meta.env?.VITE_RECORDA_PROGRAM_ID || idl.address);
 export const u64 = (value: bigint | number | string) => new BN(value.toString());
 export function protocolPdas(programId: PublicKey = RECORDA_PROGRAM_ID) {
   const pda = (...seeds: Uint8Array[]) => PublicKey.findProgramAddressSync(seeds, programId)[0];

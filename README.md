@@ -4,6 +4,8 @@
 
 **Solana · Token-2022 · Phantom · Coupon / Voting / Redemption**
 
+**Workspace entry:** Welcome → choose **Demo** (illustrative preview), **Test** (local validator) or **Devnet** (public development network). Each workspace fixes its data source and RPC.
+
 > Control coupon payments, redemptions, errors and confirmations from one workspace.
 
 **🎯 The product value:** help issuers, paying agents and operations specialists see what is owed, what execution is confirmed, and what still requires attention. Fixed record-date rights, authorized execution and verifiable evidence underpin that servicing workflow.
@@ -380,9 +382,9 @@ TZ takes precedence; roadmap checkmarks do not amend requirements. All rights re
 
 ## BondOps operational workspace
 
-The workspace selector separates **Test Workspace** (a filled illustrative example in SQLite) from **Solana program** (all financial and operational state in Rust PDA accounts). The independent **RPC validator** selector chooses Devnet or a local validator and applies to dashboard, actions, protocol, claims and explorer links. A local validator is a separate ledger; switching RPC does not copy Devnet accounts.
+The workspace selector separates **Demo Workspace** (a filled illustrative example in SQLite) from **Solana program** (all financial and operational state in Rust PDA accounts). The independent **RPC validator** selector chooses Devnet or a local validator and applies to dashboard, actions, protocol, claims and explorer links. A local validator is a separate ledger; switching RPC does not copy Devnet accounts.
 
-In Solana mode, wallet-free reads use the selected RPC; deadlines, cases/history, team membership, retained references, notification rules and inbox writes require wallet-signed program instructions. No live workspace state is stored in SQLite or sent to the Test Workspace API. See [requirements](docs/REQUIREMENTS.md#bondops-program-storage-and-workspace-boundary) and [complete setup](docs/BONDOPS-OPERATIONS.md).
+In Solana mode, wallet-free reads use the selected RPC; deadlines, cases/history, team membership, retained references, notification rules and inbox writes require wallet-signed program instructions. No live workspace state is stored in SQLite or sent to the Demo Workspace API. See [requirements](docs/REQUIREMENTS.md#bondops-program-storage-and-workspace-boundary) and [complete setup](docs/BONDOPS-OPERATIONS.md).
 
 ```bash
 npm run protocol:build
@@ -391,6 +393,6 @@ npm run bondops:local
 npm run dev
 ```
 
-Choose **Solana program → Local validator** in the interface. `bondops:local` starts an isolated validator on 8899, loads the compiled program, seeds the TZ example and keeps the ledger running. Set `RECORDA_LOCAL_WALLET` to a local test key file matching your Phantom wallet to administer the seeded workspace; otherwise the fixture uses a disposable test signer. Test Workspace is already filled without a wallet. Its footer card is labelled **Test Workspace**. Public Devnet requires deploying/upgrading the new program binary; local acceptance does not certify the currently deployed Devnet binary.
+Choose **Solana program → Local validator** in the interface. `bondops:local` starts an isolated validator on 8899, loads the compiled program, seeds the TZ example and keeps the ledger running. Set `RECORDA_LOCAL_WALLET` to a local test key file matching your Phantom wallet to administer the seeded workspace; otherwise the fixture uses a disposable test signer. Demo Workspace is already filled without a wallet. Its footer card is labelled **Demo Workspace**. Public Devnet requires deploying/upgrading the new program binary; local acceptance does not certify the currently deployed Devnet binary.
 
-`npm run test:bondops` checks Test Workspace isolation and confirmation decoding. `npm run protocol:test:bondops` checks actual Rust transactions. `npm run protocol:test:bondops:ui` checks browser → wallet signature → local program → fresh read, with the Test API disabled. Historical full-audit counts above describe earlier revisions.
+`npm run test:bondops` checks Demo Workspace isolation and confirmation decoding. `npm run protocol:test:bondops` checks actual Rust transactions. `npm run protocol:test:bondops:ui` checks browser → wallet signature → local program → fresh read, with the Test API disabled. Historical full-audit counts above describe earlier revisions.

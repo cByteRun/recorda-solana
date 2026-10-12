@@ -1,11 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async({page})=>{await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','test'));});
 test('primary entry and roles remain usable without a wallet or action', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /Ownership changes/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Real assets/ })).toBeVisible();
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
+  await page.getByRole('button',{name:'Открыть Test',exact:true}).click();
+  await page.goto('/actions');
   await expect(page.getByRole('heading', { name: 'Corporate actions', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Instrument setup', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: 'Coupon servicing' })).toBeVisible();

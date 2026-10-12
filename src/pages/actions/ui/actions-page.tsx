@@ -14,7 +14,7 @@ import { useActionsController } from "@/features/corporate-action/model/use-acti
 
 export function ActionsPage() {
   const ops=useBondOps(),example=new URLSearchParams(location.search).get('example');
-  return ops.source==='demo'&&example?<TestActionPage id={example}/>:<ChainActionsPage/>;
+  return ops.source==='demo'?<TestActionPage id={example??'DEMO-CA-001'}/>:<ChainActionsPage/>;
 }
 function ChainActionsPage() {
   const { client,governanceClient,intent,intentAddress,setIntent,governance,address,setAddress,instrument,setInstrument,wallet,setWallet,role,setRole,report,setReport,issues,setIssues,busy,error,signature,setSignature,kind,setKind,period,setPeriod,includeCoupon,setIncludeCoupon,record,setRecord,opens,setOpens,closes,setCloses,quorum,setQuorum,fraction,setFraction,proposal,setProposal,verifiedProposal,setVerifiedProposal,fundingAccount,setFundingAccount,run,refresh,create,authorized,state,actionKind,ownRight,disabled,captureAll,calculateAll,settle,fund,mutation,historyItems,setHistoryItems,historyCursor,setHistoryCursor }=useActionsController();

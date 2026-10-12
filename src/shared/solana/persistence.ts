@@ -1,10 +1,11 @@
+import { selectedWorkspace } from "@/shared/solana/workspaces";
 import { Keypair } from "@solana/web3.js";
 import { HOLDER_IDS, type HolderId } from "@/entities/holder/model/types";
 
 const KEYS = {
-  deployment: "kase_real_deployment_v2",
-  holders: "kase_real_holders_v2",
-  action: "kase_real_action_v2"
+  deployment: `kase_real_deployment_v2:${selectedWorkspace()}`,
+  holders: `kase_real_holders_v2:${selectedWorkspace()}`,
+  action: `kase_real_action_v2:${selectedWorkspace()}`
 } as const;
 
 export interface StoredHolder {

@@ -1,5 +1,14 @@
 # Roadmap
 
+### Workspace separation
+
+- [x] Explicit Welcome → Demo / Test / Devnet selection, fixed RPC binding, scoped caches and environment labels.
+- [x] Public read-only Demo fixture; existing SQLite demo editing remains local.
+- [ ] Optional local sandbox controls (fund/reset/scenario replay) in the product UI; existing CLI and isolated harness remain available.
+- [ ] Separately deploy/upgrade the Rust program in public Devnet and verify with the chosen wallet. Local execution does not satisfy this deployment item.
+
+
+
 Source scope **FR-01–58 is implemented**. The current focus is fresh feature/attack evidence, human Phantom three-action Devnet acceptance and release. [TZ](TZ.md) defines the product; [REQUIREMENTS](REQUIREMENTS.md) owns UC/FR/NFR/TC wording and checklists; this file owns delivery and open work.
 
 ## BondOps operational product evolution
@@ -101,14 +110,14 @@ The [product experience](PRODUCT-EXPERIENCE.md) makes the existing business beha
 - [x] Investor card comparing current and record-date positions, entitlement and formula; finalized-action result and onward navigation.
 - [x] Desktop/mobile welcome and working-route checks. Local chain/browser checks remain scoped evidence; historical full-audit hashes above do not certify this UI revision.
 
-## BondOps program backend and Test Workspace (2026-10-12)
+## BondOps program backend and Demo Workspace (2026-10-12)
 
 - [x] **BO-08:** Move live roles, deadlines, cases, references, append-only decisions and inbox/rules to Rust PDA accounts; wallet-signed writes and on-chain permission/proof checks. No live SQLite reads/writes and no live workspace API calls.
 - [x] **BO-09:** Separate workspace and RPC selections; Devnet / local validator applied across operational screens and explorer links; keep selected source on navigation/reload.
-- [x] **BO-10:** Filled SQLite Test Workspace with TZ's 17 units / 850 Mock USD, post-cutoff transfer, approval/funding, evidence-state examples, assigned investigation, calendar and inbox; conditional bottom-left workspace card.
+- [x] **BO-10:** Filled SQLite Demo Workspace with TZ's 17 units / 850 Mock USD, post-cutoff transfer, approval/funding, evidence-state examples, assigned investigation, calendar and inbox; conditional bottom-left workspace card.
 - [x] **BO-01–03:** Calendar, source-derived reconciliation, formula/cutoff/approval/funding/evidence panel, stable case assignment/history and proof-gated closure through the Rust program.
 - [x] **BO-04–05:** Canonical per-instrument membership/revocation and sequenced immutable audit PDAs; public proof reads and provenance-labelled exports. Financial execution permissions remain in the existing action engine/governance.
-- [x] **BO-06 source:** Rust rules/inbox, Clock-validated signed notice creation, deduplication and recipient acknowledgement. Test Workspace has a separate illustrative minute worker.
+- [x] **BO-06 source:** Rust rules/inbox, Clock-validated signed notice creation, deduplication and recipient acknowledgement. Demo Workspace has a separate illustrative minute worker.
 - [x] Local fixture runner loads the current program, seeds real example transactions and keeps an isolated validator available for the UI.
 - [ ] **BO-01–06 Devnet acceptance:** Deploy/upgrade the new SBF binary on public Devnet, then verify with actual Phantom and an available RPC. Prior public discovery hit 429; no public deployment/live PASS is claimed.
 - [ ] **BO-03 recovery:** Define an authenticated on-chain failed-reference release/replacement mechanism; unresolved reference replacement currently remains conservatively blocked.
@@ -116,6 +125,6 @@ The [product experience](PRODUCT-EXPERIENCE.md) makes the existing business beha
 - [ ] **BO-06 automation/external delivery:** Keeper scheduling/signer operations and email/messenger delivery/retries; signed Check deadlines works now.
 - [ ] **BO-07 bank connector:** Provider selection is deferred by user; authenticated callbacks, exact obligation binding and replay/conflict acceptance follow provider selection.
 
-Current evidence is scoped to source builds, real local-validator transactions, the browser-to-program path and the illustrative Test Workspace. Commands and limitations: [BONDOPS-OPERATIONS](BONDOPS-OPERATIONS.md#verification). Historical full-audit counts above do not certify this revision or close existing human Devnet/Phantom gates.
+Current evidence is scoped to source builds, real local-validator transactions, the browser-to-program path and the illustrative Demo Workspace. Commands and limitations: [BONDOPS-OPERATIONS](BONDOPS-OPERATIONS.md#verification). Historical full-audit counts above do not certify this revision or close existing human Devnet/Phantom gates.
 
-Local evidence: 15 Rust unit tests, 9 program checks, 8 Test API/reader checks, 14 Test Workspace/browser checks and one browser → signed instruction → program account → RPC-loss recovery check passed; SBF/IDL, Vite and Next compilation passed. Public Devnet deployment and autonomous keeper remain unchecked.
+Local evidence: 15 Rust unit tests, 9 program checks, 8 Test API/reader checks, 14 Demo Workspace/browser checks and one browser → signed instruction → program account → RPC-loss recovery check passed; SBF/IDL, Vite and Next compilation passed. Public Devnet deployment and autonomous keeper remain unchecked.

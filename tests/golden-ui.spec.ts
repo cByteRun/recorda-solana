@@ -2,6 +2,7 @@ import { expect, test as base } from "@playwright/test";
 
 const test = base.extend<{ runtimeErrors: string[] }>({
   runtimeErrors: [async ({ page }, use) => {
+    await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','devnet'));
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await use(errors);
@@ -64,7 +65,7 @@ test.describe("Recorda React golden UI", () => {
 
 test("restored approved action still requires wallet connection", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("kase_real_action_v2", JSON.stringify({
+    localStorage.setItem("kase_real_action_v2:devnet", JSON.stringify({
       actionId: "TEST-RESTORED", status: "APPROVED",
       signatures: { snapshot: "snapshot", transfer: "transfer", entitlement: "entitlement", approval: "approval" }
     }));
@@ -84,7 +85,7 @@ test("missing Phantom reports an error without unlocking actions", async ({ page
 
 test("R1 NFR-03/08: pending settlement remains blocked after reload and wallet connection", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("kase_real_action_v2", JSON.stringify({
+    localStorage.setItem("kase_real_action_v2:devnet", JSON.stringify({
       actionId: "TEST-PENDING", status: "APPROVED",
       pendingSettlementSignature: "submitted-signature",
       signatures: { approval: "approval" }

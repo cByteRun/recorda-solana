@@ -7,6 +7,7 @@ import {createActionsV2,auditActionsV2} from '../src/shared/solana/actions-v2';
 import {readChainClock,waitForRecordDate} from '../src/shared/solana/chain-clock.mjs';
 const rpc=new Connection(process.env.RECORDA_TEST_RPC||'http://127.0.0.1:8899','confirmed');
 const evidence=JSON.parse(readFileSync('target/protocol-evidence/actions-v2.json','utf8'));
+test.beforeEach(async({page})=>{await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','test'));});
 for(const scenario of evidence.scenarios) test(`wallet-free ${scenario.kind} receipt, role boundaries and historical reopen`,async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`/actions?action=${scenario.action}`);await expect(page.getByTestId('actions-root')).toHaveAttribute('data-busy','false');await expect(page.getByText('Audit: Verified')).toBeVisible();

@@ -20,14 +20,12 @@ test('judge can understand fixed rights, change perspectives, and enter the real
   await expect(page.getByRole('tabpanel')).toContainText('without connecting a wallet');
   expect(rpcRequests).toEqual([]);
   await page.getByRole('dialog').getByRole('link', { name: 'Get started', exact: true }).click();
+  await expect(page).toHaveURL(/\/workspaces$/);
+  await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.locator('.rail').getByRole('link', { name: 'Corporate actions', exact: true }).click();
-  await expect(page.getByLabel('Role', { exact: true })).toHaveValue('Operator');
-  await expect(page.getByLabel('Action kind', { exact: true })).toHaveValue('coupon');
-  await expect(page.getByRole('button', { name: 'Create action', exact: true })).toBeDisabled();
-  await page.getByRole('link', { name: 'Instrument setup', exact: true }).last().click();
-  await expect(page.getByRole('heading', { name: 'Coupon servicing', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Create / resume demo instrument' })).toBeDisabled();
+  await expect(page.getByRole('heading',{name:'Купонная выплата · H2 2026',exact:true})).toBeVisible();
+  expect(rpcRequests.filter(url=>!url.includes('/api/bondops'))).toEqual([]);
   expect(errors).toEqual([]);
 });
 
@@ -39,6 +37,8 @@ test('Russian welcome retains the story and start route', async ({ page }) => {
   await page.getByRole('button', { name: 'Изменить владение', exact: true }).click();
   await expect(page.locator('.coupon-value')).toContainText('500.00');
   await page.getByRole('dialog').getByRole('link', { name: 'Начать', exact: true }).click();
+  await expect(page.getByRole('heading',{name:'Choose your environment'})).toBeVisible();
+  await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();
   await expect(page.getByRole('heading', { name: 'Operations overview.', exact: true })).toBeVisible();
 });
 
@@ -57,6 +57,7 @@ test('reduced motion stops automatic storytelling but preserves manual explorati
 });
 
 test('percent inputs and technical basis points stay consistent before signing', async ({ page }) => {
+  await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','devnet'));
   await page.goto('/actions?instrument=11111111111111111111111111111111&kind=voting');
   await expect(page.getByLabel('Action kind', { exact: true })).toHaveValue('voting');
   await page.getByLabel('Quorum percent', { exact: true }).fill('62.75');
@@ -75,6 +76,7 @@ for (const width of [1440, 390, 320]) test(`welcome and workspace fit ${width}px
   await expect(page.getByRole('heading', { name: /Real assets/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: `target/design-evidence/welcome-${width}.png`, fullPage: true });
+  await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','devnet'));
   await page.goto('/actions?instrument=11111111111111111111111111111111');
   await expect(page.getByRole('heading', { name: 'Corporate actions', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -122,6 +124,8 @@ test('without WebGL the SVG sculpture remains visible and the welcome still open
   await page.getByRole('button', { name: 'RECORDA: The record', exact: true }).click();
   await expect(page.locator('.welcome')).toHaveAttribute('data-phase', '2');
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/workspaces$/);
+  await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
@@ -155,6 +159,8 @@ test('reference light responds to the pointer, freezes on pause and survives con
   await page.getByRole('button', { name: 'SOLANA: The execution', exact: true }).click();
   await expect(page.locator('.light-right-copy')).toContainText('Coupon. Voting. Redemption.');
   await page.getByRole('link', { name: 'Get started', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/workspaces$/);
+  await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   expect(errors).toEqual([]);
 });

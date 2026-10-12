@@ -1,3 +1,4 @@
+import { selectedWorkspace } from "@/shared/solana/workspaces";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Keypair, PublicKey, SystemProgram, type TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, MINT_SIZE, createInitializeMint2Instruction, getAssociatedTokenAddressSync,
@@ -9,8 +10,8 @@ import { getPhantom } from "@/shared/solana/phantom";
 import { phantomSignAndSend } from "@/shared/solana/transactions";
 import { readChainClock, waitForRecordDate, type ChainClock } from "@/shared/solana/chain-clock.mjs";
 
-const CACHE_KEY = "recorda:protocol:addresses:v1";
-const HOLDER_KEY = "recorda:protocol:disposable-holders:v1";
+const CACHE_KEY = `recorda:protocol:addresses:v1:${selectedWorkspace()}`;
+const HOLDER_KEY = `recorda:protocol:disposable-holders:v1:${selectedWorkspace()}`;
 interface Reference { instrument?: string; action?: string; id?: string; rpc?: string; program?: string }
 function readReference(): Reference {
   try {

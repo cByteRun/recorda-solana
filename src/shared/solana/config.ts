@@ -1,11 +1,12 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 
+import { selectedWorkspace } from "@/shared/solana/workspaces";
 import { createRpcFetch } from "@/shared/solana/rpc-fetch";
 
 export const DEVNET_RPC = import.meta.env?.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
 export const LOCAL_RPC = import.meta.env?.VITE_LOCAL_SOLANA_RPC_URL || 'http://127.0.0.1:8899';
 export type RpcNetwork = 'devnet'|'local';
-export function selectedRpc(): RpcNetwork {try{return sessionStorage.getItem('recorda-rpc')==='local'?'local':'devnet';}catch{return 'devnet';}}
+export function selectedRpc(): RpcNetwork { return selectedWorkspace()==='test'?'local':'devnet'; }
 export const RPC_NETWORK=selectedRpc();
 export const RPC_URL=RPC_NETWORK==='local'?LOCAL_RPC:DEVNET_RPC;
 export const connection = new Connection(RPC_URL, {

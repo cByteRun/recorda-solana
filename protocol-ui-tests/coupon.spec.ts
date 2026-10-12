@@ -8,6 +8,7 @@ import { protocolStage } from '../scripts/protocol-stage.mjs';
 const rpc = new Connection(process.env.RECORDA_TEST_RPC || 'http://127.0.0.1:8899', 'confirmed');
 const expected = JSON.parse(readFileSync('golden/coupon-tz-section-22.json', 'utf8')).expected;
 
+test.beforeEach(async({page})=>{await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','test'));});
 test('browser → real Anchor rights → explicit signed execution → receipt → independent reload', async ({ page }) => {
   test.setTimeout(420_000);
   const operator = Keypair.generate();
@@ -192,7 +193,7 @@ test('browser → real Anchor rights → explicit signed execution → receipt �
   await page.getByRole('button', { name: 'Operator', exact: true }).click();
   expect(signed.length).toBe(signedBeforeRoles);
 
-  const holderKeys = await page.evaluate(() => JSON.parse(localStorage.getItem('recorda:protocol:disposable-holders:v1')!));
+  const holderKeys = await page.evaluate(() => JSON.parse(localStorage.getItem('recorda:protocol:disposable-holders:v1:test')!));
   // Use independent RPC to verify real credited tokens, not just rendered strings.
   const instrumentAddress = await page.getByLabel('Instrument PDA').inputValue();
   const idl = JSON.parse(readFileSync('src/shared/solana/idl/recorda.json', 'utf8'));

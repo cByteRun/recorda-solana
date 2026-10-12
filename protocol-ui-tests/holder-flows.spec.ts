@@ -26,6 +26,7 @@ async function wallet(page:Page,initial:Keypair){
  await page.addInitScript(address=>{const provider={isPhantom:true,publicKey:undefined as unknown,async connect(){const path='/src/shared/solana/protocol.ts';const {RECORDA_PROGRAM_ID}=await import(/* @vite-ignore */path);const Key=RECORDA_PROGRAM_ID.constructor;this.publicKey=new Key((window as unknown as {holderWallet?:string}).holderWallet||address);return{publicKey:this.publicKey};},async signTransaction(tx:{serialize():Uint8Array;constructor:{deserialize(b:Uint8Array):unknown}}){return tx.constructor.deserialize(Uint8Array.from(await(window as unknown as {holderSign(b:number[]):Promise<number[]>}).holderSign([...tx.serialize()])));}};Object.assign(window,{phantom:{solana:provider}});},initial.publicKey.toBase58());
  return async(key:Keypair)=>{active=key;await page.evaluate(address=>{(window as unknown as {holderWallet:string}).holderWallet=address;},key.publicKey.toBase58());await page.getByRole('button',{name:/^(Connect Phantom|Wallet )/}).click();};
 }
+test.beforeEach(async({page})=>{await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','test'));});
 test('Redemption browser: holder-signed atomic burn/payment, partial progress and storage-free resume',async({page})=>{
  const {operator,holders,mint,instrument,protocol}=await setup([10,5],4n),client=createActionsV2(rpc),connect=await wallet(page,operator);
  await page.goto(`/actions?instrument=${instrument}`);await page.getByLabel('Role',{exact:true}).selectOption('Operator');await connect(operator);

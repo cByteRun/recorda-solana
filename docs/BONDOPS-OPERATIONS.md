@@ -1,18 +1,35 @@
 # BondOps program workspace
 
+## Workspace entry: Demo / Test / Devnet
+
+Welcome → `/workspaces` → explicit selection → dashboard. A direct workspace URL without a selection displays the selector; there is no automatic environment choice.
+
+| Workspace | Source of truth | RPC | Signing |
+| --- | --- | --- | --- |
+| Demo / Preview | Illustrative KZB26 dataset; local demo service uses SQLite | None | None |
+| Test / Localnet | Local Rust program accounts and ledger | `VITE_LOCAL_SOLANA_RPC_URL`, default `http://127.0.0.1:8899` | Compatible wallet / isolated local test harness |
+| Devnet | Public Devnet Rust program accounts | `VITE_SOLANA_RPC_URL`, default public Devnet RPC | Wallet confirmation for mutations |
+
+Demo includes an embedded read-only fixture for public deployments without the demo service. Local demo service retains existing editable examples and server authorization. Demo operational pages never invoke blockchain readers or signers. The packaged preview is an illustrative, fixed-date example, not live obligations.
+
+Test requires a validator on the visitor’s computer and a separately loaded program. `npm run bondops:local` loads the program and seeds the existing fixture. A hosted site cannot provide its author's localhost to visitors. Local ledger operations never migrate into Devnet; a Devnet deployment is separate. Phantom Localnet support is not assumed; use the isolated protocol test harness or a compatible signer.
+
+The workspace determines RPC; there is no independent selector that can mix modes. Optional `VITE_LOCAL_RECORDA_PROGRAM_ID` and `VITE_DEVNET_RECORDA_PROGRAM_ID` distinguish program deployments, falling back to the existing shared public program ID. Switching workspace drops the remembered wallet, performs full navigation to `/dashboard` without selected-address query parameters, and discards in-memory readers/caches. Cached protocol addresses and disposable holder identities are namespaced by workspace. Local storage only caches UI references; it is never financial evidence in Test or Devnet.
+
+
 Recorda helps the operator control fixed investor rights → obligations → authorized execution → confirmation → evidence-backed resolution. [TZ](TZ.md) and existing FR-01–58 remain the protocol source of truth; appended BO requirements cover the operating workspace.
 
 ## Storage boundary
 
 | Selected workspace | Source of financial facts | Source of operational state | Writes |
 |---|---|---|---|
-| Test Workspace | Explicit illustrative dataset, 17 units and 850 Mock USD | SQLite, only the `demo` row | Local sandbox API; predefined demo roles |
-| Solana program / Devnet RPC | Existing finalized Recorda action/right/receipt accounts | Rust PDA accounts in the same Recorda program | Wallet-signed instructions; authorization checked by Rust |
-| Solana program / Local validator | The same compiled Rust program on a separate local ledger | The same PDA schemas | The same wallet-signed instructions |
+| Demo Workspace | Explicit illustrative dataset, 17 units and 850 Mock USD | SQLite, only the `demo` row | Local sandbox API; predefined demo roles |
+| Devnet Workspace | Existing finalized Recorda action/right/receipt accounts | Rust PDA accounts in the same Recorda program | Wallet-signed instructions; authorization checked by Rust |
+| Test Workspace / Localnet | The same compiled Rust program on a separate local ledger | The same PDA schemas | The same wallet-signed instructions |
 
-Live mode performs no Test Workspace API requests and stores no live data in SQLite. A Node server started with `BONDOPS_MODE=live` opens no database. SQLite is initialized lazily only when the illustrative workspace is enabled. Existing old `live` or `team-live` database rows are not read or migrated as authority; importing real metadata would require explicit wallet-signed program instructions.
+Live mode performs no Demo Workspace API requests and stores no live data in SQLite. A Node server started with `BONDOPS_MODE=live` opens no database. SQLite is initialized lazily only when the illustrative workspace is enabled. Existing old `live` or `team-live` database rows are not read or migrated as authority; importing real metadata would require explicit wallet-signed program instructions.
 
-The source selector and RPC selector are independent. RPC choice is stored in the browser and reinitializes the application; dashboard, protocol, corporate actions, holder claims and explorer links share it. Local validator is a separate network, not a workaround endpoint for the Devnet ledger. Default URLs are `https://api.devnet.solana.com` and `http://127.0.0.1:8899`. Custom endpoints come from `VITE_SOLANA_RPC_URL` / `VITE_LOCAL_SOLANA_RPC_URL`, or corresponding Next public variables. Public RPC rate limits and network errors never activate fixtures.
+Workspace selection fixes both source and RPC, is stored in session storage and reinitializes the application; dashboard, protocol, corporate actions, holder claims and explorer links share it. Local validator is a separate network, not a workaround endpoint for the Devnet ledger. Default URLs are `https://api.devnet.solana.com` and `http://127.0.0.1:8899`. Custom endpoints come from `VITE_SOLANA_RPC_URL` / `VITE_LOCAL_SOLANA_RPC_URL`, or corresponding Next public variables. Public RPC rate limits and network errors never activate fixtures.
 
 ## Rust account and instruction contract
 
@@ -41,9 +58,9 @@ Names and decision notes written on-chain are public. Names are bounded to 80 UT
 
 The calendar distinguishes cutoff, coupon payment deadline, native voting close and redemption maturity. `create_ops_notice` checks Solana Clock, authoritative deadline or open case, recipient and reminder/escalation rules. Notice PDAs deduplicate by subject, deadline/case timestamp, type and recipient. A changed schedule supersedes old reminders in the displayed inbox; old records remain auditable.
 
-A program does not autonomously run when the clock advances. **Check deadlines** submits signed notice transactions for authorized instruments. A reliable keeper/automation signer, autonomous generation and email/messenger delivery remain roadmap tasks. The Test Workspace alone has a local minute scheduler. UI polling is read-only.
+A program does not autonomously run when the clock advances. **Check deadlines** submits signed notice transactions for authorized instruments. A reliable keeper/automation signer, autonomous generation and email/messenger delivery remain roadmap tasks. The Demo Workspace alone has a local minute scheduler. UI polling is read-only.
 
-## Filled Test Workspace
+## Filled Demo Workspace
 
 The example contains the TZ positions 10/5/2/0, a post-cutoff transfer of four units (current positions 6/9/2/0, unchanged entitlements), coupon calculation 500/250/100/0, approval/funding, illustrative confirmations totalling 350, failed/pending attempts and a current Unknown 500, assigned investigation/history, upcoming voting and maturity, calendar and inbox. All transaction identifiers are `TEST-TX-*` examples, never explorer proof. Old demo databases receive example history without discarding saved decisions.
 
@@ -60,14 +77,14 @@ Choose **Solana program**, then **Local validator**. `bondops:local` loads `targ
 
 To use public Devnet, deploy/upgrade the new program binary with its existing authority, use a Devnet wallet and choose Devnet RPC. No public Devnet deployment or upgrade has been performed by this revision. A successful local test does not certify the currently deployed Devnet binary or human Phantom acceptance.
 
-For the illustrative workspace only, Node 22.18+ and `BONDOPS_MODE=demo`, `BONDOPS_DB_PATH=target/bondops/test-workspace.sqlite`, exact `BONDOPS_ORIGINS` configure the local API. Vite reads root `.env.local`; Next reads `next-app/.env.local`. `BONDOPS_BACKGROUND=false` disables only the demo minute worker. No BONDOPS_MEMBERS / server live RPC configuration is needed. Production defaults to Solana-only mode; a static browser host can serve live mode without a BondOps database/API. The current Test Workspace is enabled only in development; a public demo hosting mode is separate future scope.
+For the illustrative workspace only, Node 22.18+ and `BONDOPS_MODE=demo`, `BONDOPS_DB_PATH=target/bondops/test-workspace.sqlite`, exact `BONDOPS_ORIGINS` configure the local API. Vite reads root `.env.local`; Next reads `next-app/.env.local`. `BONDOPS_BACKGROUND=false` disables only the demo minute worker. No BONDOPS_MEMBERS / server live RPC configuration is needed. Production defaults to Solana-only mode; a static browser host can serve live mode without a BondOps database/API. The current Demo Workspace is enabled only in development; a public demo hosting mode is separate future scope.
 
 ## Verification
 
 - `npm run test:bondops`: Test API security, persisted demo decisions, deadline/inbox deduplication, no live/team rows, no database opened in Solana-only mode; exact settle-instruction confirmation decoding and genesis rejection.
 - `npm run protocol:test:bondops`: real local-validator transactions for initialization, membership/revocation, scopes, deadlines, cases, proof-gated closure, immutable audit, conservative reference retention and recipient-only deduplicated notices.
 - `npm run protocol:test:bondops:ui`: same fixture plus browser → wallet signature → local Rust program → fresh account read; Test API disabled, zero workspace API requests.
-- `npx playwright test --config playwright.bondops.config.ts`: filled Test Workspace, source/RPC separation and desktop/mobile layouts.
+- `npx playwright test --config playwright.bondops.config.ts`: filled Demo Workspace, source/RPC separation and desktop/mobile layouts.
 - `npm run protocol:build`, `npm run build`, `npm run build:next`: SBF stack checks, shared frontend and Next compilation.
 
 Bank/paying-agent provider, external delivery, autonomous keeper, public Devnet deployment/acceptance and complete archival/scale validation remain open. Provider selection for banking is explicitly deferred by the user.

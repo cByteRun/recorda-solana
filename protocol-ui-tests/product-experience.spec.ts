@@ -5,6 +5,7 @@ import { createActionsV2 } from '../src/shared/solana/actions-v2';
 
 const evidence = JSON.parse(readFileSync('target/protocol-evidence/actions-v2.json', 'utf8'));
 
+test.beforeEach(async({page})=>{await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','test'));});
 test('real redemption receipt shows readable principal, separate coupon and zero supply; raw units remain inspectable', async ({ page }) => {
   const scenario = evidence.scenarios.find((item: { kind: string }) => item.kind === 'redemption');
   await page.goto(`/actions?action=${scenario.action}`);

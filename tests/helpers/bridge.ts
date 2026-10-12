@@ -27,8 +27,9 @@ export async function bridge(page: Page, options: { snapshotFailure?: boolean; r
   page.on('pageerror', e => errors.push(e.message));
   await page.addInitScript(({ operatorAddress, operatorBytes, storedHolders, deployment, rejectApproval }) => {
     if (!localStorage.getItem('bridge-seeded')) {
-      localStorage.setItem('kase_real_holders_v2', JSON.stringify(storedHolders));
-      localStorage.setItem('kase_real_deployment_v2', JSON.stringify(deployment));
+      sessionStorage.setItem('recorda-workspace','devnet');
+    localStorage.setItem('kase_real_holders_v2:devnet', JSON.stringify(storedHolders));
+      localStorage.setItem('kase_real_deployment_v2:devnet', JSON.stringify(deployment));
       localStorage.setItem('bridge-seeded', 'yes');
     }
     const publicKey = {
