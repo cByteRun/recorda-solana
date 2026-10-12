@@ -52,13 +52,24 @@ The implemented source covers **Coupon, Voting and maturity Redemption**, plus t
 
 ## Table of contents
 
-| 🎯 Product & presentation | 🚀 Run & develop | 🔎 Architecture & evidence |
-|---|---|---|
-| [DEMO / TEST / DEVNET](#choose-your-workspace--demo--test--devnet) | [Devnet walkthrough](#devnet-demo--coupon--voting--redemption) | [Architecture](#architecture-at-a-glance) |
-| [Operator control](#operator-control--from-rights-to-recorded-outcomes) | [Local Solana + Phantom](#local-rpc-pipeline-with-real-phantom) | [Feature & attack audit](#feature-and-attack-audit) |
-| [Features & business domains](#features-and-business-domains) | [Technical setup](#technical-setup) | [CI & deployment](#ci-and-website-deployment) |
-| [Screens & role journeys](#product-screens-and-manual-acceptance) | [BondOps workspace](#bondops-operational-workspace) | [Documentation](#documentation) |
-| [RWA evolution & scale](#from-prototype-to-rwa-infrastructure) | [Troubleshooting](#troubleshooting) | [Tokenization research](docs/ASSET-TOKENIZATION-RESEARCH.md) |
+- 🎯 **Product & presentation**
+  - [DEMO / TEST / DEVNET](#choose-your-workspace--demo--test--devnet)
+  - [Operator control](#operator-control--from-rights-to-recorded-outcomes)
+  - [Features & business domains](#features-and-business-domains)
+  - [Screens & role journeys](#product-screens-and-manual-acceptance)
+  - [RWA evolution & scale](#from-prototype-to-rwa-infrastructure)
+- 🚀 **Run & develop**
+  - [Devnet walkthrough](#devnet-demo--coupon--voting--redemption)
+  - [Local Solana + Phantom](#local-rpc-pipeline-with-real-phantom)
+  - [Technical setup](#technical-setup)
+  - [BondOps workspace](#bondops-operational-workspace)
+  - [Troubleshooting](#troubleshooting)
+- 🔎 **Architecture & evidence**
+  - [Architecture](#architecture-at-a-glance)
+  - [Feature & attack audit](#feature-and-attack-audit)
+  - [CI & deployment](#ci-and-website-deployment)
+  - [Documentation](#documentation)
+  - [Tokenization research](docs/ASSET-TOKENIZATION-RESEARCH.md)
 
 ---
 
