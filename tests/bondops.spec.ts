@@ -41,3 +41,20 @@ for(const width of [1440,390,320])test(`BondOps domains fit ${width}`,async({pag
  if(width===320){await page.goto('/dashboard');await page.getByRole('button',{name:'Open navigation'}).click();await page.getByRole('navigation',{name:'All workspace pages'}).getByRole('link',{name:'Deadline calendar',exact:true}).click();await expect(page.getByRole('heading',{name:'Deadline calendar.'})).toBeVisible();}
  await page.goto('/dashboard');await expect(page.getByRole('heading',{name:'Operations overview.'})).toBeVisible();await page.screenshot({path:`target/design-evidence/bondops-domains-${width}.png`,fullPage:true});
 });
+
+for(const preview of [false,true])test(`demo logout requires a role before reopening the dashboard (preview=${preview})`,async({page})=>{
+ if(preview)await page.route('**/api/bondops/session',route=>route.fulfill({json:{mode:'demo',member:null,csrf:null,demoEnabled:false,liveConfigured:true}}));
+ await signInDemo(page);
+ await page.locator('.top-actions').getByRole('button',{name:'Open profile',exact:true}).click();
+ await page.getByRole('button',{name:'Sign out',exact:true}).click();
+ await expect(page).toHaveURL(/\/login/);
+ await expect(page.locator('.stat-card')).toHaveCount(0);
+ await page.goto('/dashboard');
+ await expect(page).toHaveURL(/\/login/);
+ await expect(page.locator('.stat-card')).toHaveCount(0);
+ await page.reload();
+ await expect(page.locator('.stat-card')).toHaveCount(0);
+ await page.getByRole('button',{name:'Open Demo Operator',exact:true}).click();
+ await expect(page).toHaveURL(/\/dashboard$/);
+ await expect(page.locator('.top-actions')).toContainText('Demo Operator · Operator');
+});

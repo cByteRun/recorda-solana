@@ -5,7 +5,7 @@ import { useBondOps } from './bondops-context';
 export function useSignInGuard() {
   const ops=useBondOps();
   const path=location.pathname+location.search;
-  const requiresSignIn=ops.source==='live'&&!ops.session?.member;
+  const requiresSignIn=!ops.session?.member;
   const blocked=requiresSignIn&&location.pathname!=='/login';
   const loginHref=(destination:string)=>requiresSignIn?`/login?next=${encodeURIComponent(destination)}`:destination;
   useEffect(()=>{
