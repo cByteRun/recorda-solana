@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-import { TRANSLATIONS } from './translations';
+import { translate } from './translate';
 export type Language='en'|'ru';
 export type Theme='light'|'dark';
 export const PALETTES=[
@@ -27,7 +27,7 @@ export function PreferencesProvider({children}:{children:ReactNode}){
   const hex=PALETTES.find(p=>p.name===palette)!.hex;
   const brand=theme==='dark'?`color-mix(in srgb, ${hex} 55%, white)` : hex;
   const style={colorScheme:theme,'--brand':brand,'--mint':`color-mix(in srgb, ${hex} ${theme==='dark'?'25%':'10%'}, ${theme==='dark'?'#17211d':'white'})`,'--bg':theme==='dark'?'#101513':'#f7f8f7','--paper':theme==='dark'?'#19211e':'#ffffff','--ink':theme==='dark'?'#edf4f0':'#14211d','--muted':theme==='dark'?'#a9b9b0':'#66786e','--line':theme==='dark'?'#344039':'#e7ece9','--light':theme==='dark'?'#26312b':'#f1f5f2','--strong':theme==='dark'?'#edf4f0':'#1b3127','--rail':'#121b18','--input':theme==='dark'?'#202b25':'#f9fbf9','--warn':theme==='dark'?'#f9bb70':'#ac6c2b','--warning-bg':theme==='dark'?'#3b2d1e':'#fff5e6','--red':theme==='dark'?'#f48d85':'#c3554f','--red-bg':theme==='dark'?'#392523':'#fff0ed'} as CSSProperties;
-  return {language,theme,palette,setLanguage,setTheme,setPalette,style,t:(text:string)=>TRANSLATIONS[text]?.[language]??text};
+  return {language,theme,palette,setLanguage,setTheme,setPalette,style,t:(text:string)=>translate(text,language)};
  },[language,theme,palette]);
  return <Context.Provider value={value}>{children}</Context.Provider>;
 }

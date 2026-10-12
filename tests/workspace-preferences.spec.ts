@@ -1,3 +1,4 @@
+import {translate} from '../src/shared/preferences/translate';
 import {test,expect} from '@playwright/test';
 test.beforeEach(async({page})=>{
  await page.addInitScript(()=>{sessionStorage.setItem('recorda-workspace','demo');sessionStorage.setItem('bondops-persona','demo-operator');});
@@ -47,6 +48,72 @@ test('operator control desk keeps exact fixed rights, unknown evidence and usabl
  await expect(page.locator('.ops-client-book tbody tr')).toHaveCount(4);const investor=page.locator('.ops-client-book tbody tr').filter({hasText:'Investor A'});await expect(investor).toContainText('500.00');
  await page.getByLabel('Holder obligation filter').selectOption('unknown');await expect(page.locator('.ops-client-book tbody tr')).toHaveCount(1);await expect(page.locator('.ops-client-book')).toContainText('Investor A');
  await page.getByRole('button',{name:'Inspect rights',exact:true}).click();await expect(page.getByRole('region',{name:'Holder details'})).toContainText('Record units: 10');await expect(page.getByRole('region',{name:'Holder details'})).toContainText('500.00');
- await expect(page.locator('.ops-distribution')).toContainText('Unknown is part of Unsettled');await expect(page.locator('.ops-proof a')).toHaveCount(0);await expect(page.locator('.ops-pipeline a')).toHaveCount(6);
+ await expect(page.locator('.ops-distribution')).toContainText('Unknown is part of Unsettled');await expect(page.locator('.ops-proof a')).toHaveCount(0);await expect(page.locator('.ops-control-action')).toHaveCount(3);await expect(page.locator('.ops-control-action').first()).toContainText('Reconcile before retry');
  await page.getByLabel('Search holders').fill('nonexistent-wallet');await expect(page.locator('.ops-client-book tbody tr')).toHaveCount(0);await expect(page.getByText('No holders match the selected filters')).toBeVisible();
 });
+
+test('open case details, asset details and demo actions switch both languages in place',async({page})=>{
+ await page.locator('.ops-task').first().click();
+ const detail=page.locator('.exception-detail');
+ await expect(detail).toContainText('No matching execution confirmation');
+ await expect(detail).toContainText('Check retained transaction and finalized program state');
+ await page.getByLabel('Language',{exact:true}).selectOption('ru');
+ await expect(detail).toContainText('Подтверждение исполнения не найдено');
+ await expect(detail).toContainText('Проверьте сохранённую транзакцию');
+ await expect(detail).not.toContainText('No matching execution confirmation');
+ await page.locator('.ops-asset summary').first().click();
+ await expect(page.locator('.ops-asset[open]')).toContainText('Годовой купон / частота');
+ await page.getByLabel('Язык',{exact:true}).selectOption('en');
+ await expect(detail).toContainText('No matching execution confirmation');
+ await expect(page.locator('.ops-asset[open]')).toContainText('Annual coupon / frequency');
+ await expect(page.locator('.ops-action-bars')).toContainText('Coupon payment · H2 2026');
+ await page.goto('/actions?example=DEMO-CA-001');
+ await expect(page.locator('main')).toContainText('Rights → calculation → execution → verification');
+ await expect(page.locator('main')).not.toContainText('После cutoff');
+ await page.getByLabel('Language',{exact:true}).selectOption('ru');
+ await expect(page.locator('main')).toContainText('Права → расчёт → исполнение → проверка');
+ await expect(page.locator('main')).toContainText('Подтверждение исполнения не найдено');
+ await page.getByLabel('Язык',{exact:true}).selectOption('en');
+ await expect(page.locator('main')).toContainText('Rights → calculation → execution → verification');
+});
+
+test('demo overview recent activity switches audit event titles and details with EN/RU',async({page})=>{
+ const activity=page.locator('.ops-bottom-grid section').last();
+ await expect(activity.getByRole('heading',{name:'Recent activity',exact:true})).toBeVisible();
+ await expect(activity).toContainText('Exception investigation started');
+ await expect(activity).toContainText('Exception opened');
+ expect(await activity.innerText()).not.toMatch(/[а-яё]/i);
+ await page.getByLabel('Language',{exact:true}).selectOption('ru');
+ await expect(activity.getByRole('heading',{name:'Последние события',exact:true})).toBeVisible();
+ await expect(activity).toContainText('Начат разбор исключения');
+ await expect(activity).toContainText('Открыто исключение');
+ await page.getByLabel('Язык',{exact:true}).selectOption('en');
+ await expect(activity).toContainText('Exception investigation started');
+ expect(await activity.innerText()).not.toMatch(/[а-яё]/i);
+});
+
+test('demo calendar and holder registry use the selected language for all visible text',async({page})=>{
+ await page.goto('/calendar');
+ await page.getByLabel('Language',{exact:true}).selectOption('en');
+ await expect(page.locator('.calendar-weekday')).toHaveText(['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
+ await expect(page.locator('.page-sub').first()).toContainText('Payment deadlines, record dates, maturity and decision windows');
+ expect(await page.locator('main').innerText()).not.toMatch(/[а-яё]/i);
+ const month=await page.locator('.card-top h2').innerText();
+ await page.getByLabel('Language',{exact:true}).selectOption('ru');
+ await expect(page.locator('.calendar-weekday').first()).toHaveText('пн');
+ await expect(page.locator('.card-top h2')).not.toHaveText(month);
+ await expect(page.locator('.page-sub').first()).toContainText('Сроки выплат, даты фиксации');
+ await page.goto('/holders');
+ await expect(page.locator('main h1')).toHaveText('Реестр держателей');
+ await expect(page.locator('main')).toContainText('На дату фиксации');
+ await expect(page.locator('main')).toContainText('Готовый пример:');
+ await page.getByLabel('Язык',{exact:true}).selectOption('en');
+ await expect(page.locator('main h1')).toHaveText('Holder registry');
+ await expect(page.locator('main')).toContainText('Ready-made example:');
+ await expect(page.locator('main')).toContainText('At cutoff');
+ expect(await page.locator('main').innerText()).not.toMatch(/[а-яё]/i);
+ await page.reload();
+ await expect(page.locator('main')).toContainText('Ready-made example:');
+});
+
+test('demo schedule update activity title is translated both ways',()=>{expect(translate('Обновлён срок обязательства','en')).toBe('Obligation deadline updated');expect(translate('Обновлён срок обязательства','ru')).toBe('Обновлён срок обязательства');});
