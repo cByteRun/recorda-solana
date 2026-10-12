@@ -210,3 +210,48 @@ a{text-decoration:none} .content > main{min-width:0} .operational{padding:28px;m
  .sidebar-footer {gap:7px}.top-actions {min-width:0}.rail-profile:focus-visible,.profile-trigger:focus-visible,.profile-tabs button:focus-visible,.palette-grid button:focus-visible {outline:3px solid var(--brand);outline-offset:3px}
  @media(max-width:620px) {.page-head {padding:20px;gap:20px}.page-head .head-buttons {width:100%}.page-title {font-size:27px}}
 }
+
+@scope (.bondops) {
+ .sidebar-brand {display:flex;align-items:center;gap:12px;padding:0 10px;color:var(--ink);font:800 20px Manrope,sans-serif;letter-spacing:-.04em}
+ .sidebar-brand .brand-mark {margin:0;width:38px;height:38px;font-size:24px;border:1px solid var(--line);background:var(--mint);color:var(--brand);border-radius:12px;transform:none}
+ .sidebar {gap:16px;overflow:hidden}.sidebar-brand,.workspace-title,.sidebar-footer {flex-shrink:0}.sidebar-navigation {flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px;scrollbar-width:thin}.workspace-title {padding-top:0}
+ .sidebar-profile {display:flex;align-items:center;gap:10px;width:100%;min-width:0;border:0;border-top:1px solid var(--line);padding:13px 0 0;margin-top:4px;background:transparent;color:var(--ink);text-align:left;cursor:pointer}
+ .sidebar-profile>span:nth-child(2) {display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}.sidebar-profile strong {font-size:12px;overflow-wrap:anywhere}.sidebar-profile small {font-size:11px;color:var(--muted)}.sidebar-profile>svg {flex-shrink:0;color:var(--muted)}
+ .sidebar-profile:hover {color:var(--brand)}.sidebar-profile:focus-visible {outline:3px solid var(--brand);outline-offset:4px;border-radius:6px}
+ @media(min-width:981px) {.app-shell {grid-template-columns:240px minmax(0,1fr)}.rail {display:none}}
+}
+
+@scope (.bondops) {
+ .actions-workspace {max-width:none;padding:28px;color:var(--ink)}
+ .actions-workspace .workspace-heading {padding:25px 28px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(110deg,var(--paper),var(--mint));align-items:center;box-shadow:var(--shadow)}
+ .actions-workspace .workspace-heading h1 {font:800 32px Manrope,sans-serif;letter-spacing:-.04em;line-height:1.2}
+ .actions-workspace :is(.workspace-heading,.panel-heading,.summary-heading,.journey-intro) .eyebrow {color:var(--brand)}
+ .actions-workspace :is(.workspace-heading p:not(.eyebrow),.journey-intro p,.action-journey small,.journey-note,.role-selector label,.role-selector>span,.open-action-form p,.open-action-form label,.workspace-onboarding p,.panel-heading p,.schedule-fields label,.form-helper,.summary-metrics>div>span,.execution-progress li,.summary-cutoff,.summary-disclosure,.operator-controls>p,.voting-panel>p,.voting-panel label,.holder-right-values>div>span,.holder-right-card>p,.proof-heading p,.completed-action p) {color:var(--muted)}
+ .actions-workspace :is(.open-action-form,.schedule-panel,.action-summary,.operator-controls,.voting-panel,.holder-table-panel,.proof-panel,.action-journey),.actions-workspace>section:not(.action-journey):not(.action-summary) {background:var(--paper);border-color:var(--line);border-radius:16px;color:var(--ink)}
+ .actions-workspace :is(.environment-chip,.verification-badge,.onboarding-icon,.holder-right-card,.completed-action,.workspace-onboarding) {background:var(--mint);color:var(--brand);border-color:var(--line)}
+ .actions-workspace .environment-chip .status-dot {background:var(--brand)}
+ .actions-workspace .workspace-button {background:var(--brand);color:var(--paper);border-color:var(--brand);border-radius:10px}
+ :scope[data-theme=dark] .actions-workspace .workspace-button {color:#101513}
+ .actions-workspace .workspace-button:hover:not(:disabled) {background:color-mix(in srgb,var(--brand) 85%,var(--ink))}
+ .actions-workspace .workspace-button.selected {outline:2px solid var(--brand);outline-offset:3px}
+ .actions-workspace :is(input:not([type=checkbox]),select,textarea) {background:var(--input);color:var(--ink);border-color:var(--line);border-radius:10px;accent-color:var(--brand)}
+ .actions-workspace :is(input,select,textarea,.workspace-button):focus-visible {outline:2px solid var(--brand);outline-offset:3px}
+ .actions-workspace input::placeholder,.actions-workspace textarea::placeholder {color:var(--muted)}
+ .actions-workspace .action-journey li {background:var(--light);border-color:var(--line);border-radius:12px}
+ .actions-workspace .action-journey li>a:hover,.actions-workspace .action-journey .journey-active {background:var(--mint);border-color:var(--brand)}
+ .actions-workspace :is(.journey-number,.journey-active .journey-number,.execution-progress .progress-done>span) {background:var(--mint);color:var(--brand);border-color:var(--brand)}
+ .actions-workspace :is(.journey-status,.holder-right-heading,.proof-heading,.execution-progress .progress-done,.action-journey li>a>svg,.action-journey li>div>svg) {color:var(--brand)}
+ .actions-workspace :is(.execution-progress,.execution-progress li>span,.holder-entitlement) {border-color:var(--line)}
+ .actions-workspace .execution-progress .progress-current {color:var(--ink)}
+ .actions-workspace .execution-progress .progress-current>span {background:var(--brand);color:var(--paper);border-color:var(--brand)}
+ :scope[data-theme=dark] .actions-workspace .execution-progress .progress-current>span {color:#101513}
+ .actions-workspace .technical-details {background:var(--light);color:var(--muted);border-color:var(--line);border-radius:12px}
+ .actions-workspace .technical-details summary {color:var(--ink)}
+ .actions-workspace :is([role=alert],.verification-failed) {background:var(--red-bg);color:var(--red);border-color:var(--red)}
+ .actions-workspace [role=status] {background:var(--mint);color:var(--brand);border-color:var(--line)}
+ .actions-workspace .holder-table-panel th {background:var(--light);color:var(--muted);border-color:var(--line)}
+ .actions-workspace .holder-table-panel td {border-color:var(--line)}
+ .actions-workspace .holder-table-panel :is(th,td):nth-child(3) {background:var(--mint);color:var(--brand)}
+ .actions-workspace .summary-heading,.actions-workspace .execution-progress {flex-wrap:wrap}
+ @media(max-width:620px) {.actions-workspace {padding:25px 14px 45px}.actions-workspace .workspace-heading {padding:20px}.actions-workspace .workspace-heading h1 {font-size:27px}}
+}
