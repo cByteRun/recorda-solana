@@ -21,7 +21,7 @@ export function App() {
   if (location.pathname === "/" && !new URLSearchParams(location.search).has('action')) return <WelcomePage />;
   if (location.pathname === "/reference") return <Suspense fallback={<p className="workspace-loading">Opening reference…</p>}><DashboardPage /></Suspense>;
   if (location.pathname === "/workspaces" || !selectedWorkspace()) return <WorkspacesPage />;
-  const demoPage = selectedWorkspace()==='demo' && ['/holders','/claims','/protocol'].includes(location.pathname) ? (location.pathname==='/holders'?<DemoRegister/>:<TestActionPage id="DEMO-CA-001"/>) : null;
+  const demoPage = selectedWorkspace()==='demo' && ['/actions','/holders','/claims','/protocol'].includes(location.pathname) ? (location.pathname==='/holders'?<DemoRegister/>:<TestActionPage id={new URLSearchParams(location.search).get('example')??'DEMO-CA-001'}/>) : null;
   const page = demoPage ?? ( location.pathname === '/login' ? <LoginPage /> : location.pathname === '/dashboard' ? <BondOpsPage /> : ['/bonds','/settlements','/exceptions','/calendar','/notifications','/audit','/infrastructure','/settings','/holdings','/entitlements','/voting','/history','/proofs','/register','/reports'].includes(location.pathname) ? <BondOpsPage /> : location.pathname === '/holders' ? <OverviewPage /> : location.pathname === "/claims" ? <ClaimsPage /> : location.pathname === "/actions" ? <ActionsPage /> : <ProtocolPage />);
   return <BondOpsShell><Suspense key={route} fallback={<p className="workspace-loading" role="status">Opening your workspace…</p>}>{page}</Suspense></BondOpsShell>;
 }
