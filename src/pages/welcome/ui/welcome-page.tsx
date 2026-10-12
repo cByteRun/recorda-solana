@@ -17,12 +17,14 @@ const copy = {
     tags: ['INSTRUMENT', 'EXECUTION', 'RECORD'],
     note: 'ILLUSTRATIVE · NOT A LIVE TRANSACTION', prototype: 'HACKATHON PROTOTYPE / TEST ASSETS',
     example: 'A transfer changes the balance. It cannot rewrite the right.', now: 'Bonds held now', snapshot: 'At record date', entitlement: 'Coupon entitlement',
-    dialogTitle: 'Ownership changes. Rights stay recorded.',
-    dialogIntro: 'Recorda services tokenized bonds from record-date ownership to a payment, a holder decision, or redemption — with verifiable on-chain outcomes.',
-    transfer: 'Change the ownership', record: 'Capture the right', promise: 'Keep the promise',
-    captions: ['Investor A holds 10 bonds at the cutoff. The coupon right is fixed.', '4 bonds move to Investor B. Investor A now holds 6, but the right still comes from 10.', '500 Mock USD remain due to Investor A. A transfer cannot rewrite the right.'],
+    dialogTitle: 'Every obligation. A verifiable outcome.',
+    dialogIntro: 'One bond-servicing workspace for issuers and paying agents: what is owed, what is confirmed and what needs attention.',
+    value: 'Fixed holder rights, authorized payments and on-chain evidence keep coupon and redemption operations traceable. Your team sees exceptions and resolves them without losing the history.',
+    transfer: 'Track ownership changes', record: 'Determine the obligation', promise: 'Reconcile execution',
+    captions: ['10 bonds at the record date establish a 500 Mock USD coupon obligation to Investor A.', '4 bonds move to Investor B. Investor A now holds 6. A transfer cannot rewrite the right: the operator still owes 500 Mock USD.', 'BondOps matches the 500 Mock USD obligation against execution evidence. Missing confirmation stays visible for review before any retry.'],
+    settlement: 'Due: 500 Mock USD · Confirmation: unavailable · Next step: review evidence',
     roles: ['Operator', 'Investor', 'Auditor'],
-    roleTexts: ['Review record-date rights, authorize execution and follow completion.', 'See what you hold now beside the right you earned at the cutoff.', 'Verify on-chain outcomes without connecting a wallet.'],
+    roleTexts: ['For issuer and paying-agent teams: manage coupons and redemptions, reconcile confirmations and resolve exceptions with reviewers in one workspace.', 'Know what you are owed and follow payment and redemption status against your fixed rights.', 'Trace each obligation from calculation to execution evidence without connecting a wallet.'],
   },
   ru: {
     title: ['Реальные активы.', 'Неизменные права.'], intro: 'Облигации KASE. Расчёты на Solana. Права остаются в записи.', start: 'Начать', idea: 'Почему Recorda?',
@@ -32,12 +34,14 @@ const copy = {
     tags: ['ИНСТРУМЕНТ', 'ИСПОЛНЕНИЕ', 'ЗАПИСЬ'],
     note: 'ИЛЛЮСТРАЦИЯ · НЕ ЖИВАЯ ТРАНЗАКЦИЯ', prototype: 'ПРОТОТИП ДЛЯ ХАКАТОНА / ТЕСТОВЫЕ АКТИВЫ',
     example: 'Перевод меняет баланс. Но не переписывает право.', now: 'Облигаций сейчас', snapshot: 'На дату фиксации', entitlement: 'Право на купон',
-    dialogTitle: 'Владение меняется. Права остаются в записи.',
-    dialogIntro: 'Recorda связывает позиции в токенизированных облигациях на дату фиксации с выплатой, решением держателей или погашением — и проверяемым результатом в сети.',
-    transfer: 'Изменить владение', record: 'Зафиксировать право', promise: 'Сохранить обязательство',
-    captions: ['На дату фиксации у инвестора A — 10 облигаций. Право на купон закреплено.', '4 облигации переходят инвестору B. У инвестора A осталось 6, но право рассчитано по 10.', 'Инвестору A по-прежнему причитаются 500 Mock USD. Перевод не переписывает право.'],
+    dialogTitle: 'Каждое обязательство. Проверяемый результат.',
+    dialogIntro: 'Единое рабочее место эмитента и платёжного агента для обслуживания облигаций: что должны, что подтверждено и что требует внимания.',
+    value: 'Зафиксированные права держателей, авторизованные выплаты и подтверждения в сети делают купоны и погашения прослеживаемыми. Команда видит исключения и решает их, сохраняя историю.',
+    transfer: 'Учесть смену владельца', record: 'Определить обязательство', promise: 'Сверить исполнение',
+    captions: ['10 облигаций на дату фиксации определяют обязательство: выплатить инвестору A купон 500 Mock USD.', '4 облигации переходят инвестору B. У A осталось 6, но оператор по-прежнему должен ему 500 Mock USD по зафиксированным правам.', 'BondOps сверяет обязательство на 500 Mock USD с подтверждениями исполнения. Если подтверждения нет, команда проверяет доказательства перед повторной выплатой.'],
+    settlement: 'К выплате: 500 Mock USD · Подтверждение: недоступно · Следующий шаг: проверить доказательства',
     roles: ['Оператор', 'Инвестор', 'Аудитор'],
-    roleTexts: ['Проверьте права на дату фиксации, одобрите исполнение и следите за результатом.', 'Сравните текущие позиции с правом, полученным на дату фиксации.', 'Проверьте результаты в сети без подключения кошелька.'],
+    roleTexts: ['Для команды эмитента и платёжного агента: купоны, погашения, сверка подтверждений и разбор исключений с ревьюверами в одном рабочем месте.', 'Знайте, сколько вам причитается, и следите за выплатами и погашениями по зафиксированным правам.', 'Проследите каждое обязательство от расчёта до подтверждения исполнения без подключения кошелька.'],
   },
 };
 const names = ['KASE', 'SOLANA', 'RECORDA'];
@@ -123,11 +127,13 @@ export function WelcomePage() {
     <footer className="light-footer"><span>{t.prototype}</span><span>{ru ? 'Фиксация → Исполнение → Проверяемый результат' : 'Record → Execute → Verifiable outcome'}</span></footer>
     <dialog ref={dialog} className="light-explanation" aria-labelledby="explanation-title" onCancel={() => closeExplanation()} onClose={() => { setExplaining(false); explanationOrigin.current?.focus(); }} onClick={event => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeExplanation(); } }}>
       <button className="light-dialog-close" aria-label={t.close} onClick={closeExplanation}><X size={18} /></button>
-      <span className="light-dialog-eyebrow">RECORDA / THE RIGHT BEHIND THE ASSET</span>
+      <span className="light-dialog-eyebrow">RECORDA BONDOPS</span>
       <h2 id="explanation-title">{t.dialogTitle}</h2><p className="light-dialog-intro">{t.dialogIntro}</p>
+      <p className="light-dialog-intro">{t.value}</p>
       <div id="story" className="light-example">
         <div className="light-example-stats"><div className="holding-comparison"><span>{t.now}</span><strong>{exampleStep === 0 ? '10' : '6'}</strong></div><div className="snapshot-holding"><span>{t.snapshot}</span><strong>10</strong></div><div className="coupon-value"><span>{t.entitlement}</span><strong>500.00<small>Mock USD</small></strong></div></div>
         <p className="light-example-caption" aria-live="polite">{t.captions[exampleStep]}</p>
+        {exampleStep === 2 && <p className="light-example-caption">{t.settlement}</p>}
         <div className="light-example-steps">{[t.record, t.transfer, t.promise].map((label, index) => <button key={label} aria-label={label} aria-pressed={exampleStep === index} onClick={() => setExampleStep(index)}><span>0{index + 1}</span>{label}</button>)}</div>
         <p className="light-example-formula">10 × 1,000 × 10% ÷ 2 = 500 Mock USD</p><p className="light-example-note">{t.note}</p>
       </div>

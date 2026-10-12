@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 test('welcome requires explicit selection and Demo never contacts Solana on any operational page',async({page})=>{
  const rpc:string[]=[];page.on('request',r=>{if(r.postData()?.includes('"jsonrpc"'))rpc.push(r.url());});
- await page.goto('/dashboard');await expect(page.getByRole('heading',{name:'Choose your environment'})).toBeVisible();
+ await page.goto('/dashboard');await expect(page.getByRole('heading',{name:'Выберите среду'})).toBeVisible();
  await page.goto('/');await page.getByRole('link',{name:'Get started',exact:true}).first().click();await expect(page).toHaveURL(/\/workspaces$/);
  await page.getByRole('button',{name:'Открыть Demo',exact:true}).click();await expect(page.getByLabel('Workspace',{exact:true})).toHaveValue('demo');
  for(const path of ['/dashboard','/bonds','/actions','/holders','/claims','/protocol','/calendar','/audit']){await page.goto(path);await expect(page.locator('main')).toBeVisible();}
