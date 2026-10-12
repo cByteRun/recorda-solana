@@ -42,3 +42,11 @@ for(const width of [390,320])test(`all eleven operator tabs are visible and usab
  for(const href of desktop){const link=page.locator(`.rail .rail-ico[href="${href}"]`);await expect(link).toBeInViewport();await link.click();await expect(link).toHaveAttribute('aria-current','page');await expect(page.locator('main')).toBeVisible();}
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator('.rail-profile').click();await expect(page.getByRole('dialog')).toBeVisible();
 });
+
+test('operator control desk keeps exact fixed rights, unknown evidence and usable holder drill-down',async({page})=>{
+ await expect(page.locator('.ops-client-book tbody tr')).toHaveCount(4);const investor=page.locator('.ops-client-book tbody tr').filter({hasText:'Investor A'});await expect(investor).toContainText('500.00');
+ await page.getByLabel('Holder obligation filter').selectOption('unknown');await expect(page.locator('.ops-client-book tbody tr')).toHaveCount(1);await expect(page.locator('.ops-client-book')).toContainText('Investor A');
+ await page.getByRole('button',{name:'Inspect rights',exact:true}).click();await expect(page.getByRole('region',{name:'Holder details'})).toContainText('Record units: 10');await expect(page.getByRole('region',{name:'Holder details'})).toContainText('500.00');
+ await expect(page.locator('.ops-distribution')).toContainText('Unknown is part of Unsettled');await expect(page.locator('.ops-proof a')).toHaveCount(0);await expect(page.locator('.ops-pipeline a')).toHaveCount(6);
+ await page.getByLabel('Search holders').fill('nonexistent-wallet');await expect(page.locator('.ops-client-book tbody tr')).toHaveCount(0);await expect(page.getByText('No holders match the selected filters')).toBeVisible();
+});

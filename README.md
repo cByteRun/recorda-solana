@@ -444,3 +444,5 @@ npm run dev
 Choose **Solana program → Local validator** in the interface. `bondops:local` starts an isolated validator on 8899, loads the compiled program, seeds the TZ example and keeps the ledger running. Set `RECORDA_LOCAL_WALLET` to a local test key file matching your Phantom wallet to administer the seeded workspace; otherwise the fixture uses a disposable test signer. Demo Workspace is already filled without a wallet. Its footer card is labelled **Demo Workspace**. Public Devnet requires deploying/upgrading the new program binary; local acceptance does not certify the currently deployed Devnet binary.
 
 `npm run test:bondops` checks Demo Workspace isolation and confirmation decoding. `npm run protocol:test:bondops` checks actual Rust transactions. `npm run protocol:test:bondops:ui` checks browser → wallet signature → local program → fresh read, with the Test API disabled. Historical full-audit counts above describe earlier revisions.
+
+The operator overview adapts the supplied Financial, Onchain Analytics and CRM Pro templates around exact holder obligations and on-chain evidence. See [dashboard design and data contract](docs/ONCHAIN-DASHBOARD.md).
