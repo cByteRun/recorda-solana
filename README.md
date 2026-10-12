@@ -191,6 +191,10 @@ solana-test-validator \
 
 This copies the **deployed program binary**; it does not copy Devnet instruments, accounts or balances. Use a new ledger directory when changing the binary or starting a clean run, and stop any validator already using port 8899. The copied deployment must support the repository's current IDL and v2 instructions. A local build and the deployed binary can differ: the full local PASS recorded on **2026-10-12** used `target/deploy/recorda.so`, loaded by `npm run bondops:local`, rather than the differing Devnet binary. To reproduce that source-build run, use `npm run protocol:build` followed by `npm run bondops:local` instead of the download/validator commands above; that command also seeds and checks the operational fixture.
 
+**Resume after a stopped validator:** keep the original ledger and pass its **absolute path** to `solana-test-validator`, for example `--ledger "$PWD/target/bondops-local/ledger-<existing-run>"`, with the same RPC/faucet/bind options above. This preserves existing instruments, balances and receipts. `npm run bondops:local` creates a fresh ledger; use it when you want a new scenario. Keep the validator terminal running while using Test Workspace.
+
+If Phantom requests a password, unlock it and approve the connection **in Phantom**. A local RPC outage is reported separately from wallet access; restore the validator and click **Retry loading** to continue into your cabinet without reconnecting the wallet.
+
 Add this setting to `.env.local` (keep `VITE_SOLANA_RPC_URL` pointing at Devnet for the separate Devnet workspace):
 
 ```dotenv
