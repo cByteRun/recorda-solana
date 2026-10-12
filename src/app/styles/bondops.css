@@ -132,3 +132,22 @@ a{text-decoration:none} .content > main{min-width:0} .operational{padding:28px;m
 }
 
 @scope (.bondops) { .dashboard-chain-form select {max-width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--input);color:var(--ink);font:inherit} }
+
+@scope (.bondops) {
+ .login-progress {display:flex;align-items:center;gap:26px;padding:28px;margin-bottom:24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(120deg,var(--mint),var(--paper) 70%);overflow:hidden}
+ .login-progress-copy {min-width:0;flex:1}.login-progress h2 {margin:8px 0;font:600 21px Manrope,sans-serif}.login-progress-copy>p:last-of-type {color:var(--muted);font-size:13px;line-height:1.7;margin:0}
+ .login-orbit {position:relative;width:84px;height:84px;flex-shrink:0;display:grid;place-items:center;color:var(--brand)}
+ .login-orbit>svg {width:28px;height:28px;animation:workspace-breathe 2s ease-in-out infinite}
+ .login-orbit>span {position:absolute;inset:0;border:1px solid var(--line);border-top:2px solid var(--brand);border-radius:50%;animation:workspace-orbit 2.4s linear infinite}
+ .login-orbit>span:nth-child(2) {inset:10px;border-top-color:transparent;border-bottom:2px solid var(--brand);animation-direction:reverse;animation-duration:3.5s}
+ .login-stages {display:flex;gap:10px;flex-wrap:wrap;padding:0;margin:18px 0 0;list-style:none}
+ .login-stages li {display:flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--line);border-radius:30px;font-size:11px;color:var(--muted);transition:background .3s,color .3s}
+ .login-stages li.active {color:var(--brand);background:var(--mint);border-color:var(--brand)}.login-stages li.done {color:var(--brand)}
+ .login-progress.idle .login-orbit>span,.login-progress.idle .login-orbit>svg,.login-progress.ready .login-orbit>span,.login-progress.error .login-orbit>span,.login-progress.ready .login-orbit>svg,.login-progress.error .login-orbit>svg {animation:none}
+ .login-role {transition:opacity .25s,transform .25s,border-color .25s}.login-role:disabled {opacity:.45;cursor:wait;transform:translateY(3px)}
+ .login-connect button:disabled {opacity:.45;cursor:wait}
+ @media(max-width:620px) {.login-progress {gap:15px;padding:18px;flex-wrap:wrap}.login-orbit {width:54px;height:54px}.login-progress h2 {font-size:17px}.login-stages {gap:5px}.login-stages li {padding:6px 8px}}
+ @media(prefers-reduced-motion:reduce) {.login-orbit>span,.login-orbit>svg {animation:none}.login-role,.login-stages li {transition:none}.login-role:disabled {transform:none}}
+}
+@keyframes workspace-orbit {to {transform:rotate(360deg)}}
+@keyframes workspace-breathe {50% {opacity:.45;transform:scale(.9)}}

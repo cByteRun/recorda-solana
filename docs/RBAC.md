@@ -35,6 +35,8 @@ Configured address matches determine the cabinet. If there is no match, active R
 
 Internal tab links retain the same provider and loaded portfolio. Corporate actions, legacy coupon setup and holder claims reuse the shared connected wallet; opening a tab does not require another Phantom connection. The corporate actions and holder registry tabs select a portfolio action automatically, with explicit action URLs taking precedence.
 
+In Test/Devnet, signing out returns to `/login`. Sidebar, quick navigation and direct cabinet URLs also lead to login when no member is identified; page controllers do not mount before entry. The requested route is retained in `next` and opened after explicit sign-in only when the identified role can visit it.
+
 Navigation and direct-route guards limit each identified role's cabinet. Investor pages filter positions and historical rights by the connected wallet, never by the selected login card. Operator/Reviewer mutations are checked again in the shared client controller. Demo server sessions independently enforce roles, origin, CSRF and instrument scope.
 
 The environment address map is **not an on-chain permission grant**. Rust verifies signer, instrument authority, canonical PDA, active team membership and scope on every instruction. Configuring an Operator address cannot promote it to a Rust workspace admin; configuring an Auditor does not erase existing chain permissions. Update on-chain team membership separately using an authorized signer. Solana account data is public; these cabinets control the product interface rather than making blockchain data private.
