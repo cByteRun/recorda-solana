@@ -1,0 +1,506 @@
+{
+  "schema": 2,
+  "mode": "demo",
+  "instruments": [
+    {
+      "id": "DEMO-KZB26",
+      "symbol": "KZB26",
+      "name": "KASE Corporate Bond 2026",
+      "authority": "demo-operator",
+      "asset": "DEMO-MOCKUSD",
+      "currency": "Mock USD",
+      "decimals": 2,
+      "faceMinor": "100000",
+      "rateBps": 1000,
+      "frequency": 2,
+      "supply": "17",
+      "redeemedSupply": "0",
+      "maturity": "2026-11-11T12:00:00.000Z",
+      "source": "illustrative",
+      "verified": true
+    }
+  ],
+  "actions": [
+    {
+      "id": "DEMO-CA-001",
+      "version": 2,
+      "label": "Купонная выплата · H2 2026",
+      "instrument": "DEMO-KZB26",
+      "kind": "coupon",
+      "status": "executing",
+      "recordAt": "2026-10-11T12:00:00.000Z",
+      "dueAt": "2026-10-12T10:00:00.000Z",
+      "dueSource": "demo schedule",
+      "asset": "DEMO-MOCKUSD",
+      "currency": "Mock USD",
+      "decimals": 2,
+      "faceMinor": "100000",
+      "rateBps": 1000,
+      "frequency": 2,
+      "approved": true,
+      "funded": true,
+      "receipt": null,
+      "source": "illustrative",
+      "verified": true,
+      "rights": [
+        {
+          "id": "DEMO-CA-001:A",
+          "holder": "A",
+          "name": "Investor A",
+          "units": "10",
+          "principalMinor": "0",
+          "couponMinor": "50000",
+          "expectedMinor": "50000",
+          "confirmedMinor": "0",
+          "status": "unknown",
+          "signature": null,
+          "settledSlot": null,
+          "evidence": "No matching execution confirmation",
+          "calculated": true,
+          "source": "illustrative",
+          "next": {
+            "label": "Reconcile before retry",
+            "execute": false,
+            "reason": "Check retained transaction and finalized program state before submitting another payment."
+          }
+        },
+        {
+          "id": "DEMO-CA-001:B",
+          "holder": "B",
+          "name": "Investor B",
+          "units": "5",
+          "principalMinor": "0",
+          "couponMinor": "25000",
+          "expectedMinor": "25000",
+          "confirmedMinor": "25000",
+          "status": "confirmed",
+          "signature": null,
+          "settledSlot": "demo",
+          "evidence": "Illustrative confirmation; not chain evidence",
+          "calculated": true,
+          "source": "illustrative",
+          "next": {
+            "label": "View execution proof",
+            "execute": false,
+            "reason": "Execution is confirmed; another payment is forbidden."
+          }
+        },
+        {
+          "id": "DEMO-CA-001:C",
+          "holder": "C",
+          "name": "Investor C",
+          "units": "2",
+          "principalMinor": "0",
+          "couponMinor": "10000",
+          "expectedMinor": "10000",
+          "confirmedMinor": "10000",
+          "status": "confirmed",
+          "signature": null,
+          "settledSlot": "demo",
+          "evidence": "Illustrative confirmation; not chain evidence",
+          "calculated": true,
+          "source": "illustrative",
+          "next": {
+            "label": "View execution proof",
+            "execute": false,
+            "reason": "Execution is confirmed; another payment is forbidden."
+          }
+        },
+        {
+          "id": "DEMO-CA-001:D",
+          "holder": "D",
+          "name": "Investor D",
+          "units": "0",
+          "principalMinor": "0",
+          "couponMinor": "0",
+          "expectedMinor": "0",
+          "confirmedMinor": "0",
+          "status": "confirmed",
+          "signature": null,
+          "settledSlot": "demo",
+          "evidence": "Illustrative confirmation; not chain evidence",
+          "calculated": true,
+          "source": "illustrative",
+          "next": {
+            "label": "View execution proof",
+            "execute": false,
+            "reason": "Execution is confirmed; another payment is forbidden."
+          }
+        }
+      ],
+      "timing": "upcoming"
+    },
+    {
+      "id": "DEMO-CA-002",
+      "version": 2,
+      "label": "Решение держателей",
+      "instrument": "DEMO-KZB26",
+      "kind": "voting",
+      "status": "scheduled",
+      "recordAt": "2026-10-13T12:00:00.000Z",
+      "dueAt": "2026-10-14T12:00:00.000Z",
+      "dueSource": "demo voting close",
+      "asset": "DEMO-MOCKUSD",
+      "currency": "Mock USD",
+      "decimals": 2,
+      "approved": false,
+      "funded": false,
+      "source": "illustrative",
+      "verified": true,
+      "rights": [],
+      "quorumBps": 5000,
+      "timing": "upcoming"
+    },
+    {
+      "id": "DEMO-CA-003",
+      "version": 2,
+      "label": "Полное погашение",
+      "instrument": "DEMO-KZB26",
+      "kind": "redemption",
+      "status": "scheduled",
+      "recordAt": "2026-11-11T12:00:00.000Z",
+      "dueAt": "2026-11-11T12:00:00.000Z",
+      "dueSource": "demo maturity",
+      "asset": "DEMO-MOCKUSD",
+      "currency": "Mock USD",
+      "decimals": 2,
+      "approved": false,
+      "funded": false,
+      "source": "illustrative",
+      "verified": true,
+      "rights": [],
+      "timing": "upcoming"
+    }
+  ],
+  "cases": [
+    {
+      "id": "e3c4cc1aff447f2fc0660ac0",
+      "action": "DEMO-CA-001",
+      "instrument": "DEMO-KZB26",
+      "holder": "A",
+      "status": "investigating",
+      "owner": "demo-reviewer",
+      "createdAt": "2026-10-12T12:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-10-12T09:00:00.000Z",
+          "actor": "demo-reviewer",
+          "note": "Сверить retained transaction и finalized право. Не повторять выплату до проверки.",
+          "evidence": "Test example: unknown confirmation"
+        }
+      ],
+      "reason": "unknown",
+      "lastEvidence": "No matching execution confirmation"
+    }
+  ],
+  "audit": [
+    {
+      "id": "47ceb5ba235884920f50fedd",
+      "at": "2026-10-10T12:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "issue",
+      "title": "Выпуск 17 облигаций",
+      "detail": "10 / 5 / 2 / 0 · Token-2022 пример",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-001 · confirmed"
+    },
+    {
+      "id": "dc8c88fa124f78e82c878e0c",
+      "at": "2026-10-11T12:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "snapshot",
+      "title": "Зафиксированы исторические права",
+      "detail": "Cutoff: A=10, B=5, C=2, D=0",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-002 · confirmed"
+    },
+    {
+      "id": "56e97b16817a7c274c641627",
+      "at": "2026-10-11T14:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "transfer",
+      "title": "Перевод после record date",
+      "detail": "A → B: 4 облигации. Текущие позиции 6 / 9 / 2 / 0; купон остаётся 500 / 250 / 100 / 0",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-003 · confirmed"
+    },
+    {
+      "id": "f81080daf2c647752e3f0750",
+      "at": "2026-10-11T16:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "approval",
+      "title": "Оператор одобрил обязательство",
+      "detail": "850.00 Mock USD · подтверждён расчёт по историческим правам",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-004 · confirmed"
+    },
+    {
+      "id": "081453ac4612b3fe15c2ca2b",
+      "at": "2026-10-11T18:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "funding",
+      "title": "Vault обеспечен средствами",
+      "detail": "850.00 Mock USD · пример финансирования",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-005 · confirmed"
+    },
+    {
+      "id": "849c205b1efd26905af6bd12",
+      "at": "2026-10-11T20:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "settlement",
+      "title": "Investor B: исполнено 250.00",
+      "detail": "Пример подтверждения выплаты и защиты от повторного исполнения",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-006 · confirmed"
+    },
+    {
+      "id": "6b1e35f3efcc2c76eb459da6",
+      "at": "2026-10-11T21:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "settlement",
+      "title": "Investor C: исполнено 100.00",
+      "detail": "Иллюстративное processed право",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-007 · confirmed"
+    },
+    {
+      "id": "2d8d0c9b0d76a353ecd02cca",
+      "at": "2026-10-12T02:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "transaction",
+      "title": "Investor A: неуспешная попытка",
+      "detail": "Пример ошибки исполнения. Право остаётся неоплаченным",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-008 · failed"
+    },
+    {
+      "id": "2b5402e15230064137906b81",
+      "at": "2026-10-12T04:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "transaction",
+      "title": "Investor A: отправленная транзакция",
+      "detail": "Пример ожидания финальности; новую выплату нельзя считать безопасной",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-009 · pending"
+    },
+    {
+      "id": "5344d142785ddb39c5d48ef6",
+      "at": "2026-10-12T08:00:00.000Z",
+      "actor": "Demo Workspace",
+      "type": "transaction",
+      "title": "Investor A: подтверждение недоступно",
+      "detail": "500.00 Mock USD требуют сверки; отсутствие ответа RPC не подтверждает выплату",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative",
+      "evidence": "TEST-TX-010 · unknown"
+    },
+    {
+      "id": "d8c17d449833b25310018de7",
+      "at": "2026-10-11T23:50:46.785Z",
+      "actor": "reconciler",
+      "type": "exception",
+      "title": "Открыто исключение",
+      "detail": "Investor A: unknown",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "caseId": "e3c4cc1aff447f2fc0660ac0"
+    },
+    {
+      "id": "06851f4513421cf62ec90adb",
+      "at": "2026-10-11T23:50:46.785Z",
+      "actor": "demo-reviewer",
+      "type": "case",
+      "title": "Начат разбор исключения",
+      "detail": "Investor A · 500.00 Mock USD · назначен Reviewer",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "caseId": "e3c4cc1aff447f2fc0660ac0",
+      "source": "illustrative"
+    }
+  ],
+  "notifications": [],
+  "preferences": {
+    "leadHours": 72,
+    "escalateHours": 24
+  },
+  "lastSync": null,
+  "syncError": null,
+  "demoTransactions": [
+    {
+      "id": "TEST-TX-001",
+      "kind": "issue",
+      "status": "confirmed",
+      "title": "Выпуск 17 облигаций",
+      "detail": "10 / 5 / 2 / 0 · Token-2022 пример",
+      "at": "2026-10-10T12:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-002",
+      "kind": "snapshot",
+      "status": "confirmed",
+      "title": "Зафиксированы исторические права",
+      "detail": "Cutoff: A=10, B=5, C=2, D=0",
+      "at": "2026-10-11T12:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-003",
+      "kind": "transfer",
+      "status": "confirmed",
+      "title": "Перевод после record date",
+      "detail": "A → B: 4 облигации. Текущие позиции 6 / 9 / 2 / 0; купон остаётся 500 / 250 / 100 / 0",
+      "at": "2026-10-11T14:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-004",
+      "kind": "approval",
+      "status": "confirmed",
+      "title": "Оператор одобрил обязательство",
+      "detail": "850.00 Mock USD · подтверждён расчёт по историческим правам",
+      "at": "2026-10-11T16:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-005",
+      "kind": "funding",
+      "status": "confirmed",
+      "title": "Vault обеспечен средствами",
+      "detail": "850.00 Mock USD · пример финансирования",
+      "at": "2026-10-11T18:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-006",
+      "kind": "settlement",
+      "status": "confirmed",
+      "title": "Investor B: исполнено 250.00",
+      "detail": "Пример подтверждения выплаты и защиты от повторного исполнения",
+      "at": "2026-10-11T20:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-007",
+      "kind": "settlement",
+      "status": "confirmed",
+      "title": "Investor C: исполнено 100.00",
+      "detail": "Иллюстративное processed право",
+      "at": "2026-10-11T21:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-008",
+      "kind": "transaction",
+      "status": "failed",
+      "title": "Investor A: неуспешная попытка",
+      "detail": "Пример ошибки исполнения. Право остаётся неоплаченным",
+      "at": "2026-10-12T02:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-009",
+      "kind": "transaction",
+      "status": "pending",
+      "title": "Investor A: отправленная транзакция",
+      "detail": "Пример ожидания финальности; новую выплату нельзя считать безопасной",
+      "at": "2026-10-12T04:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    },
+    {
+      "id": "TEST-TX-010",
+      "kind": "transaction",
+      "status": "unknown",
+      "title": "Investor A: подтверждение недоступно",
+      "detail": "500.00 Mock USD требуют сверки; отсутствие ответа RPC не подтверждает выплату",
+      "at": "2026-10-12T08:00:00.000Z",
+      "instrument": "DEMO-KZB26",
+      "action": "DEMO-CA-001",
+      "source": "illustrative"
+    }
+  ],
+  "revision": 0,
+  "references": [],
+  "members": [
+    {
+      "id": "demo-operator",
+      "name": "Demo Operator",
+      "role": "operator",
+      "scopes": [
+        "*"
+      ],
+      "workspace": "demo",
+      "wallet": null
+    },
+    {
+      "id": "demo-reviewer",
+      "name": "Demo Reviewer",
+      "role": "reviewer",
+      "scopes": [
+        "*"
+      ],
+      "workspace": "demo",
+      "wallet": null
+    },
+    {
+      "id": "demo-auditor",
+      "name": "Demo Auditor",
+      "role": "auditor",
+      "scopes": [
+        "*"
+      ],
+      "workspace": "demo",
+      "wallet": null
+    }
+  ],
+  "totals": [
+    {
+      "asset": "DEMO-MOCKUSD",
+      "currency": "Mock USD",
+      "decimals": 2,
+      "expected": "85000",
+      "confirmed": "35000",
+      "unsettled": "50000",
+      "unknown": "50000"
+    }
+  ],
+  "serverTime": "2026-10-11T23:50:46.785Z"
+}

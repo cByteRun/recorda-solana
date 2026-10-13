@@ -5,7 +5,7 @@ import { Buffer } from 'buffer';
 
 // Controlled RPC/wallet boundary. Applies decoded client transfer instructions;
 // does not emulate a validator or prove protocol authorization.
-export async function bridge(page: Page, options: { snapshotFailure?: boolean; rejectApproval?: boolean; insufficientFunds?: boolean; wrongSnapshotOwner?: boolean; unavailableBond?: boolean; settlementConfirmationFailure?: boolean } = {}) {
+export async function bridge(page: Page, options: { snapshotFailure?: boolean; rejectApproval?: boolean; insufficientFunds?: boolean; wrongSnapshotOwner?: boolean; unavailableBond?: boolean; settlementConfirmationFailure?: boolean; settlementBroadcastResponseFailure?: boolean } = {}) {
   const operator = Keypair.generate();
   const mint = Keypair.generate().publicKey;
   const settlementMint = Keypair.generate().publicKey;
@@ -27,8 +27,9 @@ export async function bridge(page: Page, options: { snapshotFailure?: boolean; r
   page.on('pageerror', e => errors.push(e.message));
   await page.addInitScript(({ operatorAddress, operatorBytes, storedHolders, deployment, rejectApproval }) => {
     if (!localStorage.getItem('bridge-seeded')) {
-      localStorage.setItem('kase_real_holders_v2', JSON.stringify(storedHolders));
-      localStorage.setItem('kase_real_deployment_v2', JSON.stringify(deployment));
+      sessionStorage.setItem('recorda-workspace','devnet');
+    localStorage.setItem('kase_real_holders_v2:devnet', JSON.stringify(storedHolders));
+      localStorage.setItem('kase_real_deployment_v2:devnet', JSON.stringify(deployment));
       localStorage.setItem('bridge-seeded', 'yes');
     }
     const publicKey = {
@@ -121,14 +122,16 @@ export async function bridge(page: Page, options: { snapshotFailure?: boolean; r
             from.amount -= amount; to.amount += amount;
           } else if (program.toBase58().startsWith('Memo')) memos.push(JSON.parse(Buffer.from(ix.data).toString()));
         }
-        result = '2'.repeat(88); break;
+        if (options.settlementBroadcastResponseFailure && submitted.length === 5) error = { code: -32000, message: 'Connection lost after accepting payment' };
+        else result = '2'.repeat(88);
+        break;
       }
       case 'getSignatureStatuses': result = { context, value: [{ slot: 100, confirmations: 1, err: options.settlementConfirmationFailure && submitted.length === 5 ? { InstructionError: [0, 'Custom'] } : null, confirmationStatus: 'confirmed' }] }; break;
       default: failures.push(req.method); error = { code: -32601, message: `Unexpected RPC ${req.method}` };
     }
     await route.fulfill({ json: { jsonrpc: '2.0', id: req.id, ...(error ? { error } : { result }) } });
   });
-  await page.goto('/');
+  await page.goto('/reference');
   await page.getByTestId('connect-wallet').click();
   await expect(page.getByTestId('busy-state')).toHaveCount(0, { timeout: 15000 });
   await expect(page.getByTestId('current-A')).toHaveText(options.unavailableBond ? '—' : '10');

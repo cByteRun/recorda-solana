@@ -2,6 +2,7 @@ import { expect, test as base } from "@playwright/test";
 
 const test = base.extend<{ runtimeErrors: string[] }>({
   runtimeErrors: [async ({ page }, use) => {
+    await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','devnet'));
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await use(errors);
@@ -11,7 +12,8 @@ const test = base.extend<{ runtimeErrors: string[] }>({
 
 test.describe("Recorda React golden UI", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/reference");
+    await expect(page.getByRole('heading', { name: /Record Date → Right → Controlled Execution/ })).toBeVisible();
   });
 
   test("communicates the product axis and trust boundary", async ({ page }) => {
@@ -63,17 +65,17 @@ test.describe("Recorda React golden UI", () => {
 
 test("restored approved action still requires wallet connection", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("kase_real_action_v2", JSON.stringify({
+    localStorage.setItem("kase_real_action_v2:devnet", JSON.stringify({
       actionId: "TEST-RESTORED", status: "APPROVED",
       signatures: { snapshot: "snapshot", transfer: "transfer", entitlement: "entitlement", approval: "approval" }
     }));
   });
-  await page.goto("/");
+  await page.goto("/reference");
   await expect(page.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();
 });
 
 test("missing Phantom reports an error without unlocking actions", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/reference");
   await page.getByTestId("connect-wallet").click();
   await expect(page.getByTestId("app-error")).toBeVisible();
   await expect(page.getByTestId("deploy-button")).toBeDisabled();
@@ -83,7 +85,7 @@ test("missing Phantom reports an error without unlocking actions", async ({ page
 
 test("R1 NFR-03/08: pending settlement remains blocked after reload and wallet connection", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("kase_real_action_v2", JSON.stringify({
+    localStorage.setItem("kase_real_action_v2:devnet", JSON.stringify({
       actionId: "TEST-PENDING", status: "APPROVED",
       pendingSettlementSignature: "submitted-signature",
       signatures: { approval: "approval" }
@@ -91,7 +93,7 @@ test("R1 NFR-03/08: pending settlement remains blocked after reload and wallet c
     const publicKey = { toBase58: () => "11111111111111111111111111111111" };
     Object.assign(window, { phantom: { solana: { isPhantom: true, publicKey, connect: async () => ({ publicKey }) } } });
   });
-  await page.goto("/");
+  await page.goto("/reference");
   await page.getByTestId("connect-wallet").click();
   await expect(page.getByTestId("busy-state")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Settle KUSD" })).toBeDisabled();

@@ -1,0 +1,359 @@
+{
+  "source": [
+    "docs/TZ.md",
+    "docs/REQUIREMENTS.md"
+  ],
+  "scope": "Complete FR-01\u201358 source implementation (MVP and Post-MVP), with local executable acceptance mapping. Status records delivery, not a claim a suite passed; human Devnet and RPC/archive trust gates are explicit.",
+  "coverage": [
+    {
+      "ids": [
+        "UC-CP-01"
+      ],
+      "status": "implemented",
+      "roadmap": "M2.3",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts",
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts"
+      ],
+      "note": "Legacy and typed Coupon, actual token settlement; historical v1 layouts preserved."
+    },
+    {
+      "ids": [
+        "UC-BR-01",
+        "UC-VOTE-01"
+      ],
+      "status": "implemented",
+      "roadmap": "M2.3",
+      "tests": [
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts",
+        "protocol-ui-tests/holder-flows.spec.ts"
+      ],
+      "note": "Actual maturity retirement/payment and holder votes; local browser signing boundary uses Node-held disposable keys, not new human Devnet evidence."
+    },
+    {
+      "ids": [
+        "UC-PR-01"
+      ],
+      "status": "implemented",
+      "roadmap": "P2",
+      "tests": [
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts"
+      ],
+      "note": "Early/partial integer allocation with atomic retirement and reconciled supply."
+    },
+    {
+      "ids": [
+        "UC-MD-01",
+        "UC-EV-01"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "scripts/post-mvp.test.mjs",
+        "protocol-tests/post-mvp.test.mjs",
+        "protocol-ui-tests/holder-flows.spec.ts"
+      ],
+      "note": "Approved claims and canonical durable external proposals. Archive provider and external evidence authenticity are explicit operator trust boundaries."
+    },
+    {
+      "ids": [
+        "FR-01..04",
+        "FR-06..16",
+        "FR-20..27",
+        "FR-38..42"
+      ],
+      "status": "implemented",
+      "roadmap": "M2.3",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts",
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts"
+      ],
+      "note": "Instrument/registry, integer rights, approval/funding, typed receipt and wallet-free verified view. V2 copies issuer identity; MVP issuer/operator may coincide."
+    },
+    {
+      "ids": [
+        "FR-05",
+        "FR-17..19",
+        "FR-28..37",
+        "FR-43..48"
+      ],
+      "status": "implemented",
+      "roadmap": "M2.1",
+      "tests": [
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts",
+        "protocol-ui-tests/holder-flows.spec.ts"
+      ],
+      "note": "On-chain kind dispatch/maturity/locks/period/votes/atomic burn-payment and independent outcomes; token supply and browser resume covered."
+    },
+    {
+      "ids": [
+        "FR-49..50"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "scripts/lib/distribution.mjs",
+        "scripts/post-mvp.test.mjs",
+        "protocol-ui-tests/holder-flows.spec.ts"
+      ],
+      "note": "Complete finalized archive replay is authenticated by an externally pinned Ed25519 provider; deterministic content-addressed proofs survive process/browser loss. Root membership alone does not prove archive truth."
+    },
+    {
+      "ids": [
+        "FR-51..52"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "programs/recorda/src/distributor.rs",
+        "scripts/post-mvp.test.mjs",
+        "protocol-tests/post-mvp.test.mjs",
+        "protocol-ui-tests/holder-flows.spec.ts"
+      ],
+      "note": "Holder-bound proof claims, real failed CPI rollback, replay and deadline-authorized residual/dust reclaim with vault closure."
+    },
+    {
+      "ids": [
+        "FR-53..55"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "programs/recorda/src/governance.rs",
+        "src/shared/solana/governance.ts",
+        "scripts/post-mvp.test.mjs",
+        "protocol-tests/post-mvp.test.mjs",
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts"
+      ],
+      "note": "Role-threshold exact chain-stored intents, mandatory eligibility, copied terms/metadata and immutable historical receipt after approved modification. No private KYC data."
+    },
+    {
+      "ids": [
+        "FR-56"
+      ],
+      "status": "implemented",
+      "roadmap": "P2",
+      "tests": [
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts"
+      ],
+      "note": "100/300/600 at20% retires20/60/120; per-holder floor, explicit coupon, conflict barriers and atomic payment."
+    },
+    {
+      "ids": [
+        "FR-57"
+      ],
+      "status": "implemented",
+      "roadmap": "P3",
+      "tests": [
+        "programs/recorda/src/external.rs",
+        "scripts/lib/external-events.mjs",
+        "scripts/post-mvp.test.mjs",
+        "protocol-tests/post-mvp.test.mjs",
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts"
+      ],
+      "note": "Versioned canonical payload/evidence binding and stable-source deduplication; proposal cannot bypass approval. External authenticity requires source review."
+    },
+    {
+      "ids": [
+        "FR-58"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "src/shared/solana/audit-history.ts",
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts",
+        "protocol-ui-tests/holder-flows.spec.ts"
+      ],
+      "note": "Stable cursors, decimal verified export, chain-only recovery and explicit unavailable transaction evidence. RPC pruning cannot prove history absent."
+    },
+    {
+      "ids": [
+        "NFR-01..04",
+        "NFR-06..09",
+        "NFR-11",
+        "NFR-13..15"
+      ],
+      "status": "implemented",
+      "roadmap": "M2.3",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts",
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts",
+        "protocol-ui-tests/holder-flows.spec.ts",
+        "scripts/build-idl.mjs",
+        "tests/transactions.spec.ts"
+      ],
+      "note": "Controlled math/authorization/atomicity/recovery and distinct schemas; old Coupon regression preserved. Unknown historical coupon periods require attested migration, not silent inference."
+    },
+    {
+      "ids": [
+        "NFR-05"
+      ],
+      "status": "partial",
+      "roadmap": "M1.5",
+      "tests": [
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts",
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts"
+      ],
+      "note": "Account/hash/outcome/signature audit assumes trusted RPC. Pruned history is disclosed; historical ownership of later closed destinations requires retained archive."
+    },
+    {
+      "ids": [
+        "NFR-10"
+      ],
+      "status": "partial",
+      "roadmap": "M4.1",
+      "tests": [
+        "scripts/devnet.test.mjs",
+        "tests/devnet-runner.spec.ts"
+      ],
+      "note": "Reproduction instructions and historical human Coupon evidence exist; fresh human Phantom/Devnet full three-action replay remains open."
+    },
+    {
+      "ids": [
+        "NFR-12"
+      ],
+      "status": "partial",
+      "roadmap": "M4.1",
+      "tests": [
+        "scripts/audit-requirements.mjs",
+        "tests/transactions.spec.ts"
+      ],
+      "note": "Wallet owns operator keys; bounded common embedded-private-key scan includes new source. Does not constitute exhaustive Git secret-history review."
+    },
+    {
+      "ids": [
+        "NFR-16..17"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "scripts/lib/distribution.mjs",
+        "scripts/post-mvp.test.mjs",
+        "protocol-ui-tests/holder-flows.spec.ts"
+      ],
+      "note": "Pinned-provider archive provenance and fail-closed replay; public content-addressed proof archive with documented365-day retention/local restart target. Hosted availability/backup evidence required before rollout."
+    },
+    {
+      "ids": [
+        "NFR-18..19"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "scripts/benchmark-distribution.mjs",
+        "scripts/measure-protocol.mjs",
+        "docs/ARCHITECTURE.md"
+      ],
+      "note": "Offline1..10000 measurements and native4-holder compute/fee/rent workload. No100000/production capacity claim. No external engine files copied; pinned lockfiles and license inventory documented."
+    },
+    {
+      "ids": [
+        "TC-01..05",
+        "TC-15..19"
+      ],
+      "status": "implemented",
+      "roadmap": "M1.6",
+      "tests": [
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts",
+        "programs/recorda/src/lib.rs"
+      ],
+      "note": "Legacy golden and mutation/authorization/rollback/resume regression."
+    },
+    {
+      "ids": [
+        "TC-06..14",
+        "TC-20..29"
+      ],
+      "status": "implemented",
+      "roadmap": "M2.3",
+      "tests": [
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts",
+        "protocol-ui-tests/holder-flows.spec.ts",
+        "protocol-tests/coupon.test.mjs",
+        "protocol-ui-tests/coupon.spec.ts",
+        "protocol-ui-tests/audit.spec.ts"
+      ],
+      "note": "Real payment/burn/vote balances and slots, Clock/window/quorum boundaries, unsigned/replay/conflict/wrong-kind rejection, failed CPI rollback, legacy decoder and immutable typed audit."
+    },
+    {
+      "ids": [
+        "TC-30..33",
+        "TC-35..38"
+      ],
+      "status": "implemented",
+      "roadmap": "P1",
+      "tests": [
+        "scripts/post-mvp.test.mjs",
+        "protocol-tests/post-mvp.test.mjs",
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts",
+        "protocol-ui-tests/holder-flows.spec.ts",
+        "scripts/benchmark-distribution.mjs",
+        "scripts/measure-protocol.mjs"
+      ],
+      "note": "Replay/authenticity/proof storage/claims/roles/terms/source attacks and measurements are locally executable; production trust/rollout gates remain explicit."
+    },
+    {
+      "ids": [
+        "TC-34"
+      ],
+      "status": "implemented",
+      "roadmap": "P2",
+      "tests": [
+        "programs/recorda/src/engine.rs",
+        "protocol-tests/actions-v2.test.mjs",
+        "protocol-ui-tests/actions.spec.ts",
+        "protocol-ui-tests/actions-audit.spec.ts"
+      ],
+      "note": "Per-holder floor fixture, persistent locks, replay and retirement/payment rollback."
+    }
+  ]
+}

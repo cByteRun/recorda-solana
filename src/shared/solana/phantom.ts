@@ -3,7 +3,10 @@ import type { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.
 export interface PhantomProvider {
   isPhantom?: boolean;
   publicKey?: PublicKey;
-  connect(): Promise<{ publicKey: PublicKey }>;
+  on?(event: "accountChanged" | "disconnect", listener: (publicKey?: PublicKey | null) => void): void;
+  removeListener?(event: "accountChanged" | "disconnect", listener: (publicKey?: PublicKey | null) => void): void;
+  connect(options?:{onlyIfTrusted?:boolean}): Promise<{ publicKey: PublicKey }>;
+  signMessage?(message: Uint8Array, display?: "utf8" | "hex"): Promise<{ signature: Uint8Array; publicKey: PublicKey }>;
   signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction>;
 }
 

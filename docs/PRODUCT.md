@@ -1,258 +1,81 @@
-# Product context — Recorda / KASE Corporate Actions Engine
+# Recorda BondOps — product direction
 
-> This document explains the product in plain language. **`docs/TZ.md` remains the source of truth.**
+This document supplements [TZ](TZ.md) and [REQUIREMENTS](REQUIREMENTS.md). It defines product value and evolution; it does not amend protocol IDs or close acceptance gates. BO-01–10 now specify the operational layer; current source delivery and live limits are documented in BONDOPS-OPERATIONS and ROADMAP. [ROADMAP](ROADMAP.md) owns delivery status.
 
-## 1. The subject area in one example
+## Central value
 
-A company issues a two-year bond:
+**A working system for servicing tokenized bonds:** issuers, paying agents and operations specialists control coupon payments, redemptions, errors and confirmations from one workspace.
 
-- face value: `$1,000`;
-- annual coupon: `10%`;
-- coupon frequency: twice per year.
+The recurring job is to identify a financial obligation, reconcile its execution against fixed rights, investigate exceptions and perform an authorized corrective action with evidence. Record-date rights explain who is owed; settlement evidence explains whether the obligation was fulfilled. This recurring operational work is a hypothesis for which a financial organization may pay, to be validated with real users.
 
-Investor A owns 10 bonds on the coupon record date.
+Investor signing and Auditor verification support the operator's workflow. Issuance and the holder registry establish the instrument being serviced; Coupon and Redemption are the core servicing tasks. Voting remains the required third KASE scenario.
 
-```text
-10 × $1,000 × 10% ÷ 2 = $500
-```
+### Operator control in the current overview
 
-The difficult part is not minting a token that represents the bond. The difficult part is servicing that bond correctly for its entire lifecycle.
+The dashboard turns the shared lifecycle into a next-step queue: fix rights → calculate → approve → fund when required → execute/vote → finalize the receipt → inspect evidence. Filters group actions by the work still required, with uncertain results prioritized for reconciliation. Each action exposes its own cutoff and sourced deadline.
 
-After issuance, the system must repeatedly answer:
+Voting has a quorum/tally view without payment funding. Redemption shows principal and final coupon separately after verified calculation, requires holder authorization and tracks retirement alongside payment. Expandable asset details show base instrument terms, authority and outstanding/retired supply; each action retains its own fixed terms. Unknown/pending payments must be reconciled before retry, and execution without a verified final receipt remains incomplete in the overview.
 
-1. **Who** was eligible?
-2. **When** was eligibility measured?
-3. **What right** did that ownership create?
-4. **How much** was due and by which formula?
-5. **Who approved** execution?
-6. **What was actually executed?**
-7. **What happened to the instrument?**
-8. **Can an investor/auditor prove the result later?**
+These controls support the recurring servicing job with existing authorized workflows. [Dashboard contract](ONCHAIN-DASHBOARD.md) describes the read model; [asset-tokenization research](ASSET-TOKENIZATION-RESEARCH.md) maps this presentation to TZ and the supplied Chainlink reference.
 
-That is the corporate-actions domain.
+## Proposed demonstration: missing coupon payment
 
-## 2. Why record date exists
+**Illustrative product scenario, not real Devnet payment data.** The operational frontend/backend now exposes this workflow; live acceptance is separate. The original product example below uses 35 units. The implemented demo is aligned to TZ: 17 units, rights 500/250/100/0, illustrative confirmations 350 and unknown 500 Mock USD. Dollar amounts describe obligations, not actual fiat settlement.
 
-Ownership can change every day.
+| Investor | Coupon entitlement | Confirmed execution | Unsettled |
+|---|---:|---:|---:|
+| A | $500 | $0 | $500 |
+| B | $1,000 | $1,000 | $0 |
+| C | $250 | $250 | $0 |
+| Total | $1,750 | $1,250 | $500 |
 
-```text
-Record date:
-A = 10 bonds
-B = 20 bonds
-C = 5 bonds
+The proposed action view reads **CORPORATE ACTION / CA-001 · Coupon Settlement · 1 exception** with **Expected $1,750 · Confirmed $1,250 · Unsettled $500**. Its exception row is **Investor A — payment missing**, **Amount due $500**, **Action required: Review settlement**. The right exists, but matching execution confirmation is absent. Missing confirmation alone does not prove a payment never occurred.
 
-After A sells 4 to B:
-A = 6
-B = 24
-C = 5
-```
+Operator flow:
 
-The coupon for the completed record date must still use `10 / 20 / 5`.
+1. Open the exception from the servicing workspace.
+2. Inspect the holder's fixed right, cutoff, calculation, amount due, approval/funding state and available execution evidence.
+3. Reconcile against the authoritative settlement source. Distinguish an unsubmitted payment, pending/unknown confirmation, a failed transaction and a confirmed payment before deciding what to do.
+4. Initiate only a permitted action under the existing lifecycle and signer rules. For an uncertain broadcast, reconcile its retained signature/state before any new payment; prevent duplicates.
+5. Refresh authoritative evidence and close the exception only after matching execution is confirmed. Keep the decision and evidence inspectable.
 
-Therefore:
+For on-chain settlement, confirm with the transaction and corresponding program/token account state under the documented RPC trust and finality assumptions. Current wallet balances alone cannot establish historical payment. For bank transfers, a separate reliable bank/paying-agent confirmation source and reconciliation integration are required. An external-event proposal is not settlement confirmation. Unknown/unavailable evidence must remain visible, rather than being treated as zero or success.
 
-```text
-current balance ≠ entitlement balance
-```
+The operational metric is **expected entitlement minus matched confirmed execution**, in the same currency and units, with unresolved evidence shown separately. Proposed acceptance: the fixture shows one $500 exception, drill-down explains A's right and confirmation gap, an unauthorized/duplicate correction is blocked, an uncertain result remains unresolved, and valid confirmation clears the exception without changing the historical right. The current local service/API/browser tests cover these criteria with fixtures/injected readers. Real-wallet Devnet acceptance and bank confirmations remain open; see [operational evidence](BONDOPS-OPERATIONS.md#verification).
 
-This is the simplest demonstration of why a plain token balance is not enough to operate a financial instrument.
+## Interface progression: simple to complex
 
-## 3. What exists today vs what the challenge asks
+Use a **financial operations workspace**: tables, clear amounts, status filters, an action detail page and evidence drill-down. Design around the servicing job; wallet connection and Explorer links belong where signing or evidence requires them.
 
-Traditional securities infrastructure already has registries, settlement processes and corporate actions. The KASE challenge is not “replace a broken spreadsheet”.
+| Stage | Layout and flow | Delivery boundary |
+|---|---|---|
+| 1. One action | Instrument setup → action detail; Expected / Confirmed / Unsettled summary, holder reconciliation table, exception detail and one permitted next action | Locally implemented reconciliation/case views; live evidence gate remains open |
+| 2. Servicing workspace | Instruments / Actions / Exceptions / Audit navigation; search, due-date filters and cross-action attention queue → action → holder → evidence | Locally implemented portfolio/calendar/queues and source adapter; live indexing acceptance remains open |
+| 3. Team operations | Calendar, assignments, notifications, approval queue and retained resolution history | Rust PDA persistence, transaction-signer roles/scopes and on-chain inbox implemented; SQLite is only a filled Demo Workspace. Keeper/external delivery/Devnet acceptance remain open |
+| 4. Infrastructure | API/SDK, settlement connectors and embedded servicing views | Long-term integration product; requires reliability, security, support and demand evidence |
 
-The challenge asks:
+Recommended first layout: a compact instrument header; three amount cards; a prominent exception row; a holder table; a detail panel containing right, formula, evidence and permitted action. Show principal and final coupon separately for redemption, together with required holder signature and retired supply. Voting uses its own quorum/tally view rather than payment metrics.
 
-> If a financial instrument becomes tokenized and its ownership lives on Solana, how do we make its post-issuance lifecycle operational on that same programmable infrastructure?
+End-to-end servicing flow: **create/select instrument → register/distribute positions → schedule coupon/voting/redemption → fix record-date rights → calculate → approve → fund when required → execute/sign → reconcile confirmations → investigate exceptions → verify/export outcome**. The exception view may expose incomplete progress; it must not bypass finalization conditions.
 
-Issuance is only day zero.
+## Recorda Infrastructure — long-term goal
 
-A tokenized bond still needs:
+API and SDK for automating corporate actions on Solana, for exchanges, tokenization platforms, custodians and financial developers. The promise is to connect verified bond-servicing mechanisms to existing systems instead of rebuilding them. Existing typed clients and CLI/library helpers are a foundation, not a supported production API/SDK offering.
 
-- record dates;
-- coupon payments;
-- redemption;
-- voting;
-- changes of terms / buybacks / other actions;
-- a reliable audit trail.
+Advance after validating recurring BondOps usage, demand for integrations and willingness to pay, and demonstrating reliable recovery, settlement-source trust, supported capacity and production security. Reuse and integration potential are hypotheses, not established market evidence.
 
-## 4. Who needs Recorda
+## Real-world asset assurance and scale
 
-### Primary B2B users
+The prototype's instrument, registry, fixed rights and receipts establish the on-chain servicing core. A real-world deployment also needs a verifiable relationship between the tokenized instrument and the issuer's actual obligations/assets, eligible participants and authoritative payment records. These capabilities extend the product beyond the current mock-money prototype; they require new integration requirements and separate acceptance.
 
-- exchange / corporate-actions operator;
-- issuer / paying agent;
-- depository or servicing infrastructure;
-- custodian / broker integration layer;
-- auditor.
+| Area | Intended operator workflow | Foundation and remaining boundary |
+|---|---|---|
+| Participant eligibility / KYC | Review a provider's participant decision, apply expiry/revocation and enforce the policy for new transfers without rewriting historical rights | FR-54 provides versioned eligibility checks. A real KYC/AML provider, operational review and acceptance remain open. Private documents and PII stay off-chain. |
+| Asset documents / provenance | Associate issuer and asset identifiers, issuance terms and relevant ownership/custody or collateral documents with the instrument; record reviewer, source, version and validity | FR-55 provides versioned URI/hash commitments and immutable action terms; FR-57 provides external-event provenance. Neither authenticates the underlying document or proves legal rights/backing on its own. External source verification, controlled document access and issuer/custodian review remain to be defined. |
+| External settlement | Reconcile authenticated bank/paying-agent evidence to the same fixed obligation and retain conflicting/unknown results for investigation | BO-07 is deferred until provider selection. Confirmation must bind action, holder, asset and amount and resist replay; an external-event proposal is not proof of payment. |
+| Larger servicing portfolios | Discover obligations and exceptions reliably, keep proofs available, recover partial execution and measure supported holder/portfolio capacity | Existing historical distribution/claims capabilities and offline benchmarks are a foundation. Native acceptance covers four holders per instrument; 10,000-holder offline calculations are not production throughput. Hosted indexing, retention/recovery, rent/fees and end-to-end load acceptance remain open. |
+| Partner integration | Embed rights, authorized actions and inspectable outcomes into exchange, custodian or tokenization-platform systems | Existing clients/helpers are not a supported production API/SDK. Define service ownership, authentication, delivery/recovery contracts and support commitments after demand and reliability validation. |
 
-### Beneficiary
+Reserve or valuation feeds should be selected for the specific asset model. An action vault funds a particular payment; it is not evidence that the entire bond is collateralized. Document, identity and settlement sources must remain distinguishable from verified Solana state in the operator interface.
 
-The holder / investor needs a clear explanation:
-
-```text
-I held 10 units on the record date
-× face value 1,000
-× annual coupon 10%
-÷ 2 payments per year
-= 500 KUSD entitlement
-```
-
-and should be able to verify the status and transaction proof.
-
-## 5. The business problem
-
-Tokenization alone solves representation and transfer of ownership. It does not automatically create the operational servicing layer that converts historical ownership into enforceable rights.
-
-Without that layer, a tokenized security still requires separate logic for:
-
-- historical holder state;
-- eligibility;
-- entitlement calculation;
-- approval;
-- settlement coordination;
-- redemption state changes;
-- voting rights;
-- audit / proof.
-
-> **A tokenized financial instrument needs a deterministic lifecycle mechanism that binds ownership at a record date to a specific holder right and to a provable execution outcome.**
-
-## 6. The solution
-
-Recorda is a **lifecycle servicing layer for tokenized securities**.
-
-```text
-Instrument
-→ Record Date
-→ Immutable Snapshot
-→ Eligible Holders
-→ Entitlements
-→ Explicit Approval
-→ Settlement / Redemption / Voting
-→ Instrument State Change
-→ ActionReceipt
-```
-
-The system creates an auditable causal chain:
-
-> **who owned → on what date → what right arose → by which formula → who approved → what executed → what changed → where is the proof**
-
-## 7. Payroll analogy
-
-```text
-PAYROLL
-employee state
-→ cutoff
-→ eligible employees
-→ salary calculation
-→ approval
-→ payment
-→ payslip / audit
-
-RECORDA
-holder state
-→ record date
-→ eligible holders
-→ entitlement calculation
-→ approval
-→ settlement
-→ ActionReceipt / audit
-```
-
-## 8. Economic / operational value
-
-The MVP does not claim an unproven percentage of savings.
-
-It demonstrates mechanisms from which value can arise:
-
-- less reconciliation between independent ownership/calculation/execution datasets;
-- deterministic financial calculations;
-- fewer manual opportunities for entitlement error;
-- explicit execution authority;
-- faster audit because snapshot, formula, execution and result are linked;
-- reusable infrastructure for multiple instruments and action types;
-- programmable integration point for future KASE/CSD/issuer/payment systems.
-
-## 9. What is commodity and what is our edge
-
-### Reusable infrastructure
-
-- Token-2022 mint/accounts/transfers;
-- Token ACL / holder permissioning patterns;
-- Merkle snapshot/distributor patterns for future scale;
-- Squads / multisig patterns for production authorization;
-- governance patterns for voting.
-
-### Recorda-owned domain layer
-
-- record-date semantics;
-- snapshot immutability;
-- corporate-action state machine;
-- fixed-point coupon/principal calculations;
-- per-holder entitlement state;
-- no double settlement / redemption;
-- redemption lifecycle and token retirement;
-- snapshot-based voting power;
-- holder corporate-action history;
-- ActionReceipt and verification UX.
-
-This is why Recorda is not “one more RWA minting app”.
-
-## 10. What the current prototype proved
-
-```text
-Real Token-2022 bond
-A/B/C = 10/20/5
-        ↓
-Record-date snapshot = 10/20/5
-        ↓
-Real A → B transfer of 4 bonds
-        ↓
-Current = 6/24/5
-        ↓
-Entitlement still calculated from snapshot
-A = 500
-B = 1000
-C = 250
-        ↓
-Operator approval
-        ↓
-Real KUSD-DEV settlement
-500/1000/250
-        ↓
-Receipt
-        ↓
-Black-box E2E PASS
-```
-
-This proves the product hypothesis.
-
-It does **not** yet prove protocol enforcement because the browser still performs the corporate-action calculation/state orchestration and writes signed Memo attestations.
-
-## 11. The next product boundary
-
-> **Move Corporate Action Truth On-Chain.**
-
-```text
-Browser/React
-   ↓ request
-Recorda Anchor Program
-   ├── validates state
-   ├── stores record-date snapshot
-   ├── calculates entitlement
-   ├── enforces authorization
-   ├── prevents double execution
-   ├── performs Token-2022 CPI settlement/redemption
-   └── finalizes ActionReceipt
-```
-
-The browser becomes presentation + transaction initiation rather than the source of financial truth.
-
-## 12. Scope filter
-
-Before adding a feature ask:
-
-> **Does this improve Record Date → Right → Controlled Execution → Verifiable Proof or directly satisfy a required KASE scenario?**
-
-If not, it is probably not MVP.
-
+The [research matrix](ASSET-TOKENIZATION-RESEARCH.md) records reference applicability and source coverage. [Roadmap](ROADMAP.md#future-scope-requiring-new-requirements) owns future delivery; [Architecture operations](ARCHITECTURE.md#operations-and-supported-scope) owns current trust and capacity boundaries. These product directions do not amend TZ or close human Devnet/submission gates.

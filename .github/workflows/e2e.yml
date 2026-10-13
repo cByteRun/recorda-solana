@@ -1,4 +1,4 @@
-name: React Golden E2E
+name: Recorda requirements and full protocol E2E
 
 on:
   pull_request:
@@ -24,7 +24,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run audit:requirements
       - run: npm run build
+      - run: npm run test:post-mvp
+      - run: npm run benchmark:distribution
+      - run: npm run test:devnet:setup
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e:golden
       - uses: actions/upload-artifact@v4
@@ -33,5 +37,42 @@ jobs:
           name: playwright-report
           path: |
             playwright-report/
+            test-results/
+            target/security-audit/
+          retention-days: 7
+
+  action-protocol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@1.90.0
+      - uses: Swatinem/rust-cache@v2
+      - run: npm ci
+      - name: Install pinned Solana SBF toolchain and validator
+        run: |
+          curl -sSfL https://release.anza.xyz/v2.3.0/install -o /tmp/solana-install.sh
+          sh /tmp/solana-install.sh --no-modify-path v2.3.0
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+      - run: npm run protocol:test:rust
+      - run: npm run protocol:build
+      - run: npm run protocol:idl:check
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run protocol:test:ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: action-protocol-evidence
+          path: |
+            target/protocol-evidence/
+            target/benchmarks/
+            target/security-audit/
+            playwright-report/next/
+            playwright-report/protocol/
             test-results/
           retention-days: 7

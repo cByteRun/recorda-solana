@@ -1,372 +1,135 @@
-# ROADMAP — Recorda
+# Roadmap
 
-**Source of truth:** [Technical specification](TZ.md), particularly §§2–5: linking record-date ownership to holder rights, execution and proof.
+### Workspace separation
 
-> **“Tokenization tells you who owns the asset. We determine what that ownership entitled them to on the record date, execute the corporate action and prove what happened next.”**
+- [x] Explicit Welcome → Demo / Localnet / Devnet selection, fixed RPC binding, scoped caches and environment labels.
+- [x] Public read-only Demo fixture; existing SQLite demo editing remains local.
+- [ ] Optional local sandbox controls (fund/reset/scenario replay) in the product UI; existing CLI and isolated harness remain available.
+- [ ] Separately deploy/upgrade the Rust program in public Devnet and verify with the chosen wallet. Local execution does not satisfy this deployment item.
 
-**Central axis: Record Date → Right → Controlled Execution → Verifiable Proof.**
 
-Every feature must advance one of these stages or ensure its correctness. UC/FR/NFR/TC below provide concise traceability to the specification and do not replace its requirements. MVP includes Phases 1–4; Post-MVP does not replace required scenarios.
 
-## Current focus and progress
+Source scope **FR-01–58 is implemented**. The current focus is fresh feature/attack evidence, human Phantom three-action Devnet acceptance and release. [TZ](TZ.md) defines the product; [REQUIREMENTS](REQUIREMENTS.md) owns UC/FR/NFR/TC wording and checklists; this file owns delivery and open work.
 
-Branch: **feat/phase-1-react**. Active phase: **Phase 1**, milestone **R1 — React coupon bridge**. Next protocol milestone: **M1.1**, followed by M1.2–M1.6.
+## BondOps operational product evolution
 
-- [x] React/npm migration, UI/domain Playwright and runtime/CI fixes.
-- [x] Historical code verification at commit a09cd7a: build + 11/11 Playwright, [PR CI](https://github.com/cByteRun/recorda-solana/actions/runs/37360917971).
-- [x] README as product presentation; FEATURES and UC/FR/NFR in the roadmap.
-- [ ] React Devnet acceptance with manual Phantom signing and recorded transactions/deltas.
-- [ ] Latest-version preview: Vercel reported build-rate-limit.
-- [ ] Anchor Coupon Core M1.1–M1.6.
-- [ ] Full MVP: Coupon + Redemption + Voting, protocol security and proof.
+[PRODUCT](PRODUCT.md) defines the recurring operator job; BO-01–07 in [REQUIREMENTS](REQUIREMENTS.md) specify this increment. Source delivery and live acceptance are separate. [Operational contract and setup](BONDOPS-OPERATIONS.md).
 
-**Checkbox rule:** [x] means completion only within the stated scope and with evidence. An implemented bridge does not satisfy on-chain requirements. Documentation changes do not imply that a new code verification has passed.
+- [x] Define authoritative finality, integer/asset reconciliation, uncertainty and proof-gated case closure.
+- [x] Build Expected / Confirmed / Unsettled / Unknown views with holder drill-down, retained references and permitted recovery links.
+- [x] Add portfolio discovery, coupon deadline calendar, overdue queue, assignment, retained resolution history, team scope enforcement and in-app reminders/escalations.
+- [x] Add action next-step filters, separate Voting/Redemption control, expandable base instrument terms and outstanding/retired supply, and uncertainty-first reconciliation links. [Dashboard contract](ONCHAIN-DASHBOARD.md) and [asset-tokenization coverage](ASSET-TOKENIZATION-RESEARCH.md); 2026-10-12 local UI verification: 19 browser tests and production build passed, without closing live Devnet acceptance.
+- [ ] Accept the complete live operator flow with a configured Devnet wallet/portfolio and a reliable RPC; public RPC discovery returned 429 on 2026-10-12.
+- [ ] Validate recurring servicing usage, timeliness rules and willingness to pay with issuers/paying agents/operators.
+- [ ] Add bank/paying-agent confirmation after provider selection; add external email/messenger delivery and organization SSO separately.
+- [ ] Validate persistent production hosting, worker scheduling, backup/retention and measured portfolio indexing capacity before production release.
 
-## Trace requirements to outcomes
+## Verification and gaps
 
-**Specification axis → UC/FR/NFR → milestone FEATURES → golden input/expected → implementation → E2E → actual output/proof.**
+Two entrypoints: `test:e2e:actions:devnet` for human MVP demonstration and `test:audit` for requirement/feature/attack coverage. Preparation: [README](../README.md). Presentation: [DEVNET-DEMO](DEVNET-DEMO.md). Contracts/operations: [ARCHITECTURE](ARCHITECTURE.md). Attack matrix: [SECURITY-AUDIT](SECURITY-AUDIT.md). Exact requirement→evidence paths: [audit-coverage.json](audit-coverage.json).
 
-Every milestone needs features, an expected business outcome, actual-versus-expected verification and an accurate IMPLEMENTED / SIMULATED boundary.
-
-| Verification layer | What it proves | What it does not cover |
+| Requirement / feature | Implementation | Executable evidence |
 | --- | --- | --- |
-| Golden model + domain Playwright | Formula, snapshot/current separation, amounts and output comparison | Actual execution or protocol enforcement |
-| UI Playwright | Product axis, holder cards, gating and browser errors | Phantom signing and payment |
-| Manual React Devnet acceptance | RPC state, signatures and actual bridge payout deltas | Custom-program immutability and idempotency |
-| Anchor integration E2E (planned) | Actual PDA/token state, authority, transitions and repeated calls | UX clarity without interface verification |
+| FR-01–16,20–27,38–42; UC-CP-01 | Legacy Coupon plus typed Coupon, frozen controlled registry, immutable snapshot, approval/funding/payment | coupon.test.mjs, actions-v2.test.mjs, coupon.spec.ts, actions.spec.ts |
+| FR-17–18,28–32,43–46; UC-BR-01 | Clock maturity, principal/separate final coupon, persistent lock, holder-signed atomic burn/payment, period deduplication | engine.rs unit tests, actions-v2.test.mjs, holder-flows.spec.ts |
+| FR-19,33–37,47–48; UC-VOTE-01 | Immutable proposal/window/quorum, YES/NO/ABSTAIN, unique holder receipts, no payment vault, on-chain tally and typed audit | engine.rs unit tests, actions-v2.test.mjs, actions.spec.ts, actions-audit.spec.ts |
+| FR-49–52; UC-MD-01 | Authenticated finalized archive replay, deterministic retained manifest/proofs, approved/funded claims and expiry/reclaim | post-mvp.test.mjs (offline/native), holder-flows.spec.ts, distributor.rs |
+| FR-53–55 | Separate multisig roles/exact intents, eligibility, immutable copied metadata/terms and approved modification | post-mvp.test.mjs native, governance.ts, actions-audit.spec.ts |
+| FR-56; UC-PR-01 | Floor allocation/atomic partial retirement, reduced supply and overlap prevention | actions-v2.test.mjs and engine.rs |
+| FR-57; UC-EV-01 | Canonical durable event deduplication, evidence binding, proposal/approval boundary | post-mvp.test.mjs offline and actions-v2.test.mjs native |
+| FR-58; NFR-14 | Stable account/signature cursors, loss-of-storage recovery, verified decimal export, pruning disclosure and legacy decoder | actions-audit.spec.ts, actions.spec.ts, coupon.spec.ts |
+| TZ React/Next runtime | Shared FSD screens in Vite and production Next App Router | build, build:next, next-ui-tests/runtime.spec.ts |
+| NFR-16–19 | Explicit pinned archive trust, proof retention/recovery, measured envelope and dependency/license inventory | ARCHITECTURE.md, post-mvp.test.mjs, benchmark:distribution, measure-protocol.mjs |
+
+The current stable-source full audit on 2026-10-11 passed ten commands and 216 tests; `target/security-audit/run.json` records unchanged input hashes. Traceability covers 121/121 IDs, with 118 implemented and three partial NFRs: NFR-05 (RPC/history trust), NFR-10 (human replay) and NFR-12 (bounded secret scan).
+
+Current Devnet Coupon is finalized with verified payment deltas 50000/25000/10000. Voting was reconciled to finalized with actual tally 10/0/0 through agent-assisted real Phantom; the runner remains failed after holder-B timeout. Devnet Redemption was not started because public RPC 429 blocked further execution. A separate live Chromium/real Phantom run on a Devnet-cloned local validator completed Redemption on a fresh instrument: paid 1785000, supply 17→7→2→0, all rights processed, empty vault, finalized receipt and wallet-free verified audit (`target/live-redemption-evidence/result.json`). This scoped local evidence does not close human three-action Devnet acceptance. Deployed SBF identity matches the audited local binary (`target/devnet-debug/deployment.json`). Remote CI, hosted preview and video remain open; details are in [CHANGELOG](CHANGELOG.md).
+
+## Reference-driven delivery order
+
+The dependency order is **instrument/registry → typed action contracts → Coupon/Redemption/Voting → role journeys/audit → acceptance**. Post-MVP extends this through committed distributions, governance/eligibility/terms, partial retirement and external proposals. Same-instrument demo order is Coupon → Voting → Full Redemption because full redemption ends its active supply.
+
+[Reference scope and provenance](ARCHITECTURE.md#reference-assessment-and-adaptation) describes conceptual references; no external engine code was incorporated. Detailed rules live in the requirements/contracts rather than being repeated as another checklist here.
+
+## MVP source delivery
+
+| Milestone | Status | Delivered capability |
+|---|---|---|
+| M1.0 | [x] | Separately labelled Browser/Memo reference |
+| M1.1 | [x] | Instrument, Token-2022 issuance, registry and controlled transfers |
+| M1.2 | [x] | Record-date barrier, complete immutable snapshot and Scheduled cancellation |
+| M1.3 | [x] | Integer coupon rights and aggregate obligation |
+| M1.4 | [x] | Approval, funded settlement, replay prevention and atomic rollback |
+| M1.5 | [x] | Receipt, chain recovery and independent Coupon audit |
+| M1.6 | [x] | Coupon acceptance/attack fixtures and historical human Devnet evidence |
+| M1.7 | [x] | Operator/Investor/Auditor Coupon journeys, identity and responsive UI |
+| M2.0 | [x] | Versioned contracts/accounts and legacy compatibility |
+| M2.1 | [x] | Clock maturity, holder-signed atomic burn/payment, separate final coupon and supply reconciliation |
+| M2.2 | [x] | Fixed voting power, proposal hash/window/quorum, unique votes and tally |
+| M2.3 | [x] | Shared typed engine, conflict/period isolation and action-specific receipts |
+| M3.1 | [x] | Chain-backed v2 client/recovery and shared Next/Vite screens |
+| M3.2 | [x] | Action-specific holder/operator/auditor journeys and verified export |
+| M4.1 | [x] | Local TC-01–29 and authorization/precision/immutability/recovery coverage; live gate below remains open |
+| M4.2 | [x] | Local same-instrument three-action fixture and submission documentation; release gates below remain open |
+
+## Post-MVP source delivery
+
+| Milestone | Status | Implemented scope / boundary |
+|---|---|---|
+| P1 | [x] | Signed finalized-history replay, deterministic manifest/proofs, approved claims/reclaim, threshold roles, eligibility/terms, history/export and measured envelope (FR-49–55,58) |
+| P2 | [x] | Per-holder floor partial retirement and atomic settlement; 100/300/600 at 20% retires 20/60/120 and leaves 800 (FR-56) |
+| P3 | [x] | Canonical source/event deduplication and provenance-bound proposals; feeds cannot execute actions (FR-57) |
+
+These are implemented CLI/library/program capabilities, not claims of hosted indexer availability, real KYC integration or production-scale throughput. Proof retention, provider trust and supported four-holder native envelope are specified in [Architecture operations](ARCHITECTURE.md#operations-and-supported-scope).
+
+## Remaining acceptance and release work
+
+- [x] Run the full current feature/attack audit and retain matching source/IDL/SBF hashes.
+- [ ] Complete human Phantom Coupon → Voting → Full Redemption on Devnet; retain signatures, payment deltas, receipts and zero final supply.
+- [x] Independently verify deployed program identity against the intended local binary.
+- [ ] Finish the live [hackathon DoD](REQUIREMENTS.md#24-definition-of-done--hackathon-mvp), including clean role journeys and no known P0/P1 issues.
+- [ ] Verify remote CI and publish a current preview with configured deployment credentials.
+- [ ] Record the full E2E demo video.
+- [ ] Close the [track submission gates](REQUIREMENTS.md#submission-gates): main-hackathon registration confirmation, judge-accessible repository and attached technical overview with simulation disclosure.
+
+## Future scope requiring new requirements
+
+- [ ] Dividends, tender/buyback and other new action UCs/FRs/fixtures.
+- [ ] Real KYC/AML, custody/recovery, fiat rails and depository integrations.
+- [ ] External asset documentation and assurance: issuer/asset identifiers, versioned issuance terms, relevant ownership/custody or collateral evidence, reviewer/source verification and controlled off-chain document access. Existing URI/hash and event commitments do not establish legal rights or backing.
+- [ ] Measure larger holder/portfolio capacity and end-to-end indexing, proof retrieval, partial execution and recovery before expanding supported scale; offline 10,000-holder benchmarks do not establish production throughput.
+- [ ] Production security, provider operations, capacity and legal review.
+
+These tasks are not silently included in the implemented FR-01–58 checklist and are not closed by the MVP demo.
+
+Product purpose and integration boundaries: [RWA assurance and scale](PRODUCT.md#real-world-asset-assurance-and-scale). Reference applicability and current coverage: [asset-tokenization research](ASSET-TOKENIZATION-RESEARCH.md). Supported native/offline capacity and document/PII handling: [Architecture operations](ARCHITECTURE.md#operations-and-supported-scope).
+
+## Product and presentation experience
+
+The [product experience](PRODUCT-EXPERIENCE.md) makes the existing business behavior visible; it does not change track scope or close the human Devnet gate.
+
+- [x] Welcome at `/` with a clear promise, Operator audience, EN/RU and Get started.
+- [x] Separate background orbital motion and foreground interactive record-date story, pause and reduced-motion support.
+- [x] Instrument setup → contextual Coupon → Voting → Redemption journey and direct wallet-free Auditor links.
+- [x] Readable Mock USD and percentage inputs; raw units and commitments in technical disclosures.
+- [x] Investor card comparing current and record-date positions, entitlement and formula; finalized-action result and onward navigation.
+- [x] Desktop/mobile welcome and working-route checks. Local chain/browser checks remain scoped evidence; historical full-audit hashes above do not certify this UI revision.
+
+## BondOps program backend and Demo Workspace (2026-10-12)
+
+- [x] **BO-08:** Move live roles, deadlines, cases, references, append-only decisions and inbox/rules to Rust PDA accounts; wallet-signed writes and on-chain permission/proof checks. No live SQLite reads/writes and no live workspace API calls.
+- [x] **BO-09:** Separate workspace and RPC selections; Devnet / local validator applied across operational screens and explorer links; keep selected source on navigation/reload.
+- [x] **BO-10:** Filled SQLite Demo Workspace with TZ's 17 units / 850 Mock USD, post-cutoff transfer, approval/funding, evidence-state examples, assigned investigation, calendar and inbox; conditional bottom-left workspace card.
+- [x] **BO-01–03:** Calendar, source-derived reconciliation, formula/cutoff/approval/funding/evidence panel, stable case assignment/history and proof-gated closure through the Rust program.
+- [x] **BO-04–05:** Canonical per-instrument membership/revocation and sequenced immutable audit PDAs; public proof reads and provenance-labelled exports. Financial execution permissions remain in the existing action engine/governance.
+- [x] **BO-06 source:** Rust rules/inbox, Clock-validated signed notice creation, deduplication and recipient acknowledgement. Demo Workspace has a separate illustrative minute worker.
+- [x] Local fixture runner loads the current program, seeds real example transactions and keeps an isolated validator available for the UI.
+- [ ] **BO-01–06 Devnet acceptance:** Deploy/upgrade the new SBF binary on public Devnet, then verify with actual Phantom and an available RPC. Prior public discovery hit 429; no public deployment/live PASS is claimed.
+- [ ] **BO-03 recovery:** Define an authenticated on-chain failed-reference release/replacement mechanism; unresolved reference replacement currently remains conservatively blocked.
+- [ ] **BO-05 archival/scale:** Retention, recovery, RPC history availability, rent/fees and portfolio-size acceptance. Public chain metadata/notes are bounded and publicly readable.
+- [ ] **BO-06 automation/external delivery:** Keeper scheduling/signer operations and email/messenger delivery/retries; signed Check deadlines works now.
+- [ ] **BO-07 bank connector:** Provider selection is deferred by user; authenticated callbacks, exact obligation binding and replay/conflict acceptance follow provider selection.
+
+Current evidence is scoped to source builds, real local-validator transactions, the browser-to-program path and the illustrative Demo Workspace. Commands and limitations: [BONDOPS-OPERATIONS](BONDOPS-OPERATIONS.md#verification). Historical full-audit counts above do not certify this revision or close existing human Devnet/Phantom gates.
 
-**Datasets:** `golden/coupon-tz-section-22.json` implements TZ §22 A/B/C/D = 10/5/2/0, current = 6/9/2/0, coupons = 500/250/100/0 and total 850. R1 deployment and the offline UI use this dataset. `golden/coupon-happy-path.json` retains historical 10/20/5 regression expectations. Neither fixture is evidence of program enforcement.
-
-## Phase 0 — business-flow evidence in the reference prototype
-
-### M0.1 — test instrument and holders
-
-**Outcome:** the operator sees real positions from which rights later arise.
-**Axis:** input to Record Date. **UC:** preparation for UC-CP-01, UC-BR-01, UC-VOTE-01.
-**FR:** 01–04,09,40 — instrument, parameters, issuance, allocation, balance and transactions.
-**NFR:** 05,10,12 — verifiability, reproducibility and no hardcoded operator secret.
-
-**FEATURES**
-
-- [x] Reference Token-2022 KZB26, supply 35 and A/B/C = 10/20/5.
-- [x] Disposable holder identities and token accounts.
-- [x] Phantom operator and links to real Devnet transactions.
-
-**Verification / exit:** historical reference evidence in golden; mint ownership, supply and holder balances read through RPC. This is not a completed protocol registry.
-
-### M0.2 — coupon reference flow
-
-**Outcome:** coupon entitlement remains tied to the record-date position after a bond transfer.
-**Axis:** all four stages in the Browser/Memo bridge. **UC:** UC-CP-01.
-**FR:** 10,12,14–16,22–25,27,38–41 — snapshot, entitlement, approval, settlement, proof.
-**NFR:** 01,05,09,10 — repeatability, audit and a clear demo; protocol guarantees remain open.
-
-**FEATURES**
-
-- [x] Reference snapshot 10/20/5 and post-record transfer A → B: 4.
-- [x] Current ownership 6/24/5 with coupon 500/1000/250.
-- [x] Phantom approval and reference KUSD-DEV settlement.
-- [x] Memo receipt and reference verifier with RPC outcome checks.
-
-**Verification / exit:** golden/reference evidence describes a historical PASS. FR-13,20,26 and NFR-02,03,06,11 are not satisfied by the Memo/browser implementation.
-
-## Phase 1 — MVP: React bridge and protocol Coupon Core
-
-### R1 — React coupon bridge and reproducible verification
-
-**Outcome:** the same domain flow is available in a maintainable client and automatically verified within supported boundaries.
-**Axis:** presents Record Date → Right → Controlled Execution → Verifiable Proof.
-**UC:** UC-CP-01; entitlement explanation and outcome verification for specification §6 roles.
-**FR:** client scope of 09,12,14–16,20,22–27,40–41; protocol enforcement remains pending.
-**NFR:** client coverage of 01–04,08–10,12; NFR-05/06/07/11 require real-chain evidence and the future protocol core.
-
-**FEATURES**
-
-- [x] React + TypeScript + Vite/npm, Tailwind v4, local shadcn-style UI.
-- [x] FSD-style structure and ported Phantom/Token-2022 orchestration.
-- [x] Holder cards, coupon pipeline, formula, statuses and transaction links.
-- [x] Input-derived TZ §22 offline oracle, zero-balance D and full expected-output comparison; historical golden preserved.
-- [x] Checked integer minor-unit coupon products/totals, rounding and overflow rejection in the client (FR-20 / NFR-02 client scope).
-- [x] Full browser coupon lifecycle with controlled Phantom/RPC, decoded transfers, expected payouts, receipts and reload.
-- [x] Negative client flows: snapshot RPC failure/wrong owner, rejected approval, insufficient funding, unavailable balances and corrupted cached amounts.
-- [x] Persist broadcast settlement signature before confirmation; block duplicate submission across reload.
-- [x] Playwright: snapshot/current invariant, coupon/total, zero, corrupted output, UI/gating/runtime errors.
-- [x] npm lockfile, npm ci, CI build/tests and reports.
-- [x] Signed-Memo compute budget, pre-sign RPC simulation, account checks and transaction-adapter regression tests.
-- [x] Snapshot reads fail closed instead of attesting RPC-error zero fallbacks.
-- [x] PR-only CI with stale-run cancellation; merge-only Vercel CLI deployment workflow and disabled Git auto-deployments.
-- [ ] Configure VERCEL_TOKEN/VERCEL_ORG_ID/VERCEL_PROJECT_ID and verify the first merge deployment.
-- [x] Restored-session wallet gating and local recorded-settlement guard.
-- [x] README, ARCHITECTURE and implementation-boundary audit.
-- [ ] Manual React Devnet acceptance replay with retained evidence.
-- [ ] Working preview of the current version after the Vercel limit is lifted.
-
-**Verification / exit:** Local build + 35/35 Playwright tests passed on 2026-10-06. See [R1 coverage and local verification](R1_TEST_COVERAGE.md). Automated browser tests use controlled RPC and a test wallet. Real Phantom/Devnet flow requires retained manual evidence; M1.1–M1.6 protocol guarantees remain open.
-
-### M1.1 — instrument, eligibility and holder registry
-
-**Outcome:** rights are created for eligible holders of the specified instrument.
-**Axis:** foundation for Record Date. **UC:** setup for all three UCs.
-**FR:** 01–09,38 — parameters, supply, registry, approve/revoke, transfer control and balances.
-**NFR:** 04,10–12 — authority, reproducibility, protocol truth, key safety.
-
-**FEATURES**
-
-- [ ] Anchor workspace, Instrument and HolderPosition PDAs.
-- [ ] Obligation parameters, mint/settlement mint, authority and outstanding/redeemed supply.
-- [ ] Registry: register/approve/revoke a holder and link the token account.
-- [ ] Transfer eligibility control that cannot bypass the registry (FR-08).
-- [ ] Token-2022 mint/account validation and client position reads.
-
-**Verification / exit:** integration tests reject incorrect authority and unsuitable accounts; registry/parameters reload from the chain.
-
-### M1.2 — record date and immutable snapshot
-
-**Outcome:** ownership at the required date is known; later transfers do not rewrite rights.
-**Axis:** Record Date. **UC:** UC-CP-01, UC-BR-01, UC-VOTE-01.
-**FR:** 10–15,38–39 — action, authority, snapshot, finalization, metadata, transitions.
-**NFR:** 04,06,11 — authorization, immutability and protocol truth.
-
-**FEATURES**
-
-- [ ] CorporateAction PDA and valid lifecycle transitions.
-- [ ] SnapshotPosition for each eligible holder with balance-source validation.
-- [ ] create action → snapshot holders → finalize snapshot.
-- [ ] Slot/time/hash and protection against finalized-snapshot mutation.
-- [ ] Real post-record transfer without changing the snapshot.
-
-**Verification / exit:** TC-03,16,17; golden snapshot 10/20/5 with current 6/24/5. Invalid balances, mutation and transitions are rejected on-chain.
-
-### M1.3 — holder rights and financial calculation
-
-**Outcome:** each holder receives an explainable entitlement based on their record-date position.
-**Axis:** Right. **UC:** UC-CP-01; foundation for principal/final coupon and voting power.
-**FR:** 16–22 — right types, integer math, per-holder entitlement and total.
-**NFR:** 01,02,11 — determinism, precision and protocol truth.
-
-**FEATURES**
-
-- [ ] EntitlementPosition PDA and integer/fixed-point coupon calculation.
-- [ ] Calculation from Instrument + SnapshotPosition; frontend amounts are not authoritative.
-- [ ] Aggregate obligation and parameter/overflow validation.
-- [ ] Data contracts for principal, final coupon and snapshot voting power.
-
-**Verification / exit:** TC-01,02,05; 500/1000/250, total 1750, zero = 0; an incorrect client amount does not change the protocol result.
-
-### M1.4 — approval and once-only payment
-
-**Outcome:** a verified entitlement is executed after authorization without double payment.
-**Axis:** Controlled Execution. **UC:** UC-CP-01.
-**FR:** 23–27 — preview, approval, settlement, no double payment, finalization.
-**NFR:** 03,04,07,08 — idempotency, authority, atomicity, recovery.
-
-**FEATURES**
-
-- [ ] Distribution preview and approve_action with authority validation.
-- [ ] Controlled settlement vault and Token-2022 transfer_checked CPI.
-- [ ] Per-holder settled state and protection against a second settlement.
-- [ ] Safe partial-batch continuation without double payment.
-- [ ] Funding checks and total settled versus obligation verification.
-
-**Verification / exit:** TC-04,15,17–19; actual KUSD deltas = 500/1000/250. Repeated/unauthorized calls do not transfer funds.
-
-### M1.5 — receipt and rights/execution history
-
-**Outcome:** investors and auditors see when rights arose, why and what was executed.
-**Axis:** Verifiable Proof. **UC:** investor/auditor flows in specification §§6,21.
-**FR:** 38–42 — identity, events, tx, receipt, read-only verification.
-**NFR:** 05,09,11 — audit, clarity and chain state.
-
-**FEATURES**
-
-- [ ] ActionReceipt PDA and finalization only after the obligation is executed.
-- [ ] Events/transaction references linking snapshot, entitlement, approval and outcome.
-- [ ] Holder history from action/entitlement state, separate from current wallet balance.
-- [ ] Read-only formula explanation and outcome verification.
-
-**Verification / exit:** A: record-date 10, current 6, entitlement/payment 500 and final receipt. An unexecuted action cannot be finalized.
-
-### M1.6 — complete golden Coupon protocol E2E
-
-**Outcome:** actual chain state proves the business axis, beyond cards or a model.
-**Axis:** all four stages. **UC:** UC-CP-01.
-**FR:** combined acceptance of M1.1–M1.5. **NFR:** 01–12 within Coupon scope.
-
-**FEATURES**
-
-- [ ] Golden fixture → initialize → snapshot → transfer → entitlement → approve → settle → receipt.
-- [ ] Oracle compares actual PDA/token-account state with independent expected output.
-- [ ] Negative tests: unauthorized, mutation, double settlement, wrong accounts, invalid transitions.
-- [ ] Replay specification §22 with A/B/C/D and a zero-balance holder, separately from regression golden.
-- [ ] Playwright reads/displays protocol results; signing remains a human action.
-
-**Verification / exit:** TC-01–05,15–19 pass; rights/execution match expected; Memo is not the source of domain truth.
-
-## Phase 2 — MVP: three corporate actions on one engine
-
-### M2.1 — bond redemption
-
-**Outcome:** holders receive principal/final coupon and the corresponding units stop circulating.
-**Axis:** Right → Controlled Execution → Verifiable Proof, with shared Record Date.
-**UC:** UC-BR-01. **FR:** 05,17–18,28–32,41.
-**NFR:** 01–08,11 — precision, correctness, once-only execution and proof.
-
-**FEATURES**
-
-- [ ] Maturity redemption action using the shared snapshot.
-- [ ] Principal and separate final coupon.
-- [ ] Authority approval and settlement.
-- [ ] Unit burn/retirement/lock and outstanding/redeemed supply.
-- [ ] Double-redemption protection and outcome receipt.
-
-**Verification / exit:** TC-06–10; 10 bonds → 10000 principal plus the specified coupon; redeemed units cannot be redeemed again.
-
-### M2.2 — bondholder voting
-
-**Outcome:** each vote corresponds to a record-date position and is counted exactly once.
-**Axis:** shared Record Date → voting Right → vote → Proof.
-**UC:** UC-VOTE-01. **FR:** 19,33–37,41.
-**NFR:** 01,03–06,11 — determinism, once-only execution, authority, audit and immutability.
-
-**FEATURES**
-
-- [ ] Proposal, record date, voting window and quorum.
-- [ ] Voting power from the finalized snapshot.
-- [ ] YES/NO/ABSTAIN and VoteReceipt.
-- [ ] Double-vote protection and deadline validation.
-- [ ] Final on-chain tally/quorum and proof.
-
-**Verification / exit:** TC-11–14; post-record transfers do not change voting power; the result equals the sum of valid votes.
-
-### M2.3 — shared lifecycle engine
-
-**Outcome:** new events reuse one rights-servicing mechanism.
-**Axis:** all four stages. **UC:** all three UCs.
-**FR:** 06,10–15,21–24,38–42. **NFR:** 01,04–06,09,11.
-
-**FEATURES**
-
-- [ ] Shared Instrument/Registry/Snapshot and authority rules.
-- [ ] Shared identity/history/receipt model with action-specific calculations.
-- [ ] Clear UI distinction between the shared lifecycle and Coupon/Redemption/Voting logic.
-
-**Verification / exit:** 3/3 actual E2E scenarios; every completed event has a verifiable outcome.
-
-## Phase 3 — MVP: explain rights in the product
-
-### M3.1 — client reads protocol truth
-
-**Outcome:** opening the client restores history and rights independently of local state.
-**Axis:** presentation of the full chain. **UC:** operator journeys for all UCs.
-**FR:** 02,05,09,14,21–23,38–41. **NFR:** 09–12.
-
-**FEATURES**
-
-- [x] React/Vite shell and Phantom adapter (implemented early in R1).
-- [ ] Generated Anchor IDL/types and PDA reads.
-- [ ] UI finalized state from the chain; localStorage only for optional resume/cache.
-- [ ] Refresh/restart restores lifecycle and holder rights.
-
-**Verification / exit:** UI data matches PDAs after reload; the client does not determine the final amount.
-
-### M3.2 — Operator / Investor / Auditor journeys
-
-**Outcome:** users understand who is entitled to what and where the proof is within 30–60 seconds.
-**Axis:** Record Date → Right → Controlled Execution → Verifiable Proof.
-**UC:** three corporate actions and role-specific flows in specification §§6,21.
-**FR:** 02,05–09,14,21–25,33–34,38–42. **NFR:** 05,09,10.
-
-**FEATURES**
-
-- [ ] Instruments and holder registry with eligibility/current balance.
-- [ ] Corporate-action timeline and action detail with record date/formula/status.
-- [ ] Operator preview/approval/execution.
-- [ ] Investor: what was due, why and what was executed.
-- [ ] Auditor: snapshot/obligation/processed totals/mismatches/tx/receipt.
-- [ ] IMPLEMENTED/SIMULATED labels visible in the relevant context.
-
-**Verification / exit:** Playwright journeys for supported steps and the manual-signing boundary; the demo makes the pitch obvious in 30–60 seconds.
-
-## Phase 4 — MVP: acceptance and submission
-
-### M4.1 — correctness and security
-
-**Outcome:** rights and execution remain correct under normal and invalid calls.
-**Axis:** guarantees across all four stages. **UC:** all three UCs.
-**FR:** 08,11,13,20,24,26,30–32,36–42. **NFR:** 01–12.
-
-**FEATURES**
-
-- [ ] TC-01–19 automated where possible; manual boundaries documented.
-- [ ] Integer math, authority, immutable snapshot and valid transitions.
-- [ ] No double settle/redeem/vote and partial recovery.
-- [ ] Clean Devnet run, protocol/UI consistency and no known P0/P1 issues.
-- [ ] No operator secret in the repository/frontend.
-
-**Verification / exit:** mismatch/double execution/unauthorized execution = 0 in the acceptance dataset.
-
-### M4.2 — reproducible demo and submission
-
-**Outcome:** judges understand the idea and reproduce the result.
-**Axis:** pitch → live rights lifecycle → proof.
-**UC/FR:** all required scenarios and specification §24 DoD. **NFR:** 05,09,10.
-
-**FEATURES**
-
-- [x] README: problem, solution, target audience, edge and product axis.
-- [x] Local setup instructions, architecture and implemented/simulated boundaries.
-- [ ] Complete working MVP against specification §24 DoD and an evidence-backed coverage table.
-- [ ] Demo video: complete Coupon/Redemption/Voting E2E, beyond the interface.
-- [ ] Devnet evidence and a clear independent-verification method.
-
-**Verification / exit:** 3/3 scenarios, 100% finalized outcomes with proof; README enables demo reproduction.
-
-## Post-MVP — extend supported rights and integrations
-
-These milestones do not cancel unfinished MVP requirements. UCs here are new scenarios that must first be approved in the specification; existing NFRs remain mandatory.
-
-### P1 — scaling and infrastructure roles
-
-**Axis:** scalable Record Date and Controlled Execution/Proof.
-**Specification link:** §26 P1; extends FR-06,12–14,24,39–42 and NFR-04–05,08–11.
-
-**FEATURES**
-
-- [ ] Merkle commitment / indexer for larger registries.
-- [ ] Batch processing and richer transfer controls built on mandatory FR-08.
-- [ ] Issuer/operator/auditor separation and multisig.
-- [ ] Downloadable reports and an extended timeline.
-
-**Verification / exit:** scaling does not change golden rights; batching does not cause repeated processing.
-
-### P2 — additional corporate-action types
-
-**Axis:** new Rights on the shared lifecycle.
-**Specification link:** §26 P2; new UC/FR definitions before implementation, NFR-01–08,11.
-
-**FEATURES**
-
-- [ ] Early/partial redemption.
-- [ ] Dividends, tender offer/buyback.
-- [ ] Conversion and modification-of-terms workflow.
-
-**Verification / exit:** a separate golden/acceptance contract for each new right and execution.
-
-### P3 — external integrations and production model
-
-**Axis:** eligibility → controlled external execution → proof.
-**Specification link:** §§20,25–26; new UC/FR definitions, NFR-03–05,07–08,11–12.
-
-**FEATURES**
-
-- [ ] KYC/AML, custody/recovery and external fiat/bank rails.
-- [ ] KASE/KCSD/depository adapters after integration-requirement verification.
-- [ ] Production security review and an operational/legal model before Mainnet.
-
-**Verification / exit:** external settlement references link to entitlements; actual execution and initiation are clearly distinguished.
-
-## Scope filter
-
-A feature belongs in MVP if it strengthens the central axis, supports a required scenario or satisfies specification FR/NFR/DoD. Otherwise, it belongs in Post-MVP.
-
-README presents the product. ROADMAP tracks delivery and current focus. [ARCHITECTURE](ARCHITECTURE.md) describes implementation. The [audit](PHASE_1_AUDIT.md) records limitations and evidence.
+Local evidence: 15 Rust unit tests, 9 program checks, 8 Test API/reader checks, 14 Demo Workspace/browser checks and one browser → signed instruction → program account → RPC-loss recovery check passed; SBF/IDL, Vite and Next compilation passed. Public Devnet deployment and autonomous keeper remain unchecked.

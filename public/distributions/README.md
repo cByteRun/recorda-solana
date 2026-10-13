@@ -1,0 +1,2 @@
+Generate immutable public archives with `npm run distribution:index -- journal.json parameters.json public/distributions`.
+Approve/fund the distribution only after independently retrieving its manifest/proofs and verifying provenance and hashes. Back up the archive; generated content directories are ignored by Git and must be included in deployment storage explicitly. Vite and Next serve this shared public directory. See [Architecture operations](../../docs/ARCHITECTURE.md#operations-and-supported-scope) for the archive trust boundary and retention policy.

@@ -4,29 +4,63 @@
   "version": "0.1.0",
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.18.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "node scripts/build-bondops.mjs && vite",
+    "build": "node scripts/build-bondops.mjs && tsc -b && vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts tests/transactions.spec.ts tests/rpc-fetch.spec.ts tests/coupon-precision.spec.ts tests/bridge-lifecycle.spec.ts"
+    "test:e2e:golden": "playwright test tests/golden-domain.spec.ts tests/golden-ui.spec.ts tests/transactions.spec.ts tests/rpc-fetch.spec.ts tests/coupon-precision.spec.ts tests/bridge-lifecycle.spec.ts tests/devnet-runner.spec.ts tests/chain-clock.spec.ts tests/protocol-client.spec.ts",
+    "solana:airdrop": "node scripts/devnet-airdrop.mjs",
+    "test:devnet:setup": "node --test --test-isolation=none scripts/devnet.test.mjs",
+    "test:e2e:golden:devnet": "node scripts/devnet-golden.mjs",
+    "test:e2e:actions:devnet": "node scripts/devnet-actions.mjs",
+    "test:e2e:actions:local": "node scripts/devnet-actions.mjs --local",
+    "protocol:build": "node scripts/build-sbf.mjs",
+    "protocol:idl": "node scripts/build-idl.mjs",
+    "protocol:idl:check": "node scripts/build-idl.mjs --check",
+    "protocol:test:rust": "cargo test --workspace --locked",
+    "protocol:test": "node scripts/protocol-test.mjs",
+    "protocol:test:ui": "node scripts/protocol-test.mjs --ui",
+    "audit:requirements": "node scripts/audit-requirements.mjs",
+    "test:audit": "node scripts/security-audit.mjs",
+    "test:audit:client": "node scripts/security-audit.mjs --client",
+    "dev:next": "node scripts/build-bondops.mjs && next dev next-app --webpack",
+    "build:next": "node scripts/build-bondops.mjs && next build next-app --webpack",
+    "start:next": "next start next-app",
+    "test:post-mvp": "node --test --test-isolation=none scripts/post-mvp.test.mjs",
+    "benchmark:distribution": "node scripts/benchmark-distribution.mjs",
+    "distribution:index": "node scripts/distribution-index.mjs",
+    "protocol:test:post-mvp": "node scripts/protocol-test.mjs --suite=post-mvp",
+    "benchmark:protocol": "node scripts/measure-protocol.mjs",
+    "build:bondops": "node scripts/build-bondops.mjs",
+    "test:bondops": "node --test --test-isolation=none server/bondops/*.test.mjs",
+    "bondops:serve": "node scripts/bondops-server.mjs",
+    "bondops:local": "node scripts/bondops-local.mjs",
+    "protocol:test:bondops": "node scripts/protocol-test.mjs --suite=bondops",
+    "protocol:test:bondops:ui": "node scripts/protocol-test.mjs --suite=bondops --ui"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
+    "@gsap/react": "^2.1.2",
     "@solana/spl-token": "0.4.15",
     "@solana/web3.js": "1.99.0",
+    "bigint-buffer": "file:vendor/bigint-buffer",
     "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "gsap": "^3.15.0",
     "lucide-react": "^0.545.0",
+    "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "4.3.3",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
@@ -36,5 +70,10 @@
     "typescript": "^5.9.3",
     "vite": "8.3.2"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "overrides": {
+    "jayson": "5.0.0",
+    "toml": "5.0.0",
+    "bigint-buffer": "$bigint-buffer"
+  }
 }

@@ -17,7 +17,7 @@ export function createRpcFetch({
         const response = await fetcher(input, init);
         if (response.status !== 429) return response;
         if (attempt >= retries) {
-          throw new Error("Solana Devnet RPC rate limit (429). Wait before retrying, or configure VITE_SOLANA_RPC_URL with a browser-accessible Devnet RPC endpoint.");
+          throw new Error("Solana RPC rate limit (429). Wait before retrying, configure another browser-accessible Devnet RPC endpoint.");
         }
         const header = response.headers.get("retry-after");
         const seconds = header === null ? NaN : Number(header);

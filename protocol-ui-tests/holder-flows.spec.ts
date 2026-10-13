@@ -1,0 +1,50 @@
+import {test,expect,type Page} from '@playwright/test';
+import {Connection,Keypair,PublicKey,SystemProgram,Transaction,VersionedTransaction,sendAndConfirmTransaction} from '@solana/web3.js';
+import {TOKEN_2022_PROGRAM_ID,createMint,createAccount,mintTo,getAccount,getMint} from '@solana/spl-token';
+import {createProtocol} from '../src/shared/solana/protocol';
+import {createActionsV2,auditActionsV2} from '../src/shared/solana/actions-v2';
+import {createDistributionClient} from '../src/shared/solana/distribution';
+import {readChainClock,waitForRecordDate} from '../src/shared/solana/chain-clock.mjs';
+import {buildManifest,persistManifest,loadManifest} from '../scripts/lib/distribution.mjs';
+import {mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+const rpc=new Connection(process.env.RECORDA_TEST_RPC||'http://127.0.0.1:8899','confirmed');
+async function setup(units:number[],maturityDelay=86400n){
+ const operator=Keypair.generate(),holders=units.map(()=>Keypair.generate());
+ await rpc.confirmTransaction(await rpc.requestAirdrop(operator.publicKey,10_000_000_000),'confirmed');
+ const protocol=createProtocol(rpc),mint=await createMint(rpc,operator,operator.publicKey,null,2,undefined,undefined,TOKEN_2022_PROGRAM_ID),clock=await readChainClock(rpc);
+ const created=await protocol.createInstrument(operator.publicKey,mint,BigInt(Date.now()),clock.timestamp+maturityDelay);
+ const send=async(ix:Parameters<Transaction['add']>[0])=>sendAndConfirmTransaction(rpc,new Transaction().add(ix),[operator]);
+ await send(created.instruction);
+ for(const [index,h]of holders.entries()){await send(await protocol.registerHolder(operator.publicKey,created.instrument,h.publicKey,BigInt(units[index])));await send(SystemProgram.transfer({fromPubkey:operator.publicKey,toPubkey:h.publicKey,lamports:100_000_000}));}
+ return {operator,holders,mint,instrument:created.instrument,protocol,send};
+}
+async function wallet(page:Page,initial:Keypair){
+ let active=initial;
+ await page.exposeFunction('holderSign',(bytes:number[])=>{const tx=VersionedTransaction.deserialize(Uint8Array.from(bytes));tx.sign([active]);return [...tx.serialize()];});
+ await page.addInitScript(address=>{const provider={isPhantom:true,publicKey:undefined as unknown,async connect(){const path='/src/shared/solana/protocol.ts';const {RECORDA_PROGRAM_ID}=await import(/* @vite-ignore */path);const Key=RECORDA_PROGRAM_ID.constructor;this.publicKey=new Key((window as unknown as {holderWallet?:string}).holderWallet||address);return{publicKey:this.publicKey};},async signTransaction(tx:{serialize():Uint8Array;constructor:{deserialize(b:Uint8Array):unknown}}){return tx.constructor.deserialize(Uint8Array.from(await(window as unknown as {holderSign(b:number[]):Promise<number[]>}).holderSign([...tx.serialize()])));}};Object.assign(window,{phantom:{solana:provider}});},initial.publicKey.toBase58());
+ return async(key:Keypair)=>{active=key;await page.evaluate(address=>{(window as unknown as {holderWallet:string}).holderWallet=address;},key.publicKey.toBase58());await page.getByRole('button',{name:/^(Connect Phantom|Wallet )/}).click();};
+}
+test.beforeEach(async({page})=>{await page.addInitScript(()=>sessionStorage.setItem('recorda-workspace','test'));});
+test('Redemption browser: holder-signed atomic burn/payment, partial progress and storage-free resume',async({page})=>{
+ const {operator,holders,mint,instrument,protocol}=await setup([10,5],4n),client=createActionsV2(rpc),connect=await wallet(page,operator);
+ await page.goto(`/actions?instrument=${instrument}`);await page.getByLabel('Role',{exact:true}).selectOption('Operator');await connect(operator);
+ await page.getByLabel('Action kind').selectOption('redemption');const record=(await readChainClock(rpc)).timestamp+30n;await page.getByLabel('Record date',{exact:true}).fill(new Date(Number(record)*1000).toISOString().slice(0,19));
+ await page.getByRole('button',{name:'Create action',exact:true}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','scheduled');await waitForRecordDate(rpc,record);
+ await page.getByRole('button',{name:'Capture snapshot / resume'}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','snapshotted');await page.getByRole('button',{name:'Calculate rights / resume'}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','awaitingApproval');await page.getByRole('button',{name:'Approve action',exact:true}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','approved');await page.getByRole('button',{name:'Fund mock payment vault'}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','funded');
+ const address=new PublicKey(await page.getByLabel('Action PDA').inputValue());await page.getByLabel('Role',{exact:true}).selectOption('Investor');await expect(page.getByRole('button',{name:'Sign atomic burn and payment'})).toHaveCount(0);await connect(holders[0]);await page.getByRole('button',{name:'Sign atomic burn and payment'}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','executing');await expect(page.getByRole('button',{name:'Sign atomic burn and payment'})).toHaveCount(0);
+ await page.evaluate(()=>localStorage.clear());await page.reload();await expect(page.getByText('Audit: Verified')).toBeVisible();await page.getByLabel('Role',{exact:true}).selectOption('Investor');await connect(holders[1]);await page.getByRole('button',{name:'Sign atomic burn and payment'}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','settled');await connect(operator);await page.getByLabel('Role',{exact:true}).selectOption('Operator');await page.getByRole('button',{name:'Finalize receipt'}).click();await expect(page.getByTestId('actions-root')).toHaveAttribute('data-state','finalized');await page.getByText('Instrument & action details',{exact:true}).click();await expect(page.getByText('Instrument status: REDEEMED')).toBeVisible();
+ const report=await client.read(address);expect((await auditActionsV2(address,report)).issues).toEqual([]);expect((await getMint(rpc,report.instrument.mint,'confirmed',TOKEN_2022_PROGRAM_ID)).supply).toBe(0n);
+ for(const h of holders){expect((await getAccount(rpc,protocol.pdas.bondAccount(instrument,h.publicKey),'confirmed',TOKEN_2022_PROGRAM_ID)).amount).toBe(0n);const right=report.rights.find(r=>r.account.holder.equals(h.publicKey))!.account;expect((await getAccount(rpc,right.destination,'confirmed',TOKEN_2022_PROGRAM_ID)).amount).toBe(BigInt(right.total.toString()));}expect(report.instrument.redeemedSupply.toString()).toBe('15');expect(report.action.coupon.toString()).toBe('0');
+});
+test('Claims browser: retained manifest recovery, content tamper rejection, wallet binding and once-only payment',async({page})=>{
+ const {operator,holders,mint,instrument,send}=await setup([10,5]),client=createDistributionClient(rpc),id=BigInt(Date.now()),distribution=client.pdas.distribution(instrument,id);
+ const destinations:Record<string,string>={};for(const h of holders)destinations[h.publicKey.toBase58()]=(await createAccount(rpc,operator,mint,h.publicKey,undefined,undefined,TOKEN_2022_PROGRAM_ID)).toBase58();
+ const manifest=buildManifest({source:'local finalized fixture',instrument:instrument.toBase58(),recordSlot:String(await rpc.getSlot('finalized')),journalHash:'ab'.repeat(32),holders:holders.map((h,i)=>({holder:h.publicKey.toBase58(),units:String([10,5][i])})).sort((a,b)=>Buffer.compare(new PublicKey(a.holder).toBuffer(),new PublicKey(b.holder).toBuffer()))},{distribution:distribution.toBase58(),paymentMint:mint.toBase58(),face:'100000',rateBps:1000,frequency:2,policyVersion:1,destinations});
+ const archive=mkdtempSync(join(tmpdir(),'recorda-proofs-')),saved=persistManifest(archive,manifest),restored=loadManifest(archive,saved.hash);const deadline=(await readChainClock(rpc)).timestamp+300n;
+ await send(await client.create(operator.publicKey,instrument,id,restored,deadline));await send(await client.manage(distribution,operator.publicKey,'approveDistribution'));await mintTo(rpc,operator,mint,client.pdas.vault(distribution),operator,BigInt(manifest.total),[],undefined,TOKEN_2022_PROGRAM_ID);await send(await client.manage(distribution,operator.publicKey,'fundDistribution'));
+ const connect=await wallet(page,operator);let tamper=true;await page.route('**/distribution-fixture.json',route=>route.fulfill({json:tamper?{...restored,total:'1'}:restored}));
+ await page.goto(`/claims?distribution=${distribution}`);await page.getByLabel('Manifest URL').fill('/distribution-fixture.json');await page.getByRole('button',{name:'Load and verify manifest'}).click();await expect(page.getByRole('alert')).toContainText('content hash');await expect(page.getByRole('button',{name:'Sign claim'})).toHaveCount(0);tamper=false;await page.getByRole('button',{name:'Load and verify manifest'}).click();await expect(page.getByRole('heading',{name:'Verified approved commitment'})).toBeVisible();await connect(operator);await expect(page.getByText('No claim for connected wallet')).toBeVisible();await connect(holders[0]);await page.getByRole('button',{name:'Sign claim'}).click();await expect(page.getByText(/Your snapshot units \/ claim: .* · Claimed/)).toBeVisible();await expect(page.getByRole('button',{name:'Sign claim'})).toBeDisabled();
+ await page.evaluate(()=>localStorage.clear());await page.reload();await page.getByLabel('Manifest URL').fill('/distribution-fixture.json');await page.getByRole('button',{name:'Load and verify manifest'}).click();await expect(page.getByRole('heading',{name:'Verified approved commitment'})).toBeVisible();await connect(holders[0]);await expect(page.getByRole('button',{name:'Sign claim'})).toBeDisabled();expect((await getAccount(rpc,new PublicKey(destinations[holders[0].publicKey.toBase58()]),'confirmed',TOKEN_2022_PROGRAM_ID)).amount).toBe(50000n);expect((await client.read(distribution)).claims).toHaveLength(1);
+});
