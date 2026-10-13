@@ -232,7 +232,9 @@ try {
     await page.getByLabel('Optional demo maturity (ISO UTC)', { exact: true }).fill(new Date(Number(maturity) * 1000).toISOString());
     for (const [i, name] of ['A', 'B', 'C'].entries()) await page.getByLabel(`Optional holder ${name} public address`, { exact: true }).fill(holders[i]);
     await protocolStage(page, 'Create / resume demo instrument', undefined, { timeout: 600_000 });
+    await expect(page.getByLabel('Instrument PDA', { exact: true })).toHaveValue(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
     instrument = await page.getByLabel('Instrument PDA', { exact: true }).inputValue();
+    new PublicKey(instrument);
   }
   evidence.instrument = instrument; save();
   const proposal = `Recorda ${local ? 'Localnet' : 'Devnet'} acceptance: keep maturity unchanged.`;

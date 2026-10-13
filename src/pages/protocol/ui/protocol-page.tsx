@@ -9,6 +9,7 @@ import { Badge } from "@/shared/ui/badge";
 import { AddressLink } from "@/shared/ui/address-link";
 import { ArrowRight } from "lucide-react";
 import { ActionJourney } from "@/widgets/action-journey/ui/action-journey";
+import './protocol-page.css';
 
 function minor(value: { toString(): string }) {
   const raw = BigInt(value.toString()); return `${raw / 100n}.${(raw % 100n).toString().padStart(2, "0")}`;
@@ -50,11 +51,11 @@ export function ProtocolPage() {
   const calculated = !!report && report.action.calculatedHolders === report.action.expectedHolders && !["scheduled", "snapshotPending"].includes(state);
   const remaining = report ? BigInt(report.action.totalObligationMinor.toString()) - BigInt(report.action.settledTotalMinor.toString()) : 0n;
 
-  return <main data-testid="protocol-root" data-busy={busy} className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-    <header className="flex flex-wrap items-start justify-between gap-4">
+  return <main data-testid="protocol-root" data-busy={busy} className="content protocol-workspace space-y-6">
+    <header className="page-head">
       <div><div className="flex flex-wrap gap-2"><Badge>Recorda · Coupon</Badge><Badge>{connection.rpcEndpoint.includes("devnet") ? "DEVNET" : /localhost|127\.0\.0\.1/.test(connection.rpcEndpoint) ? "LOCAL VALIDATOR" : "CUSTOM RPC · verify environment"}</Badge></div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Coupon servicing</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">Record date → Investor rights → Approved payments → Verifiable proof.</p>
+        <h1 className="page-title mt-3">Instrument setup & coupon servicing</h1>
+        <p className="page-sub">Record date → Investor rights → Approved payments → Verifiable proof.</p>
       </div>
       <div className="space-y-2"><Button disabled={busy} onClick={() => void run(connect)}>{operator ? "Reconnect Phantom" : "Connect Phantom"}</Button>{operator && <p className="max-w-56 break-all text-xs text-zinc-600" title={operator.toBase58()}>Wallet: {operator.toBase58().slice(0, 6)}…{operator.toBase58().slice(-6)}</p>}</div>
     </header>
